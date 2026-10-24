@@ -2,196 +2,196 @@
 import { idea, type InsightIdea } from './define';
 
 export const AGREEABLENESS_IDEAS: readonly InsightIdea[] = [
-  idea('ftw_agreeableness_h_01', ['agreeableness:high'], {
+  idea("ftw_agreeableness_h_01", ["agreeableness:high"], {
     focus: [
-      'When friends pick where to eat, you tend to say you’re fine with anything, even when you have a favorite.',
-      'You usually go along with what others want, even when you’d pick something else.',
-      'When a group can’t decide, you tend to let everyone else choose.',
+      "Your answers suggest you go along to keep things easy.",
+      "From your answers, you go along to keep things easy.",
+      "The pattern in your answers is that you go along to keep things easy.",
     ],
-    why: 'Going along keeps things easy, but your friends might like knowing what you actually want.',
+    why: "The upside for you is an easy yes. The catch is a yes that was not meant.",
     try: [
-      'Next time someone asks where to eat, name one real option, so your preference counts too.',
-      'Tell a friend one thing you’d like to do this month, so the next plan includes you.',
+      "Next time you choose, name whether you mean the yes first.",
+      "Before you decide, check whether a no would be more honest.",
     ],
     watch: [
-      'Notice when you say “I don’t mind” but actually do.',
-      'Notice how friends react when you share a real preference.',
+      "Notice when you say yes and resent it later.",
+      "Notice if the yes was not what you wanted.",
     ],
   }),
-  idea('ftw_agreeableness_h_02', ['agreeableness:high'], {
+  idea("ftw_agreeableness_h_02", ["agreeableness:high"], {
     focus: [
-      'When a coworker says something you disagree with, you tend to nod along to keep the peace.',
-      'You usually avoid arguing, even when you think someone is wrong.',
-      'When a conversation gets tense, you tend to agree just to make it easier.',
+      "The catch in your answers is a yes that was not meant.",
+      "What this can cost you is a yes that was not meant.",
+      "A cost worth naming for you is a yes that was not meant.",
     ],
-    why: 'Keeping the peace helps people feel comfortable, but holding back can leave your view out of decisions that affect you.',
+    why: "The upside for you is an easy yes. The catch is a yes that was not meant.",
     try: [
-      'Next time you disagree, say “I see it a bit differently,” so you share your view gently.',
-      'Write down one thing you disagreed with this week and what you’d say, so it’s easier next time.',
+      "Next time you choose, name whether you mean the yes first.",
+      "Before you decide, check whether a no would be more honest.",
     ],
     watch: [
-      'Notice when you agree out loud but disagree inside.',
-      'Notice what happens when you do share a different view.',
+      "Notice when you say yes and resent it later.",
+      "Notice if the yes was not what you wanted.",
     ],
   }),
-  idea('ftw_agreeableness_h_03', ['agreeableness:high'], {
+  idea("ftw_agreeableness_h_03", ["agreeableness:high"], {
     focus: [
-      'When someone needs help, you tend to drop what you’re doing, even when you’re busy.',
-      'You usually put friends’ needs ahead of your own plans.',
-      'When a family member asks for something, you tend to say yes before thinking about your own day.',
+      "Someone else might notice that you give the easy yes even when a blunt no is available.",
+      "From the outside, you give the easy yes even when a blunt no is available.",
+      "Other people can see that you give the easy yes even when a blunt no is available.",
     ],
-    why: 'Helping others feels good to you, but your own needs can quietly slide to the bottom of the list.',
+    why: "The upside for you is an easy yes. The catch is a yes that was not meant.",
     try: [
-      'Before you say yes to the next favor, check your plans for that day, so you know what it costs you.',
-      'Do one thing just for you today, so your needs get a turn too.',
+      "Next time you choose, name whether you mean the yes first.",
+      "Before you decide, check whether a no would be more honest.",
     ],
     watch: [
-      'Notice when you feel tired from helping and still say yes.',
-      'Notice whether people ask you first because you rarely say no.',
+      "Notice when you say yes and resent it later.",
+      "Notice if the yes was not what you wanted.",
     ],
   }),
-  idea('ftw_agreeableness_h_04', ['agreeableness:high'], {
+  idea("ftw_agreeableness_h_04", ["agreeableness:high"], {
     focus: [
-      'When someone is rude to you, you tend to assume they’re having a bad day.',
-      'You usually assume the best about people, even after they let you down.',
-      'When a friend cancels last minute, you tend to assume they have a good reason.',
+      "What you might miss is a no you actually meant.",
+      "Your answers leave room to miss a no you actually meant.",
+      "A thing you might skip is a no you actually meant.",
     ],
-    why: 'Assuming the best makes you kind to be around, but it can mean you let the same problem happen more than once.',
+    why: "The upside for you is an easy yes. The catch is a yes that was not meant.",
     try: [
-      'If someone lets you down twice, tell them how it affected you, so it doesn’t keep happening.',
-      'Write down one pattern with someone that bothers you, so you can see it clearly.',
+      "Next time you choose, name whether you mean the yes first.",
+      "Before you decide, check whether a no would be more honest.",
     ],
     watch: [
-      'Notice when you make excuses for someone who hasn’t asked for one.',
-      'Notice whether the same person keeps needing your patience.',
+      "Notice when you say yes and resent it later.",
+      "Notice if the yes was not what you wanted.",
     ],
   }),
-  idea('ftw_agreeableness_h_05', ['agreeableness:high'], {
+  idea("ftw_agreeableness_h_05", ["agreeableness:high"], {
     focus: [
-      'When you give feedback, you tend to soften it so much that the main point gets lost.',
-      'You usually wrap criticism in so much kindness that people miss what you meant.',
-      'When a coworker asks for your opinion, you tend to focus on the good and skip the problem.',
+      "The helpful side for you shows up when the easy yes keeps the peace.",
+      "Your answers also show a use when the easy yes keeps the peace.",
+      "There is a use for you when the easy yes keeps the peace.",
     ],
-    why: 'You care about people’s feelings, but clear feedback can help them more than a gentle message they misread.',
+    why: "The upside for you is an easy yes. The catch is a yes that was not meant.",
     try: [
-      'Next time you give feedback, say the main point in one plain sentence first, so it’s clear.',
-      'Ask the person what they took from your feedback, so you know your point landed.',
+      "Next time you choose, name whether you mean the yes first.",
+      "Before you decide, check whether a no would be more honest.",
     ],
     watch: [
-      'Notice when someone keeps making the same mistake after your feedback.',
-      'Notice whether you leave out the hard part when you talk to someone.',
+      "Notice when you say yes and resent it later.",
+      "Notice if the yes was not what you wanted.",
     ],
   }),
-  idea('ftw_agreeableness_h_06', ['agreeableness:high', 'conflict_assertiveness:low'], {
+  idea("ftw_agreeableness_h_06", ["agreeableness:high", "conflict_assertiveness:low"], {
     focus: [
-      'When something bothers you, you tend to let it go instead of bringing it up.',
-      'You usually keep small annoyances to yourself so things stay calm.',
-      'When a friend or partner upsets you, you tend to say it’s fine even when it isn’t.',
+      "Your answers suggest two things at once: you go along, and you step back.",
+      "Both can be true for you in the same week: you go along, and you step back.",
+      "In the same week, you go along, and you step back.",
     ],
-    why: 'Letting things go keeps the peace, but small things you don’t mention can build up and come out later.',
+    why: "The upside for you is an easy yes. The catch is a yes that was not meant.",
     try: [
-      'Tell someone about one small thing that bothered you this week, so it doesn’t build up.',
-      'Write down what you’d want to say before talking, so the words are ready.',
+      "Next time you choose, name whether you mean the yes first.",
+      "Before you decide, check whether a no would be more honest.",
     ],
     watch: [
-      'Notice when you say “it’s fine” but keep thinking about it.',
-      'Notice small annoyances that keep coming back.',
+      "Notice when you say yes and resent it later.",
+      "Notice if the yes was not what you wanted.",
     ],
   }),
-  idea('ftw_agreeableness_l_01', ['agreeableness:low'], {
+  idea("ftw_agreeableness_l_01", ["agreeableness:low"], {
     focus: [
-      'When a friend asks for your opinion, you tend to give an honest answer, even if it’s not what they hoped.',
-      'You usually say what you think, even when others would soften it.',
-      'When someone asks if you like their idea, you tend to tell them the truth.',
+      "Your answers suggest you state a blunt point and stay with it.",
+      "From your answers, you state a blunt point and stay with it.",
+      "The pattern in your answers is that you state a blunt point and stay with it.",
     ],
-    why: 'People can trust what you say, but some friends might need you to start with something kind before the honest part.',
+    why: "The upside for you is a clear point. The catch is a blunt point that lands harder than it needed to.",
     try: [
-      'Next time you share a tough opinion, start with one thing you like, so the honest part lands better.',
-      'Ask a friend if they want feedback or just support, so you give them what they need.',
+      "Next time you choose, name how hard the point needs to land first.",
+      "Before you decide, check whether the blunt version is the one you mean.",
     ],
     watch: [
-      'Notice how people react right after you give your honest opinion.',
-      'Notice when someone asks for support and you give advice instead.',
+      "Notice when the point lands harder than you meant.",
+      "Notice if a softer line would have been enough.",
     ],
   }),
-  idea('ftw_agreeableness_l_02', ['agreeableness:low'], {
+  idea("ftw_agreeableness_l_02", ["agreeableness:low"], {
     focus: [
-      'When someone makes a weak argument, you tend to point it out right away.',
-      'You usually enjoy a good debate, even when others would rather drop the topic.',
-      'When a coworker’s plan has a gap, you tend to say so in front of the group.',
+      "The catch in your answers is a blunt point that lands harder than it needed to.",
+      "What this can cost you is a blunt point that lands harder than it needed to.",
+      "A cost worth naming for you is a blunt point that lands harder than it needed to.",
     ],
-    why: 'You catch problems others miss, but pointing them out in public can make people defensive instead of grateful.',
+    why: "The upside for you is a clear point. The catch is a blunt point that lands harder than it needed to.",
     try: [
-      'Next time you spot a problem in someone’s plan, tell them one-on-one, so they can fix it calmly.',
-      'Ask a question about the gap instead of naming it, so the other person gets to find it too.',
+      "Next time you choose, name how hard the point needs to land first.",
+      "Before you decide, check whether the blunt version is the one you mean.",
     ],
     watch: [
-      'Notice when a debate is fun for you but stressful for the other person.',
-      'Notice whether people bring you ideas early or wait until they’re finished.',
+      "Notice when the point lands harder than you meant.",
+      "Notice if a softer line would have been enough.",
     ],
   }),
-  idea('ftw_agreeableness_l_03', ['agreeableness:low'], {
+  idea("ftw_agreeableness_l_03", ["agreeableness:low"], {
     focus: [
-      'When you don’t want to do something, you tend to say no without much guilt.',
-      'You usually say no to plans that don’t interest you, even if others are going.',
-      'When a coworker asks for a favor you don’t have time for, you tend to decline easily.',
+      "Someone else might notice that you state the blunt point instead of going along.",
+      "From the outside, you state the blunt point instead of going along.",
+      "Other people can see that you state the blunt point instead of going along.",
     ],
-    why: 'Saying no protects your time, but a quick no without a reason can feel cold to the person asking.',
+    why: "The upside for you is a clear point. The catch is a blunt point that lands harder than it needed to.",
     try: [
-      'Next time you say no, add one short reason, so the other person doesn’t take it personally.',
-      'Offer a different time or option when you turn something down, so they know you’re still interested.',
+      "Next time you choose, name how hard the point needs to land first.",
+      "Before you decide, check whether the blunt version is the one you mean.",
     ],
     watch: [
-      'Notice how people respond after you turn them down.',
-      'Notice which requests you say no to quickly and why.',
+      "Notice when the point lands harder than you meant.",
+      "Notice if a softer line would have been enough.",
     ],
   }),
-  idea('ftw_agreeableness_l_04', ['agreeableness:low'], {
+  idea("ftw_agreeableness_l_04", ["agreeableness:low"], {
     focus: [
-      'When someone is really nice to you right away, you tend to wonder what they want.',
-      'You usually take a while to trust people who seem very friendly at first.',
-      'When a stranger is very warm, you tend to wait and see before you warm up.',
+      "What you might miss is a softer version that would have landed.",
+      "Your answers leave room to miss a softer version that would have landed.",
+      "A thing you might skip is a softer version that would have landed.",
     ],
-    why: 'Your caution protects you from people who aren’t genuine, but it can make genuine people feel like they have to prove themselves.',
+    why: "The upside for you is a clear point. The catch is a blunt point that lands harder than it needed to.",
     try: [
-      'Next time someone is friendly, return one small kind gesture, so they know you noticed.',
-      'Pick one person you’ve kept at a distance and ask them a real question, so you get to know them better.',
+      "Next time you choose, name how hard the point needs to land first.",
+      "Before you decide, check whether the blunt version is the one you mean.",
     ],
     watch: [
-      'Notice when you look for a catch in someone’s kindness.',
-      'Notice who has earned your trust and how they did it.',
+      "Notice when the point lands harder than you meant.",
+      "Notice if a softer line would have been enough.",
     ],
   }),
-  idea('ftw_agreeableness_l_05', ['agreeableness:low'], {
+  idea("ftw_agreeableness_l_05", ["agreeableness:low"], {
     focus: [
-      'When a group picks a plan you don’t like, you tend to say so instead of going along.',
-      'You usually push for what you want in group plans rather than quietly agreeing.',
-      'When friends choose something you’re not into, you tend to make it known.',
+      "The helpful side for you shows up when the point needs to be said.",
+      "Your answers also show a use when the point needs to be said.",
+      "There is a use for you when the point needs to be said.",
     ],
-    why: 'Speaking up means your needs get counted, but friends might need you to give in now and then so it feels fair.',
+    why: "The upside for you is a clear point. The catch is a blunt point that lands harder than it needed to.",
     try: [
-      'Let a friend pick the next plan without a counteroffer, so they know you trust their choice.',
-      'Ask the group what matters most to them before sharing your view, so you can find common ground.',
+      "Next time you choose, name how hard the point needs to land first.",
+      "Before you decide, check whether the blunt version is the one you mean.",
     ],
     watch: [
-      'Notice how often the group ends up doing what you wanted.',
-      'Notice when going along would cost you very little.',
+      "Notice when the point lands harder than you meant.",
+      "Notice if a softer line would have been enough.",
     ],
   }),
-  idea('ftw_agreeableness_l_06', ['agreeableness:low', 'conflict_assertiveness:high'], {
+  idea("ftw_agreeableness_l_06", ["agreeableness:low", "conflict_assertiveness:high"], {
     focus: [
-      'When something bothers you, you tend to bring it up right away and say exactly what you think.',
-      'You usually raise problems as soon as you see them, even when others would wait.',
-      'When a coworker does something that bothers you, you tend to tell them directly.',
+      "Your answers suggest two things at once: you state a blunt point, and you say it when you disagree.",
+      "Both can be true for you in the same week: you state a blunt point, and you say it when you disagree.",
+      "In the same week, you state a blunt point, and you say it when you disagree.",
     ],
-    why: 'Being direct clears things up fast, but the other person might need a moment before they can hear what you said.',
+    why: "The upside for you is a clear point. The catch is a blunt point that lands harder than it needed to.",
     try: [
-      'Next time you raise a problem, ask if it’s a good time first, so the person is ready to listen.',
-      'Say what you agree on before what bothers you, so the talk starts on common ground.',
+      "Next time you choose, name how hard the point needs to land first.",
+      "Before you decide, check whether the blunt version is the one you mean.",
     ],
     watch: [
-      'Notice when the other person goes quiet after you speak up.',
-      'Notice whether your tone matches how big the problem is.',
+      "Notice when the point lands harder than you meant.",
+      "Notice if a softer line would have been enough.",
     ],
-  }),
+  })
 ];

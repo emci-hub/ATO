@@ -117,7 +117,7 @@ export const STORY_STAR_TOPICS: readonly TopicTemplate[] = [
           narrator('You add a photo of a cake you have not baked.'),
           narrator('You let the rant sink under the pile.'),
         ],
-        reveal: 'You\'d rather step back than push.',
+        reveal: 'You step back instead of pushing.',
         otherWay: 'The other way, you would have owned the rant with a cake.',
         evidence: 'you buried the slip under decoy memes',
         tip: 'Watch out: memes can bury a slip, but the person it was about may still want a "my bad."',
@@ -196,7 +196,7 @@ export const STORY_STAR_TOPICS: readonly TopicTemplate[] = [
     settingTag: 'Video call. 10:02 AM. Monday.',
     hook: [
       narrator('You give your best two minutes of the quarter.'),
-      narrator('Nobody reacts, because you were on mute the whole time.'),
+      narrator('Nobody reacts. You were on mute the whole time.'),
     ],
     twist: [
       narrator('Avery, your manager, waits with a polite smile.'),
@@ -546,7 +546,7 @@ export const STORY_STAR_TOPICS: readonly TopicTemplate[] = [
         reveal: 'You say the hard thing, and keep it kind.',
         otherWay: 'The other way, you would have built a carton shrine.',
         evidence: 'you left a kind note and a clear ask',
-        tip: 'Watch out: a note with a drawing can read as a dig. A plain "we\'re out" is kinder.',
+        tip: 'Watch out: a note can read as a dig. A plain "we\'re out" is kinder.',
         jokeLight: { beat: 'move', line: 1 },
         jokeDark: { beat: 'twist', line: 3 },
       },
@@ -557,7 +557,7 @@ export const STORY_STAR_TOPICS: readonly TopicTemplate[] = [
           narrator('You eat the cereal dry and call it a choice.'),
           narrator('You leave a sticky note that only says "wow."'),
         ],
-        reveal: 'You\'d rather step back than push.',
+        reveal: 'You step back instead of pushing.',
         otherWay: 'The other way, you would have asked for a milk run out loud.',
         evidence: 'you left a sticky note that said wow',
         tip: 'Watch out: "wow" is funny. A second carton still needs a real ask.',
@@ -643,7 +643,7 @@ export const STORY_STAR_TOPICS: readonly TopicTemplate[] = [
       narrator('The door-holder nods like a teammate.'),
       narrator('The doors close on nobody, and look slightly disappointed.'),
     ],
-    next: 'a bus that leaves while you are still tapping your pass.',
+    next: 'a bus that leaves before you tap your pass.',
     leans: {
       high: {
         title: 'Captain Beep Beep',

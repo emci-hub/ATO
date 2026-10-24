@@ -2,196 +2,196 @@
 import { idea, type InsightIdea } from './define';
 
 export const PLAYFULNESS_IDEAS: readonly InsightIdea[] = [
-  idea('ftw_playfulness_h_01', ['playfulness:high'], {
+  idea("ftw_playfulness_h_01", ["playfulness:high"], {
     focus: [
-      'When things get tense, you tend to make a joke to lighten the mood.',
-      'You usually use humor to ease awkward moments.',
-      'When a meeting gets serious, you tend to look for something funny to say.',
+      "Your answers suggest you turn an ordinary task into play.",
+      "From your answers, you turn an ordinary task into play.",
+      "The pattern in your answers is that you turn an ordinary task into play.",
     ],
-    why: 'Humor helps people relax, but sometimes the people around you need the serious moment to stay serious.',
+    why: "The upside for you is a lighter task. The catch is play that makes the task late.",
     try: [
-      'Next time things get tense, wait a moment before joking, so people can say what they need.',
-      'Ask a friend if they want to laugh or talk, so you match their mood.',
+      "Next time you choose, name whether play is making it late first.",
+      "Before you decide, check whether the straight version is enough.",
     ],
     watch: [
-      'Notice when a joke changes the subject someone wanted to talk about.',
-      'Notice when humor really helps.',
+      "Notice when play makes the task late.",
+      "Notice if you wanted the straight version.",
     ],
   }),
-  idea('ftw_playfulness_h_02', ['playfulness:high'], {
+  idea("ftw_playfulness_h_02", ["playfulness:high"], {
     focus: [
-      'When you have boring tasks, you tend to turn them into a game or add music.',
-      'You usually find ways to make dull work more fun.',
-      'When a task is boring, you tend to put it off until you find a way to make it fun.',
+      "The catch in your answers is play that makes the task late.",
+      "What this can cost you is play that makes the task late.",
+      "A cost worth naming for you is play that makes the task late.",
     ],
-    why: 'Making things fun helps you get them done, but some tasks just need doing even when they’re dull.',
+    why: "The upside for you is a lighter task. The catch is play that makes the task late.",
     try: [
-      'Put on your favorite playlist and do one boring task now, so it gets done.',
-      'Set a small reward for finishing a dull task, so you have something to look forward to.',
+      "Next time you choose, name whether play is making it late first.",
+      "Before you decide, check whether the straight version is enough.",
     ],
     watch: [
-      'Notice which tasks you put off because they’re not fun.',
-      'Notice how quickly boring tasks go once you start.',
+      "Notice when play makes the task late.",
+      "Notice if you wanted the straight version.",
     ],
   }),
-  idea('ftw_playfulness_h_03', ['playfulness:high'], {
+  idea("ftw_playfulness_h_03", ["playfulness:high"], {
     focus: [
-      'With your partner or close friends, you tend to tease and joke around a lot.',
-      'You usually show affection through jokes and playful teasing.',
-      'When you’re close to someone, you tend to keep things light and fun.',
+      "Someone else might notice that you make an ordinary task playful even when the straight version is faster.",
+      "From the outside, you make an ordinary task playful even when the straight version is faster.",
+      "Other people can see that you make an ordinary task playful even when the straight version is faster.",
     ],
-    why: 'Playfulness keeps relationships fun, but your teasing can sting on a day when someone feels low.',
+    why: "The upside for you is a lighter task. The catch is play that makes the task late.",
     try: [
-      'Ask your partner or a friend how their day was before joking around, so you read their mood.',
-      'Tell someone one sincere thing you like about them today, so it isn’t all jokes.',
+      "Next time you choose, name whether play is making it late first.",
+      "Before you decide, check whether the straight version is enough.",
     ],
     watch: [
-      'Notice when someone doesn’t laugh at your teasing.',
-      'Notice how people react to a sincere comment from you.',
+      "Notice when play makes the task late.",
+      "Notice if you wanted the straight version.",
     ],
   }),
-  idea('ftw_playfulness_h_04', ['playfulness:high'], {
+  idea("ftw_playfulness_h_04", ["playfulness:high"], {
     focus: [
-      'When you have free time, you tend to look for something fun to do.',
-      'You usually suggest fun plans when friends are bored.',
-      'When the weekend comes, you tend to want a fun plan more than rest.',
+      "What you might miss is the straight version that would have been faster.",
+      "Your answers leave room to miss the straight version that would have been faster.",
+      "A thing you might skip is the straight version that would have been faster.",
     ],
-    why: 'Your sense of fun brings people together, but rest matters for you too.',
+    why: "The upside for you is a lighter task. The catch is play that makes the task late.",
     try: [
-      'Leave one evening this week for rest, so you have energy for the fun.',
-      'Text a friend a fun idea for the weekend, so the plan has a start.',
+      "Next time you choose, name whether play is making it late first.",
+      "Before you decide, check whether the straight version is enough.",
     ],
     watch: [
-      'Notice when you’re tired but still looking for fun.',
-      'Notice which fun plans leave you happiest.',
+      "Notice when play makes the task late.",
+      "Notice if you wanted the straight version.",
     ],
   }),
-  idea('ftw_playfulness_h_05', ['playfulness:high'], {
+  idea("ftw_playfulness_h_05", ["playfulness:high"], {
     focus: [
-      'When you make a mistake, you tend to laugh at yourself and move on.',
-      'You usually don’t take yourself too seriously.',
-      'When something embarrassing happens, you tend to joke about it.',
+      "The helpful side for you shows up when play can make the task worth doing.",
+      "Your answers also show a use when play can make the task worth doing.",
+      "There is a use for you when play can make the task worth doing.",
     ],
-    why: 'Laughing at yourself makes you easy to be around, but some mistakes might still need a closer look.',
+    why: "The upside for you is a lighter task. The catch is play that makes the task late.",
     try: [
-      'Laugh at your next mistake, then write down one thing to try next time, so you learn from it.',
-      'Ask a friend if they ever wish you were more serious, so you know how your humor lands.',
+      "Next time you choose, name whether play is making it late first.",
+      "Before you decide, check whether the straight version is enough.",
     ],
     watch: [
-      'Notice when a joke covers up something that bothered you.',
-      'Notice how laughing helps you move on.',
+      "Notice when play makes the task late.",
+      "Notice if you wanted the straight version.",
     ],
   }),
-  idea('ftw_playfulness_h_06', ['playfulness:high', 'steadiness:high'], {
+  idea("ftw_playfulness_h_06", ["playfulness:high", "steadiness:high"], {
     focus: [
-      'When things go wrong, you tend to stay calm and find something to laugh about.',
-      'You usually handle stress with humor and a steady attitude.',
-      'When others panic, you tend to stay relaxed and lighten the mood.',
+      "Your answers suggest two things at once: you turn it into play, and you shake a bad day off.",
+      "Both can be true for you in the same week: you turn it into play, and you shake a bad day off.",
+      "In the same week, you turn it into play, and you shake a bad day off.",
     ],
-    why: 'Your calm and humor help people feel safe, but someone stressed might need you to take it seriously first.',
+    why: "The upside for you is a lighter task. The catch is play that makes the task late.",
     try: [
-      'Ask a stressed friend what they need before joking, so they feel heard.',
-      'Share one thing that does worry you with someone close, so they know your serious side.',
+      "Next time you choose, name whether play is making it late first.",
+      "Before you decide, check whether the straight version is enough.",
     ],
     watch: [
-      'Notice when your calm makes someone feel unheard.',
-      'Notice when your humor helps someone relax.',
+      "Notice when play makes the task late.",
+      "Notice if you wanted the straight version.",
     ],
   }),
-  idea('ftw_playfulness_l_01', ['playfulness:low'], {
+  idea("ftw_playfulness_l_01", ["playfulness:low"], {
     focus: [
-      'When there’s work to do, you tend to want to get it done before having fun.',
-      'You usually prefer to focus and finish rather than joke around.',
-      'When a group gets silly during work, you tend to want to get back on track.',
+      "Your answers suggest you take a situation straight instead of turning it into play.",
+      "From your answers, you take a situation straight instead of turning it into play.",
+      "The pattern in your answers is that you take a situation straight instead of turning it into play.",
     ],
-    why: 'Your focus gets things done, but a little fun can help your team work better together.',
+    why: "The upside for you is a straight read. The catch is a straight read that misses a useful joke.",
     try: [
-      'Join in on one joke at work this week, so coworkers see your lighter side.',
-      'Take a ten-minute fun break after a big task, so you recharge.',
+      "Next time you choose, name whether a joke would actually help first.",
+      "Before you decide, check what the straight version leaves out.",
     ],
     watch: [
-      'Notice how a little fun affects your team.',
-      'Notice when you feel left out of the jokes.',
+      "Notice when you miss a joke that would have helped.",
+      "Notice if the playful version was the better read.",
     ],
   }),
-  idea('ftw_playfulness_l_02', ['playfulness:low'], {
+  idea("ftw_playfulness_l_02", ["playfulness:low"], {
     focus: [
-      'When friends joke around, you tend to prefer steering the talk to something real.',
-      'You usually enjoy serious conversations more than banter.',
-      'When you talk with someone, you tend to want to get to the point.',
+      "The catch in your answers is a straight read that misses a useful joke.",
+      "What this can cost you is a straight read that misses a useful joke.",
+      "A cost worth naming for you is a straight read that misses a useful joke.",
     ],
-    why: 'Real conversations matter to you, but light chat can help others feel at ease before they open up.',
+    why: "The upside for you is a straight read. The catch is a straight read that misses a useful joke.",
     try: [
-      'Ask a friend about something fun in their week, so the talk starts light.',
-      'Laugh at one joke today even if it’s small, so people see you enjoy them.',
+      "Next time you choose, name whether a joke would actually help first.",
+      "Before you decide, check what the straight version leaves out.",
     ],
     watch: [
-      'Notice when light chat helps someone open up.',
-      'Notice how you feel after a silly moment.',
+      "Notice when you miss a joke that would have helped.",
+      "Notice if the playful version was the better read.",
     ],
   }),
-  idea('ftw_playfulness_l_03', ['playfulness:low'], {
+  idea("ftw_playfulness_l_03", ["playfulness:low"], {
     focus: [
-      'When you have free time, you tend to spend it on something useful.',
-      'You usually feel better doing something productive than playing.',
-      'When others suggest something silly, you tend to say you have things to do.',
+      "Someone else might notice that you take the straight version even when a playful one is available.",
+      "From the outside, you take the straight version even when a playful one is available.",
+      "Other people can see that you take the straight version even when a playful one is available.",
     ],
-    why: 'Being productive feels good to you, but play is a kind of rest that can recharge you too.',
+    why: "The upside for you is a straight read. The catch is a straight read that misses a useful joke.",
     try: [
-      'Do one thing just for fun today, so you get a real break.',
-      'Say yes to one silly plan this month, so you give play a chance.',
+      "Next time you choose, name whether a joke would actually help first.",
+      "Before you decide, check what the straight version leaves out.",
     ],
     watch: [
-      'Notice how you feel after doing something just for fun.',
-      'Notice when being useful turns into skipping rest.',
+      "Notice when you miss a joke that would have helped.",
+      "Notice if the playful version was the better read.",
     ],
   }),
-  idea('ftw_playfulness_l_04', ['playfulness:low'], {
+  idea("ftw_playfulness_l_04", ["playfulness:low"], {
     focus: [
-      'When something goes wrong, you tend to take it seriously instead of joking about it.',
-      'You usually deal with problems directly, without jokes.',
-      'When a partner jokes about a problem, you tend to want to talk about it properly.',
+      "What you might miss is a joke that would have helped.",
+      "Your answers leave room to miss a joke that would have helped.",
+      "A thing you might skip is a joke that would have helped.",
     ],
-    why: 'Taking things seriously shows you care, but sometimes a little humor helps you and others cope.',
+    why: "The upside for you is a straight read. The catch is a straight read that misses a useful joke.",
     try: [
-      'Look for one funny thing about a small problem today, so it feels lighter.',
-      'Ask your partner why they joke about problems, so you understand their way of coping.',
+      "Next time you choose, name whether a joke would actually help first.",
+      "Before you decide, check what the straight version leaves out.",
     ],
     watch: [
-      'Notice when humor helps someone else feel better.',
-      'Notice how heavy small problems feel when you treat each one as serious.',
+      "Notice when you miss a joke that would have helped.",
+      "Notice if the playful version was the better read.",
     ],
   }),
-  idea('ftw_playfulness_l_05', ['playfulness:low'], {
+  idea("ftw_playfulness_l_05", ["playfulness:low"], {
     focus: [
-      'When you’re focused, people sometimes think you’re upset or unfriendly.',
-      'You usually look serious when you’re concentrating, and others might misread it.',
-      'When coworkers are joking, you tend to stay quiet, and some read it as disapproval.',
+      "The helpful side for you shows up when a straight read can be the right one.",
+      "Your answers also show a use when a straight read can be the right one.",
+      "There is a use for you when a straight read can be the right one.",
     ],
-    why: 'Your serious look can just be focus, but people who don’t know you might read it differently.',
+    why: "The upside for you is a straight read. The catch is a straight read that misses a useful joke.",
     try: [
-      'Smile or say hi to a coworker today, so they see your friendly side.',
-      'Tell a teammate that quiet means you’re focused, so they don’t misread it.',
+      "Next time you choose, name whether a joke would actually help first.",
+      "Before you decide, check what the straight version leaves out.",
     ],
     watch: [
-      'Notice when someone seems unsure how to approach you.',
-      'Notice how people react when you show a lighter side.',
+      "Notice when you miss a joke that would have helped.",
+      "Notice if the playful version was the better read.",
     ],
   }),
-  idea('ftw_playfulness_l_06', ['playfulness:low', 'conscientiousness:high'], {
+  idea("ftw_playfulness_l_06", ["playfulness:low", "conscientiousness:high"], {
     focus: [
-      'When you have a goal, you tend to stay focused and leave fun for later.',
-      'You usually finish your work before you allow yourself to relax.',
-      'You tend to treat fun as something you earn after the work is done.',
+      "Your answers suggest two things at once: you take it straight, and you finish the plan.",
+      "Both can be true for you in the same week: you take it straight, and you finish the plan.",
+      "In the same week, you take it straight, and you finish the plan.",
     ],
-    why: 'Your focus makes you reliable, but waiting to earn fun can mean you rarely get any.',
+    why: "The upside for you is a straight read. The catch is a straight read that misses a useful joke.",
     try: [
-      'Put one fun thing on your calendar this week, so it happens no matter what.',
-      'Take a short fun break in the middle of your work, so you don’t wait until the end.',
+      "Next time you choose, name whether a joke would actually help first.",
+      "Before you decide, check what the straight version leaves out.",
     ],
     watch: [
-      'Notice how often you actually get to the fun part.',
-      'Notice how you feel after a break you didn’t earn.',
+      "Notice when you miss a joke that would have helped.",
+      "Notice if the playful version was the better read.",
     ],
-  }),
+  })
 ];

@@ -37,8 +37,9 @@ import {
 import { writeCategoryDeepDive } from '@/lib/category-deep-dive/generate';
 import { diveLibraryKey, openLibraryDive, writeNewDive, type LibraryDiveOutcome } from '@/lib/category-deep-dive/library';
 import { STORY_LIBRARY_RUNTIME } from '@/lib/story-library/flags';
-import { hydrateStoryLibraryDevice } from '@/lib/story-library/device-store';
+import { hydrateStoryLibraryDevice, persistShownDevice } from '@/lib/story-library/device-store';
 import { renderLibraryDive } from '@/lib/story-library/render';
+import { getShownIds, lineIdsOf, rememberShown } from '@/lib/story-library/shown';
 import { LIBRARY_VERSION } from '@/lib/ai-library/types';
 import { cardJokeStyle } from '@/lib/voice/card-joke';
 import { AI_PRICE_LABEL, AI_TOKEN_PRICE, AI_TOKENS_NEEDED } from '@/lib/ato-tokens';
@@ -127,6 +128,7 @@ export function CategoryDeepDiveCard({
         dives: mergeDives(server ?? [], { ...local.dives, ...(stateRef.current?.dives ?? {}) }),
       };
       stateRef.current = next;
+      rememberShown(Object.values(next.dives).flatMap((entry) => lineIdsOf(entry.dive)));
       setState(next);
     })();
     return () => {
@@ -252,7 +254,14 @@ export function CategoryDeepDiveCard({
         setNote(null);
         try {
           await hydrateStoryLibraryDevice();
-          const dive = renderLibraryDive({ categoryId: def.id, leans, seed: `${userId}|${def.id}|${key}` });
+          const dive = renderLibraryDive({
+            categoryId: def.id,
+            leans,
+            seed: `${userId}|${def.id}|${key}`,
+            shown: getShownIds(),
+          });
+          rememberShown(dive.lineIds);
+          void persistShownDevice();
           const today = diveDay();
           const made: DiveEntry = { dive: { ...dive, leansKey: key }, madeOn: today };
           const base = stateRef.current ?? { userId, dives: {} };

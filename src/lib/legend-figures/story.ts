@@ -8,7 +8,7 @@
  *   howTheTraitWon     — each trait → one REAL moment, by id, + one line linking it
  *   metScene           — "If you'd met them": a short scene built from the entry
  *   differ             — "Where you differ": one line on a side they don't share
- *   whatItMeansForYou  — a few sentences in the moment voice
+ *   whatItMeansForYou  — a few sentences: the real similarity, in plain words
  * The moment text itself is always the hand-written one, never AI.
  *
  * `parseLegendStory` is the mechanical half of "no facts that aren't in the
@@ -58,6 +58,8 @@ export interface LegendStory {
   /** Shared library (wave93): the library card's id (Report) and "you and N others". */
   libraryId?: string;
   others?: number | null;
+  /** Story Library line ids already shown on this card. Saved with the story. */
+  lineIds?: string[];
 }
 
 /** A side of the reader the legend does not share: the opposite of one of its
@@ -254,32 +256,31 @@ ${MOMENT_VOICE_BLOCK}
 RULES
 - Use no fact, date, number, name, place or quote that is not written in THE LEGEND. No invented quotes.
 - Write numbers as words, use no quotation marks, and name no apps, brands or people other than the legend.
-  (Everyday moments still work: "the group chat", "a tab you keep open", "a playlist".)
 - Second person ("you", "your"). Never "you are", never "always", no "!", no emoji, no advice lists.
 - Do not name the reader's trait sides with any word other than the ones given in THE READER.
-- Kind, specific, modern, warm. Write like a friend who just spotted the link and is a little delighted by it.
+- Kind, specific, and plain. State the link. Do not decorate it until the link is unclear.
 - Never leave square or angle brackets in the answer.
+- Do not say the reader did something the answers do not show. A meeting scene is hypothetical. Open it with "Picture an hour with [the legend]." Do not add a second disclaimer. Do not say the talk would stay on the known work.
 
-"whatItMeansForYou" — 2 or 3 sentences, in this order (emci, 2026-10-08):
-  1. The bridge: say plainly what the legend did (in the story, for a tale), in a few words from the entry, and the side of the reader it shares.
-  2. One everyday moment the reader would recognise that shows that same side. It must make physical sense
-     (a voice note is recorded, not typed; a text is sent, not said) and it must clearly be the SAME trait as the bridge.
-  3. A short, kind closing line on what that says about the reader. No advice, no "should".
-  Never write a moment that has no link to the legend. Never stack two unrelated moments.
-  Shape only (do not copy the words, and vary how you open each sentence): "[Legend] did [thing from the entry]. You do a smaller version of that when [one modern moment showing the same side]. [What that quietly says about you]."
+"whatItMeansForYou" — 2 or 3 sentences, in this order:
+  1. The bridge: say plainly what the legend did (in the story, for a tale), in a few words from the entry, and the side of the reader it shares. Say the similarity in plain words.
+  2. Optional: one example of that same side, only if it makes the similarity clearer. Mark it as an example. It must be the SAME trait as the bridge. Do not glue it to the legend's deed with "when" unless they are the same event.
+  3. A short closing line on what that says about the reader. No advice, no "should".
+  Never add a detail that has no link to the legend. Never stack two unrelated scenes.
+  Shape only (do not copy the words): "[Legend] did [thing from the entry]. You share [the plain similarity]. [What that says about you]."
   Reread it once: if a friend would ask "wait, what does that have to do with it?", rewrite it.
 
 "title" — a name for the reader, two to ${TITLE_MAX_WORDS} words, all lowercase, starting with "the".
   It names ONE side they share with the legend (from THE READER) in a fresh, flattering way the reader would want to share.
   Never about worry, doubt, overthinking, loneliness, sadness or struggle, even if that side is one of them. No names, no numbers, no trait words from a test.
 
-"metScene" — "If you'd met": ${SCENE_MIN_WORDS}–${SCENE_MAX_WORDS} words, two sentences. Imagine one ordinary hour the reader spends
-  with the legend (inside the tale, for a story), built only from THE LEGEND's facts and moments: one thing you do together,
-  and one thing the legend would notice about the reader's shared side. Fun and specific; no new events, places, people or facts.
+"metScene" — "Picture an hour with [the legend]": ${SCENE_MIN_WORDS}–${SCENE_MAX_WORDS} words. This is a hypothetical, not the reader's history. One plain imagined scene, only from THE LEGEND's facts and moments (inside the tale, for a story). No new events, places, people or facts.
+  Shape only (do not copy the words): "Picture an hour with [name]: they'd be [one fact from the entry], and you'd [the reader's shared side]."
+  The "Picture" opening is the hypothetical mark. Do not add "that hour is imagined." Do not say the talk would stay on the known work.
 
 "differ" — only when a DIFFERENCE is given at the end: "Where you differ", one sentence, ${DIFFER_MIN_WORDS}–${DIFFER_MAX_WORDS} words, on that
-  difference. Make it interesting and fair: say it plainly, without shaming either side. If the entry says nothing about that side of the legend,
-  do NOT claim they lacked it; contrast the reader's side with what the legend is known for.
+  difference. Make it interesting and fair: say it plainly, without shaming either side. If the entry has a fact for that side, you may name the legend and that fact.
+  If the entry says nothing about that side, state the reader only. Do not name the legend. Do not claim they lacked the side. Do not say it is separate from what they are known for. Do not say the answers land on that side.
 
 ${CARD_JOKE_RULES}
 
@@ -516,6 +517,7 @@ export function parseStoredLegendStory(raw: unknown): LegendStory | null {
     ...(typeof obj.libraryId === 'string' && /^[0-9a-f-]{36}$/.test(obj.libraryId) ? { libraryId: obj.libraryId } : {}),
     ...(typeof obj.others === 'number' ? { others: obj.others } : {}),
     source: obj.source === 'ai' ? 'ai' : obj.source === 'library' ? 'library' : 'fallback',
+    ...(Array.isArray(obj.lineIds) ? { lineIds: obj.lineIds.filter((id): id is string => typeof id === 'string') } : {}),
   };
 }
 

@@ -13,9 +13,9 @@ export function shouldAskNotificationPermission(input: {
 }
 
 /** Copy for the ask sheet. No urgency, no guilt. */
-export const NOTIFICATION_ASK_TITLE = 'Want a nudge now and then?';
+export const NOTIFICATION_ASK_TITLE = 'Allow a reminder?';
 export const NOTIFICATION_ASK_BODY =
-  'ATO can send a short note when your insight is ready. You can change this any time.';
+  'ATO can send a short note when your daily insight is ready. You can turn this off later.';
 export const NOTIFICATION_ASK_YES = 'Turn on';
 export const NOTIFICATION_ASK_NO = 'Not now';
 

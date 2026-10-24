@@ -719,7 +719,7 @@ Run AFTER wave105 is applied and Release B is on the phone. Two accounts that ar
 Run on Release B. Use a fresh or reset account that has never been asked for notifications (iOS: delete the app first, or Settings → ATO → Notifications is "not determined").
 - [ ] **Load insight:** Insights → Load insight shows the Focus · try · watch card. Airplane mode, tap again: "Couldn't load it just now — tap to try again." Back online, tap: it loads.
 - [ ] **Slow network:** with a very slow connection the skeleton gives up in about 10 seconds with a retry, not 45.
-- [ ] **Ask comes after the insight, never at launch:** cold start shows NO system dialog. After the FIRST insight loads, a small sheet appears: "Want a nudge now and then?" with **Turn on** and **Not now**. Read the two lines: keep / fix.
+- [ ] **Ask comes after the insight, never at launch:** cold start shows NO system dialog. After the FIRST insight loads, a small sheet appears: "Allow a reminder?" with **Turn on** and **Not now**. Read the two lines: keep / fix.
 - [ ] **Not now:** closes the sheet, NO iOS dialog, and it never comes back (reload another insight, restart the app).
 - [ ] **Turn on (second fresh account):** the iOS permission dialog opens; Allow → no sheet again. Settings → ATO → Notifications is on.
 - [ ] **Earlier-day label, widget try line / private line, the 7th-day +10:** as before (Box list in docs/ato-finish-roadmap.md step 5).
@@ -823,7 +823,7 @@ If it stops at `complete_signup` with an invite error, tell me (signup needs an 
 
 - [ ] **B1** Insights tab → **Load insight**. → The Focus · try · watch card appears. A weakness line says "you may…" with one small step, and tells you something true, not a diagnosis. Keep / fix.
 - [ ] **B2** Cold-start check: before the first insight, no system notification dialog appeared at launch. → None.
-- [ ] **B3** Right after the FIRST insight loads, a small sheet appears: "Want a nudge now and then?" with **Turn on** and **Not now**. → Read the two lines: keep / fix.
+- [ ] **B3** Right after the FIRST insight loads, a small sheet appears: "Allow a reminder?" with **Turn on** and **Not now**. → Read the two lines: keep / fix.
 - [ ] **B4** On account C tap **Not now**. → Sheet closes, no iOS dialog. Load another insight and restart the app. → The sheet never comes back.
 - [ ] **B5** On a second fresh account/install tap **Turn on**. → The iOS permission dialog opens; Allow. No sheet again. Settings → ATO → Notifications is on.
 - [ ] **B6** Airplane mode on, tap Load insight again. → "Couldn't load it just now — tap to try again." Airplane mode off, tap. → It loads. (On a very slow connection the skeleton gives up in about 10 s with a retry.)

@@ -2,196 +2,196 @@
 import { idea, type InsightIdea } from './define';
 
 export const CONFLICT_ASSERTIVENESS_IDEAS: readonly InsightIdea[] = [
-  idea('ftw_conflict_assertiveness_h_01', ['conflict_assertiveness:high'], {
+  idea("ftw_conflict_assertiveness_h_01", ["conflict_assertiveness:high"], {
     focus: [
-      'When you disagree in a meeting, you tend to say so right away.',
-      'You usually speak up when you think a plan at work won’t work.',
-      'When something seems wrong, you tend to say it out loud instead of waiting.',
+      "Your answers suggest you put a clear point on the table in a disagreement.",
+      "From your answers, you put a clear point on the table in a disagreement.",
+      "The pattern in your answers is that you put a clear point on the table in a disagreement.",
     ],
-    why: 'Speaking up helps catch problems early, but quieter coworkers might not get a chance to share their view with you.',
+    why: "The upside for you is a point that gets said. The catch is a point that takes over the talk.",
     try: [
-      'Ask a quieter coworker for their opinion before you share yours, so more ideas get heard.',
-      'Wait for two other people to speak in your next meeting before you do, so you hear the room first.',
+      "Next time you choose, name whether the point is taking over first.",
+      "Before you decide, check what the other person still needs to say.",
     ],
     watch: [
-      'Notice who talks after you speak up.',
-      'Notice when your first point makes others hold back theirs.',
+      "Notice when your point takes over the whole talk.",
+      "Notice if you missed the other person's point.",
     ],
   }),
-  idea('ftw_conflict_assertiveness_h_02', ['conflict_assertiveness:high'], {
+  idea("ftw_conflict_assertiveness_h_02", ["conflict_assertiveness:high"], {
     focus: [
-      'When you want something from a friend or partner, you tend to ask for it plainly.',
-      'You usually tell people what you need instead of hinting.',
-      'When a plan doesn’t work for you, you tend to say so and suggest another.',
+      "The catch in your answers is a point that takes over the talk.",
+      "What this can cost you is a point that takes over the talk.",
+      "A cost worth naming for you is a point that takes over the talk.",
     ],
-    why: 'Asking plainly makes things clear, but others might hint instead, so you might miss what they need.',
+    why: "The upside for you is a point that gets said. The catch is a point that takes over the talk.",
     try: [
-      'Ask a friend or partner what they’d like this week, so their needs are clear too.',
-      'Pay attention to one hint someone drops today and act on it, so they feel heard.',
+      "Next time you choose, name whether the point is taking over first.",
+      "Before you decide, check what the other person still needs to say.",
     ],
     watch: [
-      'Notice when someone hints at what they want.',
-      'Notice how often your plan becomes the group’s plan.',
+      "Notice when your point takes over the whole talk.",
+      "Notice if you missed the other person's point.",
     ],
   }),
-  idea('ftw_conflict_assertiveness_h_03', ['conflict_assertiveness:high'], {
+  idea("ftw_conflict_assertiveness_h_03", ["conflict_assertiveness:high"], {
     focus: [
-      'When there’s tension with someone, you tend to want to talk it out right away.',
-      'You usually prefer to settle a problem the same day instead of letting it sit.',
-      'When a disagreement starts, you tend to push for an answer quickly.',
+      "Someone else might notice that you say the point when staying quiet would be easier.",
+      "From the outside, you say the point when staying quiet would be easier.",
+      "Other people can see that you say the point when staying quiet would be easier.",
     ],
-    why: 'Dealing with things fast stops them from growing, but the other person might need time to think before talking with you.',
+    why: "The upside for you is a point that gets said. The catch is a point that takes over the talk.",
     try: [
-      'Next time there’s tension, ask the other person when they’d like to talk, so they’re ready too.',
-      'Give a disagreement a night before you bring it up, so you both come in calmer.',
+      "Next time you choose, name whether the point is taking over first.",
+      "Before you decide, check what the other person still needs to say.",
     ],
     watch: [
-      'Notice when the other person seems rushed to answer.',
-      'Notice whether a short pause changes how the talk goes.',
+      "Notice when your point takes over the whole talk.",
+      "Notice if you missed the other person's point.",
     ],
   }),
-  idea('ftw_conflict_assertiveness_h_04', ['conflict_assertiveness:high'], {
+  idea("ftw_conflict_assertiveness_h_04", ["conflict_assertiveness:high"], {
     focus: [
-      'When someone pushes back on your idea, you tend to argue your point harder.',
-      'You usually defend your view strongly when others disagree.',
-      'When a coworker challenges your plan, you tend to explain it again more firmly.',
+      "What you might miss is the other person's point.",
+      "Your answers leave room to miss the other person's point.",
+      "A thing you might skip is the other person's point.",
     ],
-    why: 'Standing by your ideas shows confidence, but listening first might show you something you missed.',
+    why: "The upside for you is a point that gets said. The catch is a point that takes over the talk.",
     try: [
-      'Next time someone pushes back, ask what worries them before you reply, so you understand their side.',
-      'Repeat back the other person’s point in your own words, so they know you heard it.',
+      "Next time you choose, name whether the point is taking over first.",
+      "Before you decide, check what the other person still needs to say.",
     ],
     watch: [
-      'Notice when you start your reply before the other person finishes.',
-      'Notice whether their concern had a point.',
+      "Notice when your point takes over the whole talk.",
+      "Notice if you missed the other person's point.",
     ],
   }),
-  idea('ftw_conflict_assertiveness_h_05', ['conflict_assertiveness:high'], {
+  idea("ftw_conflict_assertiveness_h_05", ["conflict_assertiveness:high"], {
     focus: [
-      'When someone is treated unfairly, you tend to speak up for them.',
-      'You usually step in when you see a friend or coworker being talked over.',
-      'When a decision seems unfair, you tend to say something even if it’s not about you.',
+      "The helpful side for you shows up when the point needs to be in the talk.",
+      "Your answers also show a use when the point needs to be in the talk.",
+      "There is a use for you when the point needs to be in the talk.",
     ],
-    why: 'Speaking up for others is a real strength, but the person you’re defending might want to speak for themselves.',
+    why: "The upside for you is a point that gets said. The catch is a point that takes over the talk.",
     try: [
-      'Ask the person afterward if they wanted you to step in, so you know for next time.',
-      'Next time, look at the person first before you speak, so they get the chance to answer.',
+      "Next time you choose, name whether the point is taking over first.",
+      "Before you decide, check what the other person still needs to say.",
     ],
     watch: [
-      'Notice how the person you defend reacts.',
-      'Notice when someone was about to speak up for themselves.',
+      "Notice when your point takes over the whole talk.",
+      "Notice if you missed the other person's point.",
     ],
   }),
-  idea('ftw_conflict_assertiveness_h_06', ['conflict_assertiveness:high', 'conflict_cooperativeness:high'], {
+  idea("ftw_conflict_assertiveness_h_06", ["conflict_assertiveness:high", "conflict_cooperativeness:high"], {
     focus: [
-      'In a disagreement, you tend to say what you think and then look for a fix that suits everyone.',
-      'You usually speak up in a conflict, but you also want both sides to leave happy.',
-      'When friends argue, you tend to share your view and then help find a middle ground.',
+      "Your answers suggest two things at once: you say your point, and you widen the plan.",
+      "Both can be true for you in the same week: you say your point, and you widen the plan.",
+      "In the same week, you say your point, and you widen the plan.",
     ],
-    why: 'Mixing honesty with care makes you good at solving problems, but it can take a lot of your energy.',
+    why: "The upside for you is a point that gets said. The catch is a point that takes over the talk.",
     try: [
-      'Next time you help settle something, take a short break after, so you have energy left for yourself.',
-      'Let one small disagreement go today, so you save your energy for the ones that matter.',
+      "Next time you choose, name whether the point is taking over first.",
+      "Before you decide, check what the other person still needs to say.",
     ],
     watch: [
-      'Notice how tired you feel after helping settle a disagreement.',
-      'Notice which conflicts actually need you.',
+      "Notice when your point takes over the whole talk.",
+      "Notice if you missed the other person's point.",
     ],
   }),
-  idea('ftw_conflict_assertiveness_l_01', ['conflict_assertiveness:low'], {
+  idea("ftw_conflict_assertiveness_l_01", ["conflict_assertiveness:low"], {
     focus: [
-      'When a roommate leaves a mess, you tend to clean it up instead of saying something.',
-      'You usually choose to keep quiet about small things that bother you.',
-      'When a friend keeps showing up late, you usually don’t mention it.',
+      "Your answers suggest you step back in a disagreement even when the point is ready.",
+      "From your answers, you step back in a disagreement even when the point is ready.",
+      "The pattern in your answers is that you step back in a disagreement even when the point is ready.",
     ],
-    why: 'Keeping quiet avoids small fights, but the same thing can keep happening because the other person doesn’t know it bothers you.',
+    why: "The upside for you is a softer disagreement. The catch is a point that never gets said.",
     try: [
-      'Tell one person about one small thing that bugs you, so they get the chance to change it.',
-      'Practice saying what bothers you in one sentence, out loud and alone, so it feels familiar when you need it.',
+      "Next time you choose, name whether the point still needs saying first.",
+      "Before you decide, check what you are not saying.",
     ],
     watch: [
-      'Notice when the same small thing happens again.',
-      'Notice how you feel after you don’t say something.',
+      "Notice when the point never gets said.",
+      "Notice if you wanted to say it and stepped back.",
     ],
   }),
-  idea('ftw_conflict_assertiveness_l_02', ['conflict_assertiveness:low'], {
+  idea("ftw_conflict_assertiveness_l_02", ["conflict_assertiveness:low"], {
     focus: [
-      'When you disagree in a meeting, you tend to keep it to yourself.',
-      'You usually wait to share a concern until after the meeting, if at all.',
-      'When your boss suggests something you doubt, you tend to go along with it.',
+      "The catch in your answers is a point that never gets said.",
+      "What this can cost you is a point that never gets said.",
+      "A cost worth naming for you is a point that never gets said.",
     ],
-    why: 'Holding back avoids friction, but your view might be the one that saves the team time.',
+    why: "The upside for you is a softer disagreement. The catch is a point that never gets said.",
     try: [
-      'Send your concern to your boss in a short message after the meeting, so it still gets heard.',
-      'Ask one question about the plan in your next meeting, so your doubt gets voiced gently.',
+      "Next time you choose, name whether the point still needs saying first.",
+      "Before you decide, check what you are not saying.",
     ],
     watch: [
-      'Notice when a concern you didn’t share turns out to be right.',
-      'Notice how people react when you do speak up.',
+      "Notice when the point never gets said.",
+      "Notice if you wanted to say it and stepped back.",
     ],
   }),
-  idea('ftw_conflict_assertiveness_l_03', ['conflict_assertiveness:low'], {
+  idea("ftw_conflict_assertiveness_l_03", ["conflict_assertiveness:low"], {
     focus: [
-      'When you want something, you tend to hint at it instead of asking directly.',
-      'You usually hope people will notice what you need without you saying it.',
-      'When a plan doesn’t suit you, you tend to go along and hope it works out.',
+      "Someone else might notice that you step back even when the point is ready to say.",
+      "From the outside, you step back even when the point is ready to say.",
+      "Other people can see that you step back even when the point is ready to say.",
     ],
-    why: 'Hinting feels gentler to you, but people often miss hints and then can’t give you what you want.',
+    why: "The upside for you is a softer disagreement. The catch is a point that never gets said.",
     try: [
-      'Ask for one thing you want this week in a plain sentence, so the other person knows.',
-      'Text your partner or a friend one clear request, so it’s easier than saying it in person.',
+      "Next time you choose, name whether the point still needs saying first.",
+      "Before you decide, check what you are not saying.",
     ],
     watch: [
-      'Notice when you drop a hint and nobody picks it up.',
-      'Notice how people respond when you ask plainly.',
+      "Notice when the point never gets said.",
+      "Notice if you wanted to say it and stepped back.",
     ],
   }),
-  idea('ftw_conflict_assertiveness_l_04', ['conflict_assertiveness:low'], {
+  idea("ftw_conflict_assertiveness_l_04", ["conflict_assertiveness:low"], {
     focus: [
-      'When an argument starts, you tend to stay quiet and wait for it to calm down.',
-      'You usually listen more than you talk when people disagree.',
-      'When voices get raised, you tend to step back instead of joining in.',
+      "What you might miss is the point you meant to say.",
+      "Your answers leave room to miss the point you meant to say.",
+      "A thing you might skip is the point you meant to say.",
     ],
-    why: 'Staying calm helps cool things down, but your view still matters even if you share it later.',
+    why: "The upside for you is a softer disagreement. The catch is a point that never gets said.",
     try: [
-      'When things calm down, share one thought you held back, so your side gets heard.',
-      'Write down your view during a tense talk, so you can share it later when it’s calmer.',
+      "Next time you choose, name whether the point still needs saying first.",
+      "Before you decide, check what you are not saying.",
     ],
     watch: [
-      'Notice what you wanted to say but didn’t.',
-      'Notice whether people ask for your view after things calm down.',
+      "Notice when the point never gets said.",
+      "Notice if you wanted to say it and stepped back.",
     ],
   }),
-  idea('ftw_conflict_assertiveness_l_05', ['conflict_assertiveness:low'], {
+  idea("ftw_conflict_assertiveness_l_05", ["conflict_assertiveness:low"], {
     focus: [
-      'After a disagreement, you tend to apologize first, even when it wasn’t your fault.',
-      'You usually say sorry to end a tense moment, even if you weren’t wrong.',
-      'When there’s tension with a friend, you tend to apologize just to end it.',
+      "The helpful side for you shows up when a softer step can keep the talk alive.",
+      "Your answers also show a use when a softer step can keep the talk alive.",
+      "There is a use for you when a softer step can keep the talk alive.",
     ],
-    why: 'Apologizing keeps the peace, but saying sorry for things you didn’t do can leave your own hurt unspoken.',
+    why: "The upside for you is a softer disagreement. The catch is a point that never gets said.",
     try: [
-      'Next time you go to apologize, ask yourself what you’re sorry for, so you only say it when you mean it.',
-      'Swap one “sorry” for “thanks for waiting” today, so you still sound kind.',
+      "Next time you choose, name whether the point still needs saying first.",
+      "Before you decide, check what you are not saying.",
     ],
     watch: [
-      'Notice when you say sorry out of habit.',
-      'Notice whether the other person also apologizes.',
+      "Notice when the point never gets said.",
+      "Notice if you wanted to say it and stepped back.",
     ],
   }),
-  idea('ftw_conflict_assertiveness_l_06', ['conflict_assertiveness:low', 'conflict_cooperativeness:high'], {
+  idea("ftw_conflict_assertiveness_l_06", ["conflict_assertiveness:low", "conflict_cooperativeness:high"], {
     focus: [
-      'In disagreements, you tend to give in so the other person is happy.',
-      'When a friend wants something different, you usually go with their choice.',
-      'You tend to put the other person’s wishes first when you both want different things.',
+      "Your answers suggest two things at once: you step back, and you widen the plan.",
+      "Both can be true for you in the same week: you step back, and you widen the plan.",
+      "In the same week, you step back, and you widen the plan.",
     ],
-    why: 'Giving in keeps things kind, but doing it often can leave your own wishes out of the decision.',
+    why: "The upside for you is a softer disagreement. The catch is a point that never gets said.",
     try: [
-      'Next time you both want different things, say what you want first, so the other person knows.',
-      'Pick one plan this week to choose yourself, so the choices get shared.',
+      "Next time you choose, name whether the point still needs saying first.",
+      "Before you decide, check what you are not saying.",
     ],
     watch: [
-      'Notice how often you end up doing what the other person wanted.',
-      'Notice when giving in leaves you a little resentful.',
+      "Notice when the point never gets said.",
+      "Notice if you wanted to say it and stepped back.",
     ],
-  }),
+  })
 ];

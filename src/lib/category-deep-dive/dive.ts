@@ -63,6 +63,8 @@ export interface CategoryDive {
   opensOn?: string;
   /** 'library' = assembled from the Story Library (no model). */
   source: 'ai' | 'library';
+  /** Story Library line ids already shown on this card. Saved with the story. */
+  lineIds?: string[];
 }
 
 export const SHOWS_MIN_WORDS = 10;
@@ -203,7 +205,7 @@ RULES
   you need in a few plain words. Never show a score or percentage. A framework or theory name is allowed only when it is
   relevant, accurate and explained, and never as a diagnosis or as a validated assessment ATO is not; never present a
   type code (MBTI and similar) as the reader's own result.
-- Every moment must make physical sense (a voice note is recorded, not typed) and clearly show the leaning it is for.
+- If you add an example, it has to make physical sense (a voice note is recorded, not typed) and clearly show the leaning it is for.
 - Kind, specific, modern, warm, a little delighted. Never a diagnosis or label applied to the reader, never shaming.
 - Closeness (love, partners, family, friends) is an ordinary topic, judged by meaning like any other: describe habits
   with close people plainly and specifically. Never apply a
@@ -215,8 +217,8 @@ RULES
   the reader is on.
 - When a card gives an ANGLE, set every example in that part of life.
 
-STYLE — CLEAR FIRST, MOMENT SECOND (emci, 2026-10-08; this overrides "Describe the moment and stop" above, and the
-counts in the register examples there — "eleven ways", "47 tabs" — are exactly what NOT to do here):
+STYLE — MEANING FIRST (emci, 2026-10-23; this follows the voice block above. Do not
+invent a scene, and do not copy a count from an old example — "eleven ways", "47 tabs" — those are exactly what NOT to do here):
 - Every part opens with a plain, true sentence about the reader that a friend would nod at.
   Only THEN, if it helps, add one short, realistic everyday example (the kind that happens every week,
   not a strange one-off scene). Nobody should have to reread it to get the point.
@@ -240,10 +242,10 @@ FOR EACH CARD:
 "othersNotice" — ${NOTICE_MIN_WORDS}–${NOTICE_MAX_WORDS} words: what the people around the reader probably notice about them here. Kind, specific.
 "whatItMeansForYou" — ${DIVE_MEANS_MIN_WORDS}–${DIVE_MEANS_MAX_WORDS} words, 2 or 3 sentences, in this order:
   1. Name the overall pattern in plain words (what these leanings add up to in this part of the reader's life).
-  2. One realistic everyday moment that shows it.
+  2. Optional: one realistic example, only if it makes that pattern clearer. Mark it as an example. Do not present it as something the reader did.
   3. A short, honest closing line: what that says about the reader, including the real cost if there is one, and where
      it fits one small step they could try.
-  Shape only (do not copy the words): "[Plain pattern]. You see it when [one realistic moment]. [What it says about you, and its cost]."
+  Shape only (do not copy the words): "[Plain pattern]. [Optional example, marked as an example]. [What it says about you, and its cost]."
   Reread it once: if a friend would ask "wait, what?", rewrite it.
 ${CARD_JOKE_RULES}
 
@@ -436,5 +438,6 @@ export function parseStoredDive(raw: unknown): CategoryDive | null {
     ...(typeof obj.joke === 'string' ? { joke: obj.joke } : {}),
     ...(typeof obj.opensOn === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(obj.opensOn) ? { opensOn: obj.opensOn } : {}),
     source: obj.source === 'library' ? 'library' : 'ai',
+    ...(Array.isArray(obj.lineIds) ? { lineIds: obj.lineIds.filter((id): id is string => typeof id === 'string') } : {}),
   };
 }

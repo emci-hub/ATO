@@ -1,8 +1,8 @@
 /**
- * Renders every template × trait × tier × pronoun. Shipping checks pass
- * `requireApproved`. The admin save does not, so a draft can become validated.
+ * Whole-line gate. Length, slots, and the voice bans. A flip note is optional
+ * and is not required to be a scene. Scene phrases are not required.
  */
-import { TRAIT_AXES } from '@/lib/traits';
+import { type TraitAxis } from '@/lib/traits';
 import {
   DIVE_MEANS_MAX_WORDS,
   DIVE_MEANS_MIN_WORDS,
@@ -25,45 +25,32 @@ import {
   legendLineViolation,
   titleViolation,
 } from '@/lib/legend-figures/story';
-import { fill, PRONOUNS } from '@/lib/story-v3/tracery';
+import { PRONOUNS } from '@/lib/story-v3/tracery';
 import { cardJokeViolation } from '@/lib/voice/card-joke';
+import { TAG_QUESTION_CAP, openerOveruse, tagQuestionShare, textIssues } from '@/lib/voice/player-copy';
 
-import type { PronounSet, Reader, StoryLibrary, Template, Tier } from './types';
-import { PRONOUN_TOKENS } from './types';
+import { speak } from './pick';
+import type { StoryLibrary, StoryLine } from './types';
+import { BANNED_PATTERNS } from './types';
 
-const TIERS: readonly Tier[] = ['low', 'mid', 'high'];
-const PRONOUN_IDS = ['you', 'they', 'she', 'he'] as const;
+const QUOTE_ANSWER = 'I make the shared doc anyway';
+/** Same clause legendDeed returns for Marie Curie. Word counts stay stable. */
+const LEGEND_DEED = 'coined the word radioactivity';
+const ALLOWED_TOKEN = /\{(?:Subj|subj|Name|legend|answer|deed)\}/g;
 
-const BANDS: Record<string, readonly [number, number]> = {
-  'dive-shows': [SHOWS_MIN_WORDS, SHOWS_MAX_WORDS],
-  'dive-mix': [MIX_MIN_WORDS, MIX_MAX_WORDS],
-  'dive-notice': [NOTICE_MIN_WORDS, NOTICE_MAX_WORDS],
-  'dive-means': [DIVE_MEANS_MIN_WORDS, DIVE_MEANS_MAX_WORDS],
+const DIVE_BANDS: Record<string, readonly [number, number]> = {
+  shows: [SHOWS_MIN_WORDS, SHOWS_MAX_WORDS],
+  mix: [MIX_MIN_WORDS, MIX_MAX_WORDS],
+  notice: [NOTICE_MIN_WORDS, NOTICE_MAX_WORDS],
+  means: [DIVE_MEANS_MIN_WORDS, DIVE_MEANS_MAX_WORDS],
+};
+
+const LEGEND_BANDS: Record<string, readonly [number, number]> = {
   'legend-won': [8, WON_MAX_WORDS],
   'legend-scene': [SCENE_MIN_WORDS, SCENE_MAX_WORDS],
   'legend-differ': [DIFFER_MIN_WORDS, DIFFER_MAX_WORDS],
   'legend-means': [MEANS_MIN_WORDS, MEANS_MAX_WORDS],
 };
-
-function wordCount(text: string): number {
-  return text.trim().split(/\s+/).filter(Boolean).length;
-}
-
-/** Product rules on top of the filler: voice, joke shape, and the bands the card shows. */
-function productIssue(template: Template, text: string): string | null {
-  const allowed = template.kind === 'legend' ? 'Marie Curie' : '';
-  if (template.id.endsWith('-joke')) {
-    return cardJokeViolation(text) ?? (template.kind === 'legend' ? legendLineViolation(text, allowed, false) : diveLineViolation(text, allowed));
-  }
-  if (template.id.endsWith('-title')) return titleViolation(text, allowed);
-  const line = template.kind === 'legend' ? legendLineViolation(text, allowed, false) : diveLineViolation(text, allowed);
-  if (line) return line;
-  const band = BANDS[template.id];
-  if (!band) return null;
-  const n = wordCount(text);
-  if (n < band[0] || n > band[1]) return `length ${n}, want ${band[0]}–${band[1]}`;
-  return null;
-}
 
 export interface MatrixFailure {
   templateId: string;
@@ -78,90 +65,89 @@ export interface MatrixReport {
   failures: MatrixFailure[];
 }
 
-function readerFor(trait: string, tier: Tier, pronoun: PronounSet, secondary?: Reader['secondary']): Reader {
-  return {
-    name: 'Alex',
-    pronoun,
-    dominant: { trait, tier },
-    ...(secondary ? { secondary } : {}),
-  };
+function words(text: string): number {
+  return text.trim().split(/\s+/).filter(Boolean).length;
+}
+
+function push(failures: MatrixFailure[], trait: string, tier: string, detail: string): void {
+  failures.push({ templateId: 'line', trait, tier, pronoun: '-', detail });
+}
+
+function spoken(line: StoryLine, legend = false): string {
+  return speak(line.text, PRONOUNS.you, 'You', {
+    legend: legend ? 'Marie Curie' : undefined,
+    answer: line.text.includes('{answer}') ? QUOTE_ANSWER : undefined,
+    deed: legend ? LEGEND_DEED : undefined,
+  });
+}
+
+function lineIssues(line: StoryLine): string[] {
+  const issues: string[] = [];
+  if (line.flip.trim() && line.flip.trim() === line.text.trim()) issues.push('flip repeats the line');
+  const bare = line.text.replace(ALLOWED_TOKEN, '');
+  if (/[{}]/.test(bare)) issues.push('unknown slot');
+  for (const ban of BANNED_PATTERNS) {
+    if (ban.test(line.text) || ban.test(line.flip)) issues.push(`banned ${ban}`);
+  }
+  for (const issue of textIssues(`${line.text}\n${line.flip}`)) issues.push(issue.detail);
+  const legend = line.slot.startsWith('legend');
+  const text = spoken(line, legend);
+  const allowed = [legend ? 'Marie Curie' : '', line.text.includes('{answer}') ? QUOTE_ANSWER : ''].filter(Boolean).join(' ');
+  if (line.slot === 'title' || line.slot === 'legend-title') {
+    const title = titleViolation(text, allowed);
+    if (title) issues.push(title);
+  } else if (line.slot === 'joke' || line.slot === 'legend-joke') {
+    const joke = cardJokeViolation(text);
+    if (joke) issues.push(joke);
+    const voice = legend ? legendLineViolation(text, allowed, false) : diveLineViolation(text, allowed);
+    if (voice) issues.push(voice);
+  } else {
+    const voice = legend ? legendLineViolation(text, allowed, false) : diveLineViolation(text, allowed);
+    if (voice) issues.push(voice);
+    const band = legend ? LEGEND_BANDS[line.slot] : DIVE_BANDS[line.slot];
+    if (band) {
+      const n = words(text);
+      if (n < band[0] || n > band[1]) issues.push(`length ${n}, want ${band[0]}–${band[1]}`);
+    }
+  }
+  return issues;
+}
+
+function budgetIssues(lines: readonly StoryLine[]): string[] {
+  const issues: string[] = [];
+  if (tagQuestionShare(lines.map((line) => line.text)) > TAG_QUESTION_CAP) {
+    issues.push(`tag questions are over ${TAG_QUESTION_CAP}`);
+  }
+  const groups = new Map<string, StoryLine[]>();
+  for (const line of lines) {
+    const key = `${line.slot}|${line.trait}|${line.tier}`;
+    const group = groups.get(key) ?? [];
+    group.push(line);
+    groups.set(key, group);
+  }
+  for (const [key, group] of groups) {
+    const hit = openerOveruse(group.map((line) => spoken(line, line.slot.startsWith('legend') || line.text.includes('{legend}') || line.text.includes('{deed}'))));
+    if (hit) issues.push(`${key}: opener "${hit.key}" on ${hit.count}/${hit.total}`);
+  }
+  return issues;
 }
 
 export function validateLibrary(library: StoryLibrary, options: { requireApproved?: boolean } = {}): MatrixReport {
   const failures: MatrixFailure[] = [];
-  let renders = 0;
   const requireApproved = options.requireApproved ?? false;
-  const reserved = new Set<string>(PRONOUN_TOKENS);
-
-  for (const template of library.templates) {
-    for (const spec of template.slots) {
-      if (reserved.has(spec.id)) {
-        failures.push({
-          templateId: template.id,
-          trait: '-',
-          tier: '-',
-          pronoun: '-',
-          detail: `slot id ${spec.id} collides with a pronoun token`,
-        });
-      }
-      const corpus = `${template.body}\n${template.endings.map((ending) => ending.text).join('\n')}`;
-      if (!corpus.includes(`{${spec.id}}`)) {
-        failures.push({
-          templateId: template.id,
-          trait: '-',
-          tier: '-',
-          pronoun: '-',
-          detail: `body is missing {${spec.id}}`,
-        });
-      }
+  let renders = 0;
+  const seen = new Set<string>();
+  for (const line of library.lines) {
+    renders += 1;
+    if (seen.has(line.id)) push(failures, line.trait, String(line.tier), `duplicate id ${line.id}`);
+    seen.add(line.id);
+    if (requireApproved && line.status !== 'approved') {
+      push(failures, line.trait, String(line.tier), `${line.id} is ${line.status}`);
     }
+    for (const issue of lineIssues(line)) push(failures, line.trait, String(line.tier), `${line.id}: ${issue}`);
   }
-
-  for (const template of library.templates) {
-    const usesSecondary = template.slots.some((spec) => spec.trait === 'secondary') || template.endings.some((ending) => ending.when.alsoTrait);
-    for (const trait of TRAIT_AXES) {
-      for (const tier of TIERS) {
-        for (const pronounId of PRONOUN_IDS) {
-          const secondary = usesSecondary
-            ? { trait: trait === 'playfulness' ? 'openness' : 'playfulness', tier: 'high' as const }
-            : undefined;
-          const result = fill(template, readerFor(trait, tier, PRONOUNS[pronounId], secondary), library.entries, `${template.id}|${trait}|${tier}|${pronounId}`, {
-            requireApproved,
-            tokens: template.kind === 'legend' ? { legend: 'Marie Curie' } : undefined,
-          });
-          renders += 1;
-          for (const issue of result.issues) {
-            failures.push({
-              templateId: template.id,
-              trait,
-              tier,
-              pronoun: pronounId,
-              detail: `${issue.code}: ${issue.detail}`,
-            });
-          }
-          const product = productIssue(template, result.text);
-          if (product) {
-            failures.push({
-              templateId: template.id,
-              trait,
-              tier,
-              pronoun: pronounId,
-              detail: product,
-            });
-          }
-          if (Object.values(result.picks).includes('openness-high-screech')) {
-            failures.push({
-              templateId: template.id,
-              trait,
-              tier,
-              pronoun: pronounId,
-              detail: 'sharp decoy was picked',
-            });
-          }
-        }
-      }
-    }
-  }
-
+  for (const issue of budgetIssues(library.lines)) push(failures, '-', '-', issue);
   return { renders, failures };
 }
+
+export type { TraitAxis };

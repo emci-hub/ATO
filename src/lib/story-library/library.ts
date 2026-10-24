@@ -1,12 +1,12 @@
-import { STORY_BANK } from './bank';
-import { STORY_TEMPLATES } from './templates';
+import { STORY_LINES } from './lines';
 import type { StoryLibrary } from './types';
 
 /** Shipped library. Nothing in here is live until `STORY_LIBRARY_RUNTIME` is on. */
 export const STORY_LIBRARY: StoryLibrary = {
-  version: 'storylib-0',
-  templates: [...STORY_TEMPLATES],
-  entries: [...STORY_BANK],
+  version: 'storylib-1',
+  templates: [],
+  entries: [],
+  lines: [...STORY_LINES],
 };
 
 export function templateById(id: string, library: StoryLibrary = STORY_LIBRARY) {

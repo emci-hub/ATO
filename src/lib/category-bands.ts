@@ -38,7 +38,7 @@ export const CATEGORY_FALLBACK_BANDS: Record<CategoryId, readonly CategoryBand[]
     { min: TRAIT_BAND_HIGH_CUT, max: 1.01, lede: 'You want it done your way, and you figure you can handle the hard part.' },
   ],
   cat_agency: [
-    { min: 0, max: TRAIT_BAND_LOW_CUT, lede: 'When it falls apart, you tend to figure it was going to, and that road can feel closed.' },
+    { min: 0, max: TRAIT_BAND_LOW_CUT, lede: 'When it falls apart, you figure it was going to, and that road can feel closed.' },
     { min: TRAIT_BAND_LOW_CUT, max: TRAIT_BAND_HIGH_CUT, lede: 'Sometimes you look for what to change. Sometimes you let it be.' },
     { min: TRAIT_BAND_HIGH_CUT, max: 1.01, lede: 'After a miss you go looking for what to change, and the bigger ask still looks doable.' },
   ],

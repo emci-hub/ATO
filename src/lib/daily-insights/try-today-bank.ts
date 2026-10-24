@@ -49,7 +49,7 @@ export const TRY_TODAY_BANK: readonly TryTodayLine[] = [
   line('cat_openness', 'low', 'stretch', 'dark', "Change one tiny habit today. If it's worse, it was research."),
   line('cat_drive', 'high', 'strength', 'plain', 'Give the hardest task ten minutes before noon.'),
   line('cat_drive', 'high', 'stretch', 'light', 'Take a real 10-minute break. Productivity can wait in the lobby.'),
-  line('cat_drive', 'low', 'strength', 'light', "Pick something purely because it's fun. That counts."),
+  line('cat_drive', 'low', 'strength', 'light', 'Pick something that is just for fun.'),
   line('cat_drive', 'low', 'stretch', 'plain', 'Set one 10-minute goal and tick it off.'),
   line('cat_agency', 'high', 'strength', 'plain', 'Fix one annoying thing nobody else will.'),
   line('cat_agency', 'high', 'stretch', 'plain', "Ask for help on something you'd normally solo."),

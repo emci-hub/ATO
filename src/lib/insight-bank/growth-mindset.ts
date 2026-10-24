@@ -2,196 +2,196 @@
 import { idea, type InsightIdea } from './define';
 
 export const GROWTH_MINDSET_IDEAS: readonly InsightIdea[] = [
-  idea('ftw_growth_mindset_h_01', ['growth_mindset:high'], {
+  idea("ftw_growth_mindset_h_01", ["growth_mindset:high"], {
     focus: [
-      'When you make a mistake, you tend to think about what you’d do differently next time.',
-      'You usually see a failure as a chance to learn something.',
-      'When something goes wrong, you tend to look for the lesson in it.',
+      "Your answers suggest you look for what to change after a miss.",
+      "From your answers, you look for what to change after a miss.",
+      "The pattern in your answers is that you look for what to change after a miss.",
     ],
-    why: 'Learning from mistakes helps you improve, but not every mistake needs a lesson; some can just be let go.',
+    why: "The upside for you is a next try. The catch is a change that never settles.",
     try: [
-      'Write down one lesson from a recent mistake, then close the note, so you move on.',
-      'Let one small mistake go today without picking it apart, so you get a break.',
+      "Next time you choose, name what actually needs to change first.",
+      "Before you decide, check whether the miss can stay closed.",
     ],
     watch: [
-      'Notice when learning from a mistake turns into dwelling on it.',
-      'Notice which lessons you actually use.',
+      "Notice when you change it again before it settles.",
+      "Notice if the miss was fine to leave closed.",
     ],
   }),
-  idea('ftw_growth_mindset_h_02', ['growth_mindset:high'], {
+  idea("ftw_growth_mindset_h_02", ["growth_mindset:high"], {
     focus: [
-      'When you finish a project, you tend to ask how you could have done better.',
-      'You usually want feedback, even when it’s hard to hear.',
-      'When your boss gives notes, you tend to see them as useful rather than personal.',
+      "The catch in your answers is a change that never settles.",
+      "What this can cost you is a change that never settles.",
+      "A cost worth naming for you is a change that never settles.",
     ],
-    why: 'Seeking feedback helps you grow fast, but asking too often can make others feel they have to critique you.',
+    why: "The upside for you is a next try. The catch is a change that never settles.",
     try: [
-      'Ask for feedback on one specific thing, so the answer is easy to give.',
-      'Celebrate one thing that went well before asking what to improve, so you see the good too.',
+      "Next time you choose, name what actually needs to change first.",
+      "Before you decide, check whether the miss can stay closed.",
     ],
     watch: [
-      'Notice when you focus on the feedback and skip the praise.',
-      'Notice which feedback actually helped you.',
+      "Notice when you change it again before it settles.",
+      "Notice if the miss was fine to leave closed.",
     ],
   }),
-  idea('ftw_growth_mindset_h_03', ['growth_mindset:high'], {
+  idea("ftw_growth_mindset_h_03", ["growth_mindset:high"], {
     focus: [
-      'When something is hard, you tend to see it as a chance to get better.',
-      'You usually enjoy a challenge more than an easy task.',
-      'When you’re learning something new, you tend to keep going even when it’s frustrating.',
+      "Someone else might notice that you look for a change even when the miss could stay closed.",
+      "From the outside, you look for a change even when the miss could stay closed.",
+      "Other people can see that you look for a change even when the miss could stay closed.",
     ],
-    why: 'Your love of challenge helps you grow, but rest and easy wins matter for you too.',
+    why: "The upside for you is a next try. The catch is a change that never settles.",
     try: [
-      'Do one easy thing you enjoy today, so you get a break from pushing.',
-      'Pick one goal to focus on this month, so your energy doesn’t spread too thin.',
+      "Next time you choose, name what actually needs to change first.",
+      "Before you decide, check whether the miss can stay closed.",
     ],
     watch: [
-      'Notice when you pick the hard option just because it’s hard.',
-      'Notice how you feel after an easy, fun day.',
+      "Notice when you change it again before it settles.",
+      "Notice if the miss was fine to leave closed.",
     ],
   }),
-  idea('ftw_growth_mindset_h_04', ['growth_mindset:high'], {
+  idea("ftw_growth_mindset_h_04", ["growth_mindset:high"], {
     focus: [
-      'When a friend says they’re bad at something, you tend to tell them they can learn it.',
-      'You usually believe people can improve with practice.',
-      'When someone gives up, you tend to encourage them to try again.',
+      "What you might miss is a rest the next try did not allow.",
+      "Your answers leave room to miss a rest the next try did not allow.",
+      "A thing you might skip is a rest the next try did not allow.",
     ],
-    why: 'Your belief in growth can lift people up, but sometimes a friend just needs you to listen.',
+    why: "The upside for you is a next try. The catch is a change that never settles.",
     try: [
-      'Ask a friend if they want encouragement or just to vent, so you give them what they need.',
-      'Share a time you struggled and improved, so your encouragement feels real.',
+      "Next time you choose, name what actually needs to change first.",
+      "Before you decide, check whether the miss can stay closed.",
     ],
     watch: [
-      'Notice when a friend wants to be heard, not coached.',
-      'Notice how people respond to your encouragement.',
+      "Notice when you change it again before it settles.",
+      "Notice if the miss was fine to leave closed.",
     ],
   }),
-  idea('ftw_growth_mindset_h_05', ['growth_mindset:high'], {
+  idea("ftw_growth_mindset_h_05", ["growth_mindset:high"], {
     focus: [
-      'When you look at your life, you tend to see things you want to improve.',
-      'You usually have a few self-improvement goals going at once.',
-      'When you have free time, you tend to spend it learning something.',
+      "The helpful side for you shows up when a next try can be the right move.",
+      "Your answers also show a use when a next try can be the right move.",
+      "There is a use for you when a next try can be the right move.",
     ],
-    why: 'Wanting to grow keeps your life interesting, but it can make you forget to enjoy your life as it is now.',
+    why: "The upside for you is a next try. The catch is a change that never settles.",
     try: [
-      'Write down three things you like about your life right now, so you see what’s already good.',
-      'Take one evening off from self-improvement, so you get time to just enjoy.',
+      "Next time you choose, name what actually needs to change first.",
+      "Before you decide, check whether the miss can stay closed.",
     ],
     watch: [
-      'Notice when improving feels like pressure instead of fun.',
-      'Notice what you already do well.',
+      "Notice when you change it again before it settles.",
+      "Notice if the miss was fine to leave closed.",
     ],
   }),
-  idea('ftw_growth_mindset_h_06', ['growth_mindset:high', 'locus_of_control:high'], {
+  idea("ftw_growth_mindset_h_06", ["growth_mindset:high", "locus_of_control:high"], {
     focus: [
-      'When something goes wrong, you tend to look at what you could do better and make a plan.',
-      'You usually take responsibility for setbacks and work out how to improve.',
-      'When a plan fails, you tend to ask what you can change next time.',
+      "Your answers suggest two things at once: you look for the change, and you look at your part.",
+      "Both can be true for you in the same week: you look for the change, and you look at your part.",
+      "In the same week, you look for the change, and you look at your part.",
     ],
-    why: 'Owning your part helps you improve, but not every setback is something you could have changed.',
+    why: "The upside for you is a next try. The catch is a change that never settles.",
     try: [
-      'Write down one part of a recent setback that wasn’t up to you, so you don’t carry all of it.',
-      'Pick one change to make next time and let the rest go, so you can move forward.',
+      "Next time you choose, name what actually needs to change first.",
+      "Before you decide, check whether the miss can stay closed.",
     ],
     watch: [
-      'Notice when you take blame for something outside your control.',
-      'Notice how often your plans actually work.',
+      "Notice when you change it again before it settles.",
+      "Notice if the miss was fine to leave closed.",
     ],
   }),
-  idea('ftw_growth_mindset_l_01', ['growth_mindset:low'], {
+  idea("ftw_growth_mindset_l_01", ["growth_mindset:low"], {
     focus: [
-      'When choosing what to do, you tend to stick with things you’re already good at.',
-      'You usually prefer doing what you know you can do well.',
-      'When a new skill feels hard, you tend to decide it’s just not for you.',
+      "Your answers suggest you can treat a miss as the end of that path.",
+      "From your answers, you can treat a miss as the end of that path.",
+      "The pattern in your answers is that you can treat a miss as the end of that path.",
     ],
-    why: 'Sticking to your strengths makes sense, but some skills only feel hard to you at the start.',
+    why: "The upside for you is a clear ending. The catch is an ending that closes a path too soon.",
     try: [
-      'Try one new skill for ten minutes today, so you see how it feels after the start.',
-      'Ask a friend how long it took them to learn something, so you know the slow start is normal.',
+      "Next time you choose, name whether another try is still open first.",
+      "Before you decide, check what the miss actually showed.",
     ],
     watch: [
-      'Notice when you decide you’re bad at something after one try.',
-      'Notice how much easier things get with practice.',
+      "Notice when you close a path that still had a try in it.",
+      "Notice if another try would have changed it.",
     ],
   }),
-  idea('ftw_growth_mindset_l_02', ['growth_mindset:low'], {
+  idea("ftw_growth_mindset_l_02", ["growth_mindset:low"], {
     focus: [
-      'When something isn’t working, you tend to accept it rather than try to change it.',
-      'You usually feel at peace with how things are.',
-      'When a friend pushes you to change something, you tend to feel it’s fine as it is.',
+      "The catch in your answers is an ending that closes a path too soon.",
+      "What this can cost you is an ending that closes a path too soon.",
+      "A cost worth naming for you is an ending that closes a path too soon.",
     ],
-    why: 'Being content saves you stress, but small changes might make some things easier for you.',
+    why: "The upside for you is a clear ending. The catch is an ending that closes a path too soon.",
     try: [
-      'Pick one small thing that bugs you and change it this week, so you see if it helps.',
-      'Ask a friend what they’ve changed recently, so you get one new idea.',
+      "Next time you choose, name whether another try is still open first.",
+      "Before you decide, check what the miss actually showed.",
     ],
     watch: [
-      'Notice when something bothers you more than you let on.',
-      'Notice whether a small change would be worth it.',
+      "Notice when you close a path that still had a try in it.",
+      "Notice if another try would have changed it.",
     ],
   }),
-  idea('ftw_growth_mindset_l_03', ['growth_mindset:low'], {
+  idea("ftw_growth_mindset_l_03", ["growth_mindset:low"], {
     focus: [
-      'When you get critical feedback, you tend to take it as a judgment of you as a person.',
-      'You usually take criticism as a sign you’re not good at something.',
-      'When your work is critiqued, you tend to feel discouraged for a while.',
+      "Someone else might notice that you treat a miss as final even when another try is available.",
+      "From the outside, you treat a miss as final even when another try is available.",
+      "Other people can see that you treat a miss as final even when another try is available.",
     ],
-    why: 'Feedback can sting, but it’s usually about one piece of your work, not about you as a person.',
+    why: "The upside for you is a clear ending. The catch is an ending that closes a path too soon.",
     try: [
-      'Write down one specific thing to try from the feedback, so it becomes a step, not a judgment.',
-      'Ask the person what they think went well, so you get the full picture.',
+      "Next time you choose, name whether another try is still open first.",
+      "Before you decide, check what the miss actually showed.",
     ],
     watch: [
-      'Notice when feedback makes you want to quit.',
-      'Notice how often feedback helped you later.',
+      "Notice when you close a path that still had a try in it.",
+      "Notice if another try would have changed it.",
     ],
   }),
-  idea('ftw_growth_mindset_l_04', ['growth_mindset:low'], {
+  idea("ftw_growth_mindset_l_04", ["growth_mindset:low"], {
     focus: [
-      'When things are going fine, you tend to see no reason to change them.',
-      'You usually feel happy with the skills and routines you already have.',
-      'When others talk about self-improvement, you tend to feel it’s not for you.',
+      "What you might miss is a try that was still open.",
+      "Your answers leave room to miss a try that was still open.",
+      "A thing you might skip is a try that was still open.",
     ],
-    why: 'Being happy with what you have is a strength, and growth can be small and easy when you want it.',
+    why: "The upside for you is a clear ending. The catch is an ending that closes a path too soon.",
     try: [
-      'Pick one thing you enjoy and learn one new fact about it, so growth feels fun.',
-      'Watch one short video about a hobby you like, so you learn without pressure.',
+      "Next time you choose, name whether another try is still open first.",
+      "Before you decide, check what the miss actually showed.",
     ],
     watch: [
-      'Notice what you’re curious about.',
-      'Notice when you feel like trying something new.',
+      "Notice when you close a path that still had a try in it.",
+      "Notice if another try would have changed it.",
     ],
   }),
-  idea('ftw_growth_mindset_l_05', ['growth_mindset:low'], {
+  idea("ftw_growth_mindset_l_05", ["growth_mindset:low"], {
     focus: [
-      'When something new doesn’t work out at first, you tend to stop trying.',
-      'You usually move on quickly when a new hobby feels hard.',
-      'When you struggle at the start, you tend to think you’re not made for it.',
+      "The helpful side for you shows up when some misses really are the end of a path.",
+      "Your answers also show a use when some misses really are the end of a path.",
+      "There is a use for you when some misses really are the end of a path.",
     ],
-    why: 'Moving on saves you frustration, but many skills feel awkward for everyone at the start.',
+    why: "The upside for you is a clear ending. The catch is an ending that closes a path too soon.",
     try: [
-      'Give a new skill three tries before deciding, so you see past the awkward start.',
-      'Write down one thing you got better at over time, so you remember it’s possible.',
+      "Next time you choose, name whether another try is still open first.",
+      "Before you decide, check what the miss actually showed.",
     ],
     watch: [
-      'Notice when you quit right after the first hard moment.',
-      'Notice how others struggle at the start too.',
+      "Notice when you close a path that still had a try in it.",
+      "Notice if another try would have changed it.",
     ],
   }),
-  idea('ftw_growth_mindset_l_06', ['growth_mindset:low', 'openness:low'], {
+  idea("ftw_growth_mindset_l_06", ["growth_mindset:low", "openness:low"], {
     focus: [
-      'You tend to stick with the activities and skills you already know and enjoy.',
-      'When friends try new hobbies, you usually prefer to stay with what you like.',
-      'You tend to feel happiest doing the things you’ve done for years.',
+      "Your answers suggest two things at once: you close the path, and you keep a known favorite.",
+      "Both can be true for you in the same week: you close the path, and you keep a known favorite.",
+      "In the same week, you close the path, and you keep a known favorite.",
     ],
-    why: 'Knowing what you enjoy is a strength, but a small new thing can add some fun to your week.',
+    why: "The upside for you is a clear ending. The catch is an ending that closes a path too soon.",
     try: [
-      'Join a friend for one new activity this month, so you try it with someone you trust.',
-      'Pick one familiar hobby and try a new version of it, so it feels new but safe.',
+      "Next time you choose, name whether another try is still open first.",
+      "Before you decide, check what the miss actually showed.",
     ],
     watch: [
-      'Notice when you say no to something new out of habit.',
-      'Notice which old favorites still make you happy.',
+      "Notice when you close a path that still had a try in it.",
+      "Notice if another try would have changed it.",
     ],
-  }),
+  })
 ];

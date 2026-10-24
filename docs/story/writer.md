@@ -106,7 +106,7 @@ Proof: {evidenceMove}.                                ← L3 (required; the spec
 {tipOrWatchOut}                                       ← L4 (required; one kind real-life tip, may carry a tiny wink)
 ```
 - `categoryName` is the **real user-facing label** from `src/lib/categories.ts` (`CATEGORY_DEFS[].name`), never the id.
-- `leanPhrase` is keyed by categoryId + lean (table below). It is written from the repo's `TRAIT_POLE_LINES` (src/lib/traits.ts), so it matches what the app already says about the user.
+- `leanPhrase` is keyed by categoryId + lean (table below). The live strings are `STORY_LEAN_PHRASES` in `src/lib/story-v3/lean-phrases.ts`.
 - `evidenceMove` belongs to the skeleton + lean. It names the concrete action from card 3 in ≤12 words ("you rewrote the chat instead of deleting it").
 - `tipOrWatchOut` is keyed by categoryId + lean (+ optionally the setting). It starts with "Tip:" or "Watch out:", is ≤20 words, kind, and may end with a tiny wink.
 - **Rules:**
@@ -118,17 +118,17 @@ Proof: {evidenceMove}.                                ← L3 (required; the spec
 
 | categoryId | Repo label (`name`) | high leanPhrase | low leanPhrase |
 |---|---|---|---|
-| cat_steadiness | Steadiness | you stay even when things wobble | you feel the wobble, then ride it |
-| cat_openness | Openness to life | you say yes to the untried path | you like the known path, done well |
-| cat_drive | Drive | you push until it's done | you go at your own pace and still get there |
-| cat_agency | Agency | you treat the outcome as yours to shape | you roll with what the day deals |
-| cat_social | Everyday social energy | people charge you up, even strangers | you recharge in quieter company |
-| cat_communication | Communication | you say the hard thing, and keep it kind | you'd rather step back than push |
-| cat_love | Love / closeness ⚠️ map | you lean in close | you keep a little room, even with people you like |
-| cat_independence | Independence & closeness ⚠️ map | you like doing things your own way | you're happy sharing someone else's path |
-| cat_levity | Levity | you reach for the lighter take | you keep a straight face and get it done |
-| cat_structure | Structure vs. spontaneity ⚠️ map | you like a plan and follow it through | you keep plans loose and change them as you go |
-| cat_resilience | Resilience under pressure | pressure makes you sharper | pressure hits hard, but you find a side door |
+| cat_steadiness | Steadiness | you shake a bad day off and keep going | you feel a bad day for longer |
+| cat_openness | Openness to life | you try something new | you stick with what you already like |
+| cat_drive | Drive | you push until the work is done | you go at your own pace and still finish |
+| cat_agency | Agency | you change one piece and try it again | you leave the outcome to the day |
+| cat_social | Everyday social energy | you want time with other people | you want less time in a crowd |
+| cat_communication | Communication | you say the hard part, then look for what works for both of you | you step back and let the other person talk |
+| cat_love | Love / closeness ⚠️ map | you stay close and answer | you care and still leave a little room |
+| cat_independence | Independence & closeness ⚠️ map | you choose the way before anyone else does | you take a plan someone else already made |
+| cat_levity | Levity | you lighten a hard thing, then say it plain | you take a hard talk straight |
+| cat_structure | Structure vs. spontaneity ⚠️ map | you make a plan and follow it through | you change the plan as you go |
+| cat_resilience | Resilience under pressure | you stay and try again after a miss | a bad day stays with you and you still finish |
 
 ⚠️ **Map categories** (cat_love, cat_independence, cat_structure) are 2-D in the repo (`shape: 'map'`), so a single high/low lean is a simplification. Before shipping, someone needs to confirm which axis "high" means for these three; the repo only defines high/low per *axis*, not per category.
 

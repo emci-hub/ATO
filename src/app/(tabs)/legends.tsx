@@ -83,7 +83,7 @@ export const LEGENDS_ONE_TODAY_COPY = 'One free reveal a day. Pick a frame.';
 export const legendsAiLine = (tokens: number) =>
   `With ${AI_TOKEN_PRICE} tokens it comes with your AI card (you have ${tokens}); without them you get the museum’s own words.`;
 export const LEGENDS_PAID_FAILED =
-  'The AI card didn’t come through, so this reveal didn’t happen. Your tokens come back (once a day). Try again in a bit.';
+  'The legend card did not load, so this reveal was not saved. Try again later. If tokens were charged for this try, they come back (a failed charge is refunded once a day).';
 export const legendsPaidLine = (tokens: number) =>
   `Want another? Reveal one more for ${AI_TOKEN_PRICE} tokens (you have ${tokens}).`;
 export const HALL_CHAPTERS_COPY = 'You’ve met every legend here. The frames now hide new chapters about them.';

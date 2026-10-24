@@ -212,7 +212,7 @@ export const LOADED_LINES: readonly LoadedLine[] = [
   { tag: "extraversion:low+relatedness:high", text: "You skipped the party and missed everyone at it." },
   { tag: "extraversion:high+relatedness:low", text: "You were great at the party. You couldn't name three things anyone said." },
   { tag: "extraversion:high+relatedness:low", text: "You love a crowd the way you love weather." },
-  { tag: "extraversion:high+relatedness:low", text: "You met six people and remembered the vibe." },
+  { tag: "extraversion:high+relatedness:low", text: "You met six people and remembered the quiet one." },
   { tag: "conscientiousness:high+playfulness:low", text: "You finished everything and then looked for more everything." },
   { tag: "conscientiousness:high+playfulness:low", text: "The holiday had a spreadsheet. The spreadsheet had tabs." },
   { tag: "conscientiousness:high+playfulness:low", text: "You earned the break, took it, and timed it." },

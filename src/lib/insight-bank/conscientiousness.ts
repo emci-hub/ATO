@@ -2,196 +2,196 @@
 import { idea, type InsightIdea } from './define';
 
 export const CONSCIENTIOUSNESS_IDEAS: readonly InsightIdea[] = [
-  idea('ftw_conscientiousness_h_01', ['conscientiousness:high'], {
+  idea("ftw_conscientiousness_h_01", ["conscientiousness:high"], {
     focus: [
-      'You tend to keep working through your to-do list even when you’re tired and could stop.',
-      'When there’s still something on your list, you usually find it hard to relax.',
-      'You tend to feel restless on a day off if a few tasks are still unfinished.',
+      "Your answers suggest you see a plan through once it is started.",
+      "From your answers, you see a plan through once it is started.",
+      "The pattern in your answers is that you see a plan through once it is started.",
     ],
-    why: 'Finishing things gives you a sense of control, but rest can start to feel like something you have to earn.',
+    why: "The upside for you is a finished plan. The catch is a plan that crowds the rest of the day.",
     try: [
-      'Put one thing on today’s list that’s just for rest, so taking a break counts as getting something done.',
-      'Pick a time tonight to stop working, so the list doesn’t decide when your day ends.',
+      "Next time you choose, name what the plan is costing you first.",
+      "Before you decide, check whether the plan still needs to be finished.",
     ],
     watch: [
-      'Notice when you feel guilty for resting with tasks still left.',
-      'Notice how much of your list actually had to be done today.',
+      "Notice when you finish a plan that no longer matters.",
+      "Notice if an open item was the one that mattered.",
     ],
   }),
-  idea('ftw_conscientiousness_h_02', ['conscientiousness:high'], {
+  idea("ftw_conscientiousness_h_02", ["conscientiousness:high"], {
     focus: [
-      'When plans change last minute, you tend to feel thrown off even if the new plan is fine.',
-      'You usually find it hard when a friend changes plans you already had in your calendar.',
-      'When a set plan falls through, you tend to feel annoyed for longer than you’d expect.',
+      "The catch in your answers is a plan that crowds the rest of the day.",
+      "What this can cost you is a plan that crowds the rest of the day.",
+      "A cost worth naming for you is a plan that crowds the rest of the day.",
     ],
-    why: 'Planning ahead helps you feel ready, so a sudden change can feel like losing the time you spent getting ready.',
+    why: "The upside for you is a finished plan. The catch is a plan that crowds the rest of the day.",
     try: [
-      'Next time plans change, take a minute to list what’s still the same, so the change feels smaller.',
-      'Leave one evening this week with no plan at all, so you can practice going with it.',
+      "Next time you choose, name what the plan is costing you first.",
+      "Before you decide, check whether the plan still needs to be finished.",
     ],
     watch: [
-      'Notice whether you’re upset about the new plan or about the change itself.',
-      'Notice how quickly you settle once the new plan starts.',
+      "Notice when you finish a plan that no longer matters.",
+      "Notice if an open item was the one that mattered.",
     ],
   }),
-  idea('ftw_conscientiousness_h_03', ['conscientiousness:high'], {
+  idea("ftw_conscientiousness_h_03", ["conscientiousness:high"], {
     focus: [
-      'In group projects, you tend to take over the organizing because you want it done right.',
-      'When coworkers are slow to plan, you usually step in and make the schedule yourself.',
-      'You tend to end up as the planner in any group because you care about getting it done.',
+      "Someone else might notice that you keep going until the plan is done.",
+      "From the outside, you keep going until the plan is done.",
+      "Other people can see that you keep going until the plan is done.",
     ],
-    why: 'Your planning keeps things on track, but people can start relying on you for all of it without noticing the extra work.',
+    why: "The upside for you is a finished plan. The catch is a plan that crowds the rest of the day.",
     try: [
-      'Ask one person in your group to own a part of the plan, so it isn’t all on you.',
-      'Write down what you’re doing for the group this week, so you can see if the load is fair.',
+      "Next time you choose, name what the plan is costing you first.",
+      "Before you decide, check whether the plan still needs to be finished.",
     ],
     watch: [
-      'Notice when you take on a task before anyone else has a chance to.',
-      'Notice whether you’re tired from your own work or from everyone else’s.',
+      "Notice when you finish a plan that no longer matters.",
+      "Notice if an open item was the one that mattered.",
     ],
   }),
-  idea('ftw_conscientiousness_h_04', ['conscientiousness:high'], {
+  idea("ftw_conscientiousness_h_04", ["conscientiousness:high"], {
     focus: [
-      'You tend to check your work a few extra times before you send it, even when it’s already good.',
-      'Before you send an email or hand something in, you usually go over it more than once.',
-      'When something has your name on it, you tend to keep fixing small details.',
+      "What you might miss is time the plan did not leave you.",
+      "Your answers leave room to miss time the plan did not leave you.",
+      "A thing you might skip is time the plan did not leave you.",
     ],
-    why: 'Caring about details makes your work strong, but extra checking can take time you’d rather spend elsewhere.',
+    why: "The upside for you is a finished plan. The catch is a plan that crowds the rest of the day.",
     try: [
-      'Set a timer for your next review and send it when the timer ends, so you send it once it’s good enough.',
-      'Before you send your next message, read it once and then hit send, so you can see it go fine.',
+      "Next time you choose, name what the plan is costing you first.",
+      "Before you decide, check whether the plan still needs to be finished.",
     ],
     watch: [
-      'Notice when the changes you’re making stop making a real difference.',
-      'Notice how often someone else even sees the details you fixed.',
+      "Notice when you finish a plan that no longer matters.",
+      "Notice if an open item was the one that mattered.",
     ],
   }),
-  idea('ftw_conscientiousness_h_05', ['conscientiousness:high'], {
+  idea("ftw_conscientiousness_h_05", ["conscientiousness:high"], {
     focus: [
-      'When someone asks you for help, you tend to say yes because you know you’ll follow through.',
-      'You usually keep your promises, even the ones you said yes to too fast.',
-      'When a friend or coworker needs something done, you’re often the one they ask first.',
+      "The helpful side for you shows up when the plan is worth finishing.",
+      "Your answers also show a use when the plan is worth finishing.",
+      "There is a use for you when the plan is worth finishing.",
     ],
-    why: 'People trust you because you deliver, and that trust can quietly fill your week with other people’s tasks.',
+    why: "The upside for you is a finished plan. The catch is a plan that crowds the rest of the day.",
     try: [
-      'Before you say yes to the next request, wait an hour, so you can check if you have room.',
-      'List what you’ve promised people this week, so you can see if anything should be handed back.',
+      "Next time you choose, name what the plan is costing you first.",
+      "Before you decide, check whether the plan still needs to be finished.",
     ],
     watch: [
-      'Notice when you say yes before you’ve checked your own plans.',
-      'Notice which promises you make out of habit.',
+      "Notice when you finish a plan that no longer matters.",
+      "Notice if an open item was the one that mattered.",
     ],
   }),
-  idea('ftw_conscientiousness_h_06', ['conscientiousness:high', 'steadiness:low'], {
+  idea("ftw_conscientiousness_h_06", ["conscientiousness:high", "steadiness:low"], {
     focus: [
-      'When a deadline gets close, you tend to stay on top of it, but the stress can keep you up at night.',
-      'You usually meet your deadlines, but you tend to worry about them more than the work needs.',
-      'When you have a lot due, you tend to get it all done while feeling tense the whole time.',
+      "Your answers suggest two things at once: you finish the plan, and you feel a bad day longer.",
+      "Both can be true for you in the same week: you finish the plan, and you feel a bad day longer.",
+      "In the same week, you finish the plan, and you feel a bad day longer.",
     ],
-    why: 'Caring a lot is part of why you finish things, but carrying that worry home can wear you down.',
+    why: "The upside for you is a finished plan. The catch is a plan that crowds the rest of the day.",
     try: [
-      'Write tomorrow’s first task down before bed, so your mind doesn’t have to hold it overnight.',
-      'Take a five-minute walk after your next big task, so you have a moment to unwind.',
+      "Next time you choose, name what the plan is costing you first.",
+      "Before you decide, check whether the plan still needs to be finished.",
     ],
     watch: [
-      'Notice when you’re worrying about work that’s already on track.',
-      'Notice how you feel the day after a deadline passes.',
+      "Notice when you finish a plan that no longer matters.",
+      "Notice if an open item was the one that mattered.",
     ],
   }),
-  idea('ftw_conscientiousness_l_01', ['conscientiousness:low'], {
+  idea("ftw_conscientiousness_l_01", ["conscientiousness:low"], {
     focus: [
-      'Plans changing doesn’t bother you much, but chores and errands tend to pile up without a set time.',
-      'You handle changing plans well, but small tasks can pile up when there’s no deadline.',
-      'When nothing’s on the calendar, you tend to let small tasks wait until they become urgent.',
+      "Your answers suggest you keep plans loose on purpose.",
+      "From your answers, you keep plans loose on purpose.",
+      "The pattern in your answers is that you keep plans loose on purpose.",
     ],
-    why: 'Being flexible helps you handle surprises, but tasks without a deadline can end up waiting until they’re stressful.',
+    why: "The upside for you is room to change the day. The catch is a loose plan that never gets finished.",
     try: [
-      'Pick one small task you’ve been putting off and do the first five minutes now, so it starts moving.',
-      'Put two errands on your calendar for this week, so they get a time instead of waiting.',
+      "Next time you choose, name the one piece that does need a plan first.",
+      "Before you decide, check whether this plan can stay loose.",
     ],
     watch: [
-      'Notice which tasks you keep moving to tomorrow.',
-      'Notice how you feel once a small task you put off is finally done.',
+      "Notice when a loose plan leaves the important part undone.",
+      "Notice if the loose part was the one that needed a plan.",
     ],
   }),
-  idea('ftw_conscientiousness_l_02', ['conscientiousness:low'], {
+  idea("ftw_conscientiousness_l_02", ["conscientiousness:low"], {
     focus: [
-      'When friends ask what you want to do this weekend, you tend to say you’ll decide closer to the day.',
-      'You usually prefer to make weekend plans the day of, instead of locking them in early.',
-      'When someone wants to plan ahead with you, you tend to keep your answer open as long as you can.',
+      "The catch in your answers is a loose plan that never gets finished.",
+      "What this can cost you is a loose plan that never gets finished.",
+      "A cost worth naming for you is a loose plan that never gets finished.",
     ],
-    why: 'Keeping plans open lets you follow your mood, but friends who plan ahead might feel unsure if you’re coming.',
+    why: "The upside for you is room to change the day. The catch is a loose plan that never gets finished.",
     try: [
-      'Text one friend a clear yes or no about a plan this week, so they can plan around you.',
-      'Pick one plan for the weekend now and keep the rest open, so you get both.',
+      "Next time you choose, name the one piece that does need a plan first.",
+      "Before you decide, check whether this plan can stay loose.",
     ],
     watch: [
-      'Notice when a friend asks twice about the same plan.',
-      'Notice whether keeping things open makes you feel free or stuck.',
+      "Notice when a loose plan leaves the important part undone.",
+      "Notice if the loose part was the one that needed a plan.",
     ],
   }),
-  idea('ftw_conscientiousness_l_03', ['conscientiousness:low'], {
+  idea("ftw_conscientiousness_l_03", ["conscientiousness:low"], {
     focus: [
-      'You tend to know where things are in your own mess, even when it looks like chaos to others.',
-      'Your space usually looks messy to others, but you tend to find what you need fine.',
-      'When your room or desk gets cluttered, you tend not to notice until someone points it out.',
+      "Someone else might notice that you leave the plan open even when others want it locked.",
+      "From the outside, you leave the plan open even when others want it locked.",
+      "Other people can see that you leave the plan open even when others want it locked.",
     ],
-    why: 'A little mess doesn’t slow you down, but it can stress out a partner or roommate who shares the space with you.',
+    why: "The upside for you is room to change the day. The catch is a loose plan that never gets finished.",
     try: [
-      'Spend ten minutes clearing one shared spot today, so the people you live with get a break.',
-      'Pick one place for your keys and wallet, so your mornings go smoother.',
+      "Next time you choose, name the one piece that does need a plan first.",
+      "Before you decide, check whether this plan can stay loose.",
     ],
     watch: [
-      'Notice when you spend time looking for something you just had.',
-      'Notice how the people you live with react to shared spaces.',
+      "Notice when a loose plan leaves the important part undone.",
+      "Notice if the loose part was the one that needed a plan.",
     ],
   }),
-  idea('ftw_conscientiousness_l_04', ['conscientiousness:low'], {
+  idea("ftw_conscientiousness_l_04", ["conscientiousness:low"], {
     focus: [
-      'When you start a new habit, you tend to go strong for a week and then let it slide.',
-      'You usually begin new routines with a lot of energy, but they tend to fade after a few weeks.',
-      'When a new workout or habit gets repetitive, you tend to drift away from it.',
+      "What you might miss is a finish that needed a tighter plan.",
+      "Your answers leave room to miss a finish that needed a tighter plan.",
+      "A thing you might skip is a finish that needed a tighter plan.",
     ],
-    why: 'Interest tends to drive you more than routine, so habits can stick when they stay a little fun.',
+    why: "The upside for you is room to change the day. The catch is a loose plan that never gets finished.",
     try: [
-      'Make your habit smaller today, like five minutes instead of thirty, so it’s easy to keep going.',
-      'Change one thing about a habit that’s fading, so it feels new enough to continue.',
+      "Next time you choose, name the one piece that does need a plan first.",
+      "Before you decide, check whether this plan can stay loose.",
     ],
     watch: [
-      'Notice the day a habit starts to feel like a chore.',
-      'Notice which habits you’ve kept and what made them different.',
+      "Notice when a loose plan leaves the important part undone.",
+      "Notice if the loose part was the one that needed a plan.",
     ],
   }),
-  idea('ftw_conscientiousness_l_05', ['conscientiousness:low'], {
+  idea("ftw_conscientiousness_l_05", ["conscientiousness:low"], {
     focus: [
-      'When a text needs a real answer, you tend to leave it for later and then forget it.',
-      'You usually mean to reply to messages, but the ones that need thought tend to sit unanswered.',
-      'When friends send long messages, you tend to wait for the right moment to reply, and it slips.',
+      "The helpful side for you shows up when the day needs room to change.",
+      "Your answers also show a use when the day needs room to change.",
+      "There is a use for you when the day needs room to change.",
     ],
-    why: 'You want to give a good answer, but waiting for the perfect time can leave friends wondering if you saw it.',
+    why: "The upside for you is room to change the day. The catch is a loose plan that never gets finished.",
     try: [
-      'Reply to one waiting message now with a short note, so the friend knows you saw it.',
-      'Set a reminder for the texts you want to answer properly, so they don’t slip away.',
+      "Next time you choose, name the one piece that does need a plan first.",
+      "Before you decide, check whether this plan can stay loose.",
     ],
     watch: [
-      'Notice how many messages you’ve opened but not answered.',
-      'Notice whether a short reply would have been enough.',
+      "Notice when a loose plan leaves the important part undone.",
+      "Notice if the loose part was the one that needed a plan.",
     ],
   }),
-  idea('ftw_conscientiousness_l_06', ['conscientiousness:low', 'openness:high'], {
+  idea("ftw_conscientiousness_l_06", ["conscientiousness:low", "openness:high"], {
     focus: [
-      'You tend to jump from idea to idea, so lots of things get started and fewer get finished.',
-      'When a new idea grabs you, you usually drop what you were doing and chase it.',
-      'You tend to have more exciting plans than finished ones, because new ideas keep showing up.',
+      "Your answers suggest two things at once: you keep plans loose, and you try new things.",
+      "Both can be true for you in the same week: you keep plans loose, and you try new things.",
+      "In the same week, you keep plans loose, and you try new things.",
     ],
-    why: 'Following new ideas keeps your life interesting, but the things you care about most might need you to stay with them longer.',
+    why: "The upside for you is room to change the day. The catch is a loose plan that never gets finished.",
     try: [
-      'Write new ideas in a note instead of starting them, so you can finish one thing first.',
-      'Pick the one unfinished project you’d be proudest to complete and work on it for ten minutes.',
+      "Next time you choose, name the one piece that does need a plan first.",
+      "Before you decide, check whether this plan can stay loose.",
     ],
     watch: [
-      'Notice what you were working on the last time a new idea pulled you away.',
-      'Notice which unfinished things still matter to you.',
+      "Notice when a loose plan leaves the important part undone.",
+      "Notice if the loose part was the one that needed a plan.",
     ],
-  }),
+  })
 ];

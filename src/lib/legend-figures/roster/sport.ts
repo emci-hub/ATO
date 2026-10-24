@@ -254,7 +254,7 @@ export const SPORT_LEGENDS: readonly LegendFigure[] = [
       moment('m2', 'His career home run total stood at 714.', src(wiki('Babe_Ruth'), '714')),
     ],
     angles: [
-      angle('a1', 'pitcher to slugger', 'What does a pitcher who became the greatest hitter have in common with you?', 'Switching roles can unlock the thing you’re best at.'),
+      angle('a1', 'pitcher to slugger', 'What does a pitcher who became the greatest hitter have in common with you?', 'Switching roles can show the thing you’re best at.'),
       angle('a2', 'the big swing', 'Why swing for the fences every time?', 'Going big sometimes means missing, and that’s part of it.'),
       angle('a3', 'the nickname', 'What does it mean when the world gives you a nickname?', 'Being yourself loudly is how people remember you.'),
       angle('a4', 'first five', 'What does it take to be in the first group remembered?', 'Doing something nobody had done sets the bar for everyone after.'),
