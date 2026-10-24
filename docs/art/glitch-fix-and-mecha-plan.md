@@ -16,7 +16,7 @@ App Store review submission is on hold until emci says so.
 ## Step status
 | Step | What | Cost | Who/Model | Status |
 |---|---|---|---|---|
-| G1 | Fix the ~12 glitchy clips (Tier A), emci eyeballs sheets first | 0 gens | Sonnet | not started |
+| G1 | Fix the ~12 glitchy clips (Tier A), emci eyeballs sheets first | 0 gens | Sonnet | DONE 2026-10-24 (commit 4c8376b2, not published as OTA). Fixed: ghost Attack E f5 + W f7 stray streaks erased (originals in art-src/archive/2026-10/tower.ghost.streetwear-Attack-pre-edgefix-20261024). Left on purpose: Walk drift 4-6 px (gait bob, lifted foot, no planted-foot slide on sheets), archangel Faint E (identical end-pose frames already one 310 ms hold, no visual change), Oni Run (real leap; not listed by emci), lunges. |
 | M0 | emci fixes the PixelLab MCP connector (401 Invalid API token) | 0 | emci | not started |
 | M1 | Pre-flight (docs + search_help + get_balance) and 5 concept sketches as samples + scale sheet next to Kael | est 20-40 gens, ask first (Pro) | Sonnet | blocked on M0 |
 | M2 | emci picks/edits the 5 (or swaps); lock names, element/behavior, palette | 0 | emci | - |
