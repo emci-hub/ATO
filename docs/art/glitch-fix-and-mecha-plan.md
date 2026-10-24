@@ -11,6 +11,10 @@ App Store review submission is on hold until emci says so.
 - Defaults chosen by Fable (emci may override): no Faint clip (heroes have no Faint slot in play today); unlock = the existing
   free_farm path used by other heroes, stated per hero in M3; style A (native 128, about 100-108 px tall grown, mech cues:
   wide shoulders, visor, backpack), scale-checked against grown Kael (H about 106).
+- **Pipeline decision (emci, 2026-10-24): follow OUR style, not PixelLab standard.** Concept still = Pro Flash 128 with the cropped Kael as
+  `style_image` (colours off, 6 gens); then import with `create_character` v3 + `reference_image_url` (2 gens, 4 directions) and animate
+  with `skeleton-v3` (3 gens per direction per clip). Proof: `docs/art/mecha-compare/` (standard lost sword/shoulders, 7 px foot drift;
+  ours kept them, 3 px). Body-type stills for animals/humanoid: `docs/art/body-type-protos/` (styled-*.png), animal rigs later.
 - Glitch fixing is free (Tier A, 0 generations). Paid redo only for a clip that Tier A cannot save (Oni Run worst case about 6).
 
 ## Step status
