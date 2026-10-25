@@ -77,7 +77,11 @@ assert.equal(AI_TOKEN_PRICE, 5);
 assert.ok(ATO_TOKEN_HOW_LINES.some((line) => line.includes('Check in on Home')), 'You says where tokens come from');
 assert.ok(
   ATO_TOKEN_HOW_LINES.some((line) => line.includes('do not cost ATO tokens')),
-  'library cards are not a token spend',
+  'the free library cards are not a token spend',
+);
+assert.ok(
+  ATO_TOKEN_HOW_LINES.some((line) => line.includes(String(AI_TOKEN_PRICE)) && /library/i.test(line) && /extra/i.test(line)),
+  'an extra library page names its price',
 );
 assert.equal(atoTokenCopyClean(), true);
 // Honest token copy (roadmap v2 step A1, 2026-10-22): what tokens buy must match AI_USE_DISCLOSURE

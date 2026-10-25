@@ -295,8 +295,9 @@ assert.ok(card.includes('const open = useCallback'), 'the button runs open()');
 assert.doesNotMatch(card, /writeOld|writeCategoryDeepDive|category-deep-dive\/generate/, 'the old one-person path is gone');
 // A missing server (wave93 not live) is only a note, never a fallback call: it maps to the "not switched on yet" line.
 assert.doesNotMatch(card, /outcome\.reason === 'missing'/, 'a missing server is not a path anymore');
-assert.doesNotMatch(card, /open\('new'\)/, 'there is no paid brand-new writer');
-assert.match(card, /onPress=\{\(\) => void open\('library'\)\}/, 'the story library card is a tap');
+assert.match(card, /onPress=\{\(\) => void open\('new'\)\}/, 'a paid extra page is a tap');
+assert.match(card, /claimCategoryDeepDive\(/, 'the paid page is claimed before it is shown');
+assert.match(card, /onPress=\{\(\) => void open\('library'\)\}/, 'the free story library card is a tap');
 assert.match(card, /if \(!def \|\| writingRef\.current \|\| leans\.length === 0\) return;/, 'a double tap does nothing');
 assert.match(card, /if \(epochRef\.current !== epochAtStart\) return;/, 'a wipe while writing is never written back');
 assert.doesNotMatch(card, /COPY_REVIEWED|[Dd]raft/, 'no draft badge in the app');
@@ -308,7 +309,8 @@ assert.match(libraryFn, /reason: 'library' \}, 410\)/);
 assert.doesNotMatch(libraryFn, /await complete\(|claim_library_write/);
 assert.match(read('src/lib/category-deep-dive/store.ts'), /PGRST202/, 'before wave90 is applied it says "not switched on yet", never "used"');
 // wave92: tokens decide how often (the server keeps a safety ceiling); the button shows the price.
-assert.doesNotMatch(card, /AI_TOKEN_PRICE|AI_PRICE_LABEL|open\('new'\)/, 'a deep dive does not show a token price');
+assert.match(card, /AI_PRICE_LABEL/, 'the paid page shows its price');
+assert.doesNotMatch(card, /writeNewDive|generateText\(/, 'the paid page is not a model write');
 assert.match(card, /renderLibraryDive\(/, 'the tap assembles the story library');
 assert.match(card, /if \(epochRef\.current !== epochAtStart\) return;/, 'a wipe while writing is never written back');
 // Moved from Home to Explore (emci, 2026-10-09): between Categories and "How you've changed".

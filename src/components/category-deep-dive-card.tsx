@@ -3,7 +3,8 @@
  *
  * Pick a category → your leanings in it ("Adventurous 78%", worked out on the
  * phone, no AI) → "Open my deep dive" assembles approved Story Library copy
- * on the phone. No model, no token. Nothing here calls a model on mount
+ * on the phone. A new page is the same library, charged by
+ * `claim_category_deep_dive`. Nothing here calls a model on mount
  * (`check:no-auto-ai` lists this file).
  *
  * Separate from the daily insight above it, which stays stored copy.
@@ -19,6 +20,8 @@ import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { useAccountDataEpoch } from '@/lib/account-data-epoch';
+import { AI_PRICE_LABEL, AI_TOKEN_PRICE, AI_TOKENS_NEEDED } from '@/lib/ato-tokens';
+import { refundAiTokens } from '@/lib/ato-tokens-server';
 import { codeForAxis } from '@/lib/axis-codes';
 import { AXIS_SHORT_NAME } from '@/lib/axis-poles';
 import { readCategory, type CategoryDef } from '@/lib/categories';
@@ -37,6 +40,7 @@ import { getShownIds, lineIdsOf, rememberShown } from '@/lib/story-library/shown
 import { diveBucketKey } from '@/lib/ai-library/deep-dive';
 import { LIBRARY_VERSION } from '@/lib/ai-library/types';
 import {
+  claimCategoryDeepDive,
   diveDay,
   fetchServerDives,
   loadDiveState,
@@ -58,7 +62,7 @@ export const DEEP_DIVE_WRITE_LABEL = 'Write my deep dive';
 /** Shared library (wave93): a card from people with leanings like yours, free. */
 export const DEEP_DIVE_OPEN_LABEL = 'Open my deep dive · free';
 export const DEEP_DIVE_ANOTHER_LABEL = 'Show me another angle · free';
-export const DEEP_DIVE_NEW_LABEL = 'Write me a brand-new one';
+export const DEEP_DIVE_NEW_LABEL = 'New deep dive from the library';
 export const DEEP_DIVE_EMPTY =
   'You’ve read every deep dive for leanings like yours. Open this one again for a fresh page from the story library.';
 export const DEEP_DIVE_DAILY = 'That’s today’s free deep dives. A brand-new one is still open, or come back tomorrow.';
@@ -76,14 +80,16 @@ export const DEEP_DIVE_PCT_NOTE = '50% is the middle; 100% is all the way to tha
 export function CategoryDeepDiveCard({
   userId,
   tracks,
+  tokens,
+  onSpent,
 }: {
   userId: string;
   tracks: readonly TraitTrack[];
-  /** Kept so Explore can still pass the old consent flag. The library does not read it. */
+  /** Kept so Explore can still pass the old consent flag. A library page does not read it. */
   consentGranted: boolean;
-  /** Kept so Explore can still pass the balance. The library does not charge. */
+  /** Balance for the paid extra page. The free open does not charge. */
   tokens: number;
-  /** Kept so Explore can still pass a refresh. The library does not spend tokens. */
+  /** Refresh the balance after a paid page is claimed. */
   onSpent: () => void;
 }) {
   const theme = useTheme();
@@ -146,21 +152,39 @@ export function CategoryDeepDiveCard({
   /** A bundled card written today for tomorrow: shown once its day comes. */
   const opensLater = entry?.dive.opensOn != null && entry.dive.opensOn > diveDay();
 
-  /** Assemble the story library on the phone. No model and no token charge. */
+  /** Assemble a story-library page. 'library' is free. 'new' claims the token price first, then another page. */
   const open = useCallback(
-    async (mode: 'library') => {
+    async (mode: 'library' | 'new') => {
       if (!def || writingRef.current || leans.length === 0) return;
       writingRef.current = true;
       setBusy(true);
       setNote(null);
       const epochAtStart = epochRef.current;
+      let charged = false;
       try {
+        if (mode === 'new') {
+          if (tokens < AI_TOKEN_PRICE) {
+            setNote(AI_TOKENS_NEEDED);
+            return;
+          }
+          const claim = await claimCategoryDeepDive();
+          if (epochRef.current !== epochAtStart) {
+            if (claim === 'ok') await refundAiTokens('deep_dive');
+            return;
+          }
+          if (claim !== 'ok') {
+            setNote(claim === 'tokens' ? AI_TOKENS_NEEDED : claim === 'used' ? DEEP_DIVE_USED : DEEP_DIVE_FAILED);
+            return;
+          }
+          charged = true;
+        }
         await hydrateStoryLibraryDevice();
+        if (charged && epochRef.current !== epochAtStart) await refundAiTokens('deep_dive');
         if (epochRef.current !== epochAtStart) return;
         const dive = renderLibraryDive({
           categoryId: def.id,
           leans,
-          seed: `${userId}|${def.id}|${key}|${mode}`,
+          seed: `${userId}|${def.id}|${key}|${mode}|${charged ? String(Date.now()) : 'free'}`,
           shown: getShownIds(),
         });
         rememberShown(dive.lineIds);
@@ -173,12 +197,16 @@ export function CategoryDeepDiveCard({
         setState(next);
         void saveDiveState(next);
         void saveServerDive(made);
+        if (charged) onSpent();
+      } catch {
+        if (charged) await refundAiTokens('deep_dive');
+        setNote(DEEP_DIVE_FAILED);
       } finally {
         writingRef.current = false;
         setBusy(false);
       }
     },
-    [def, leans, key, userId],
+    [def, leans, key, userId, tokens, onSpent],
   );
 
   const detail = def ? (
@@ -246,6 +274,22 @@ export function CategoryDeepDiveCard({
           </ThemedText>
         )}
       </Pressable>
+      {tokens >= AI_TOKEN_PRICE ? (
+        <Pressable
+          onPress={() => void open('new')}
+          disabled={busy || state == null}
+          accessibilityRole="button"
+          accessibilityLabel={`${DEEP_DIVE_NEW_LABEL}, ${AI_PRICE_LABEL}: ${categoryDisplayName(def)}`}
+          style={({ pressed }) => [styles.secondary, { borderColor: theme.border }, (pressed || busy) && styles.pressed]}>
+          <ThemedText type="smallBold" style={styles.buttonText}>
+            {DEEP_DIVE_NEW_LABEL} · {AI_PRICE_LABEL}
+          </ThemedText>
+        </Pressable>
+      ) : (
+        <ThemedText type="small" themeColor="textSecondary">
+          {AI_TOKENS_NEEDED}
+        </ThemedText>
+      )}
       {note ? (
         <ThemedText type="small" themeColor="textSecondary">
           {note}

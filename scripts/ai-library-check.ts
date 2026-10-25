@@ -344,7 +344,9 @@ async function main() {
   assert.doesNotMatch(client, /functions\.invoke\('ai-library'|writeLibraryCard|serveLibraryCard|wantLibraryCards/, 'the phone does not serve or write a library card');
   const card = read('src/components/category-deep-dive-card.tsx');
   assert.match(card, /DEEP_DIVE_OPEN_LABEL = 'Open my deep dive · free'/);
-  assert.doesNotMatch(card, /DEEP_DIVE_NEW_LABEL\} · \{AI_PRICE_LABEL\}/, 'a brand-new model card is not offered');
+  assert.match(card, /DEEP_DIVE_NEW_LABEL\} · \{AI_PRICE_LABEL\}/, 'a paid extra page shows the library label and the price');
+  assert.match(card, /claimCategoryDeepDive\(/, 'the paid page is claimed, not written by a model');
+  assert.doesNotMatch(card, /writeNewDive|functions\.invoke\('ai-library'/, 'the paid page does not call the writer');
   assert.match(card, /<LibraryCardFooter libraryId=\{entry\.libraryId\} others=\{entry\.others\} \/>/);
   // Insights (2026-10-14): the app no longer reads Story cards from the
   // library (template-only); the server dropped Story on 2026-10-22 (A3 / S4).

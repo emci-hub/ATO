@@ -192,14 +192,22 @@ export async function fetchServerMuseum(): Promise<MuseumEntry[] | null> {
   }
 }
 
-/** Claim one legend story (server cap). False = no AI call (fallback story). */
-export async function claimLegendStory(): Promise<boolean> {
+/**
+ * Charge one extra legend reveal. `claim_legend_figure_story` deducts the token
+ * price and counts the daily cap. It does not call a model. The card is still
+ * assembled from the on-device library after this returns 'ok'.
+ */
+export async function claimLegendStory(): Promise<'ok' | 'tokens' | 'quota' | 'failed'> {
   try {
     const { data, error } = await supabase.rpc('claim_legend_figure_story');
-    if (error || !data || typeof data !== 'object') return false;
-    return (data as { ok?: unknown }).ok === true;
+    if (error || !data || typeof data !== 'object') return 'failed';
+    const row = data as { ok?: unknown; reason?: unknown };
+    if (row.ok === true) return 'ok';
+    if (row.reason === 'tokens') return 'tokens';
+    if (row.reason === 'quota') return 'quota';
+    return 'failed';
   } catch {
-    return false;
+    return 'failed';
   }
 }
 

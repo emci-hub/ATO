@@ -596,11 +596,13 @@ assert.doesNotMatch(gen, /writeLibraryCard\(/, 'the phone does not ask the serve
 assert.match(screen, /meetingRef\.current\) return;/, 'a second tap while a story is being written does nothing');
 assert.match(
   screen,
-  /const free = revealsLeft\(revealedBefore, bonus\) > 0;\s*if \(!free\) return;/,
-  'no reveal past the day’s allowance, and nothing is sold for tokens',
+  /const free = revealsLeft\(revealedBefore, bonus\) > 0;\s*const balance = me \? atoTokenBalanceOf\(me\) : 0;\s*if \(!free && balance < AI_TOKEN_PRICE\) return;/,
+  'past the free allowance, a reveal needs the token price',
 );
-assert.doesNotMatch(screen, /refundAiTokens\(/, 'a reveal is not charged, so it is not refunded');
-assert.doesNotMatch(gen, /refundAiTokens\(/, 'the legend writer never charged on the phone');
+assert.match(screen, /claimLegendStory\(/, 'a paid reveal is claimed on the server before the card is shown');
+assert.match(screen, /refundAiTokens\('legend'\)/, 'a failed paid reveal is refunded');
+assert.match(screen, /story\.source !== 'library'/, 'a paid reveal is saved only when the library card loaded');
+assert.doesNotMatch(gen, /refundAiTokens\(/, 'the library render does not charge; the screen does');
 assert.doesNotMatch(libraryServer, /refund_ai_tokens/, 'the writer does not charge');
 assert.match(screen, /if \(!meetingRef\.current\) persist\(next\);/, 'a reload never overwrites a reveal being saved');
 assert.match(screen, /LegendShareSheet/, 'share uses the on-screen Modal capture (share-card.tsx pattern)');

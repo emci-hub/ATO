@@ -20,12 +20,15 @@ import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { useAccountDataEpoch } from '@/lib/account-data-epoch';
 import { AI_TAP_TIMEOUT_MS } from '@/lib/ai/timeouts';
+import { AI_TOKEN_PRICE, AI_TOKENS_NEEDED, atoTokenBalanceOf } from '@/lib/ato-tokens';
+import { refundAiTokens } from '@/lib/ato-tokens-server';
 import { PRE_LAUNCH_DEV } from '@/lib/dev-mode';
 import { FULL_PROFILE_LOCKED_COPY, fullProfileLockedLine, fullProfileProgress } from '@/lib/full-profile-gate';
 import { fetchHomeBootstrap } from '@/lib/home-bootstrap';
 import { planLegendReveal, revealLegendStory } from '@/lib/legend-figures/generate';
 import { hydrateStoryLibraryDevice } from '@/lib/story-library/device-store';
 import {
+  claimLegendStory,
   fetchAngleCounts,
   fetchCircleFriends,
   fetchServerMuseum,
@@ -73,8 +76,13 @@ export const LEGENDS_LEDE =
 export const LEGENDS_TOMORROW_COPY = 'That’s today’s legend. Come back tomorrow to reveal the next one.';
 export const LEGENDS_BONUS_COPY = 'Your answers changed who you’d meet. One more reveal is open today.';
 export const LEGENDS_ONE_TODAY_COPY = 'One free reveal a day. Pick a frame.';
-/** One reveal a day from the story library. Extra reveals are not sold. */
+/** The free reveal, and any paid extra, both come from the story library. */
 export const LEGENDS_LIBRARY_COPY = 'This card comes from the story library.';
+export const legendsPaidLine = (tokens: number) =>
+  `Want another from the story library? It costs ${AI_TOKEN_PRICE} tokens (you have ${tokens}).`;
+export const LEGENDS_PAID_FAILED =
+  'The legend card did not load, so this reveal was not saved. If tokens were charged for this try, they come back once today.';
+export const LEGENDS_PAID_QUOTA = 'That’s the most extra legend reveals for today. Come back tomorrow.';
 export const HALL_CHAPTERS_COPY = 'You’ve met every legend here. The frames now hide new chapters about them.';
 export const HALL_EMPTY_COPY = 'Nothing left to reveal in this hall today. Try another hall.';
 export const HALL_ALL_TOLD_COPY = 'You’ve heard every story in this hall.';
@@ -123,10 +131,9 @@ function ensureHall(
  * other unlock: `legendsUnlocked(tracks)` (the finished intake), plus at least
  * two clear trait leans.
  *
- * Pick a hall → three "???" frames (no clue) → reveal one a day (plus one bonus
- * when a new trait side settles). Nothing here spends on its own: the frames
- * are picked on the phone with no AI (`pick.ts`), and the one model call runs
- * only on a reveal tap (`revealLegendStory` → the `ai-library` function, claimed on the server first).
+ * Pick a hall → three "???" frames (no clue) → one free reveal a day (plus one bonus
+ * when a new trait side settles). Past that, another reveal costs tokens
+ * (`claim_legend_figure_story`) and the card is still assembled from the story library.
  * Opening a met legend is free — the story was saved.
  */
 export default function LegendsScreen() {
@@ -144,6 +151,7 @@ export default function LegendsScreen() {
   const [revealNotes, setRevealNotes] = useState<Record<string, string[]>>({});
   const [friends, setFriends] = useState<Record<string, string[]>>({});
   const [shareOpen, setShareOpen] = useState(false);
+  const [tokenNote, setTokenNote] = useState<string | null>(null);
   const requestRef = useRef(0);
   /** A story is being written: one at a time (a double tap must not pay twice)
    * and no reload may overwrite the state until it is saved. */
@@ -233,7 +241,9 @@ export default function LegendsScreen() {
   const revealedToday = day?.revealed.length ?? 0;
   const bonusUnlocked = revealedToday >= 1 && day != null && hasNewSettledLean(day.fingerprint, settledFingerprint(tracks));
   const left = revealsLeft(revealedToday, bonusUnlocked);
-  const canReveal = left > 0;
+  const tokens = me ? atoTokenBalanceOf(me) : 0;
+  const canPay = tokens >= AI_TOKEN_PRICE;
+  const canReveal = left > 0 || canPay;
 
   const chooseHall = useCallback(
     (next: LegendHall) => {
@@ -263,14 +273,29 @@ export default function LegendsScreen() {
       const revealedBefore = startDay?.revealed.length ?? 0;
       const bonus = revealedBefore >= 1 && startDay != null && hasNewSettledLean(startDay.fingerprint, settledFingerprint(tracks));
       const free = revealsLeft(revealedBefore, bonus) > 0;
-      if (!free) return;
+      const balance = me ? atoTokenBalanceOf(me) : 0;
+      if (!free && balance < AI_TOKEN_PRICE) return;
       const { legendId, angleId } = parseFrameKey(key);
       const legend = legendById(legendId);
       if (!legend) return;
       meetingRef.current = true;
       setBusyKey(key);
+      setTokenNote(null);
       const epochAtStart = epochRef.current;
+      let charged = false;
       try {
+        if (!free) {
+          const claim = await claimLegendStory();
+          if (epochRef.current !== epochAtStart) {
+            await refundAiTokens('legend');
+            return;
+          }
+          if (claim !== 'ok') {
+            setTokenNote(claim === 'quota' ? LEGENDS_PAID_QUOTA : claim === 'tokens' ? AI_TOKENS_NEEDED : LEGENDS_PAID_FAILED);
+            return;
+          }
+          charged = true;
+        }
         const chapter = start.museum.filter((row) => row.legendId === legend.id).length;
         const told = toldAngles(start.museum).get(legend.id);
         const counts = await withTimeout(fetchAngleCounts(legend.id), COUNTS_TIMEOUT_MS, 'legend-counts').catch(() => null);
@@ -284,11 +309,24 @@ export default function LegendsScreen() {
         try {
           story = await withTimeout(revealLegendStory({ ...input, consentGranted, free }), AI_TAP_TIMEOUT_MS, 'legend-story');
         } catch {
+          if (charged) await refundAiTokens('legend');
           story = fallbackLegendStory(input);
+          if (charged) {
+            setTokenNote(LEGENDS_PAID_FAILED);
+            return;
+          }
         }
+        if (charged && story.source !== 'library') {
+          await refundAiTokens('legend');
+          setTokenNote(LEGENDS_PAID_FAILED);
+          return;
+        }
+        if (charged) void refreshMe();
         // A wipe while the story was being written wins: never write it back.
-        if (epochRef.current !== epochAtStart) return;
-        void refreshMe();
+        if (epochRef.current !== epochAtStart) {
+          if (charged) await refundAiTokens('legend');
+          return;
+        }
         const entry: MuseumEntry = { legendId: legend.id, chapter, story, metOn: today };
         const latest = localRef.current ?? start;
         const latestDay =
@@ -327,7 +365,7 @@ export default function LegendsScreen() {
         setBusyKey(null);
       }
     },
-    [hall, today, busyKey, tracks, consentGranted, persist, loadFriends, refreshMe],
+    [hall, today, busyKey, tracks, consentGranted, me, persist, loadFriends, refreshMe],
   );
 
   const openLegend = useCallback(
@@ -479,7 +517,14 @@ export default function LegendsScreen() {
                         <ThemedText type="small" themeColor="textSecondary">
                           {left > 0
                             ? `${revealedToday >= 1 ? LEGENDS_BONUS_COPY : LEGENDS_ONE_TODAY_COPY} ${LEGENDS_LIBRARY_COPY}`
-                            : LEGENDS_TOMORROW_COPY}
+                            : canPay
+                              ? legendsPaidLine(tokens)
+                              : `${LEGENDS_TOMORROW_COPY} ${AI_TOKENS_NEEDED}`}
+                        </ThemedText>
+                      ) : null}
+                      {tokenNote ? (
+                        <ThemedText type="small" themeColor="textSecondary">
+                          {tokenNote}
                         </ThemedText>
                       ) : null}
                     </>

@@ -340,6 +340,45 @@ for (const line of STORY_LIBRARY.lines) {
   assert.doesNotMatch(line.flip, /would not|worse|weaker|\black\b/i, `${line.id} flip`);
 }
 
+/** A non-name 5-word phrase may show up on at most 3 legends. The hour opener is the one shared frame. Flips are not spoken. */
+function repeatedLegendPhrases(lines: readonly { legendId?: string; text: string }[]): string[] {
+  const byPhrase = new Map<string, Set<string>>();
+  for (const line of lines) {
+    if (!line.legendId) continue;
+    const raw = line.text
+      .replace(/picture an hour with\s+\{legend\}\s*:/gi, ' ')
+      .replace(/\{(?:Subj|subj|Name|legend|answer|deed)\}/g, ' ')
+      .toLowerCase()
+      .replace(/[^a-z'\s-]/g, ' ');
+    const words = raw.split(/\s+/).filter(Boolean);
+    const seen = new Set<string>();
+    for (let i = 0; i + 5 <= words.length; i += 1) {
+      const phrase = words.slice(i, i + 5).join(' ');
+      if (seen.has(phrase)) continue;
+      seen.add(phrase);
+      const ids = byPhrase.get(phrase) ?? new Set<string>();
+      ids.add(line.legendId);
+      byPhrase.set(phrase, ids);
+    }
+  }
+  return [...byPhrase.entries()]
+    .filter(([, ids]) => ids.size > 3)
+    .map(([phrase, ids]) => `"${phrase}" on ${ids.size} legends`);
+}
+
+const three = Array.from({ length: 3 }, (_, i) => ({ legendId: `lf_${i}`, text: 'alpha beta gamma delta epsilon zeta' }));
+const four = [...three, { legendId: 'lf_3', text: 'alpha beta gamma delta epsilon zeta' }];
+assert.equal(repeatedLegendPhrases(three).length, 0, 'three legends may share a 5-word phrase');
+assert.ok(repeatedLegendPhrases(four).length > 0, 'a fourth legend sharing that phrase fails');
+const repeated = repeatedLegendPhrases(LEGEND_LINES);
+assert.equal(repeated.length, 0, repeated.slice(0, 8).join('\n'));
+assert.match(
+  LEGEND_LINES.find((line) => line.id === 'lf_hachiko-scene')?.text ?? '',
+  /\bhe'd\b/,
+  'Hachikō uses he',
+);
+assert.doesNotMatch(LEGEND_LINES.find((line) => line.id === 'lf_hachiko-scene')?.text ?? '', /\bthey\b/i);
+
 const SHAPE_NOISE = /\b(when|because|then)\b|,|\?|\d/;
 for (const legend of LEGEND_ROSTER) {
   const deed = HAND_DEEDS[legend.id];
