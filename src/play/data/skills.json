@@ -142,5 +142,14 @@
     "damage": 4,
     "slow_ms": 2000,
     "slow_pct": 0.34
+  },
+  {
+    "id": "skill_ironclad_kabuto",
+    "name": "Tide Veil",
+    "description": "A tidal surge slows and batters nearby foes.",
+    "radius": 25,
+    "damage": 4,
+    "slow_ms": 2000,
+    "slow_pct": 0.34
   }
 ]

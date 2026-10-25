@@ -95,16 +95,20 @@ ok('pet: holds step, slow factor, one-shot length; flat fallback unchanged');
     Hurt: 6 * CAST_ACTOR_FRAME_MS.avatar.hurt!,
     Faint: 7 * CAST_ACTOR_FRAME_MS.tower.faint!,
   };
+  /** Mecha heroes ship without a Faint clip; every other hero must still have one. */
+  const NO_FAINT_HEROES = new Set(['ironclad-kabuto']);
   const heroes = new Set<string>();
   for (const key of Object.keys(sheets)) {
     const m = /^sheets\/streetwear\/heroes\/([^/]+)\/([A-Za-z]+)$/.exec(key);
     if (m) heroes.add(m[1]);
   }
-  assert.ok(heroes.size >= 16, `16 Streetwear heroes packed (${heroes.size})`);
+  assert.ok(heroes.size >= 17, `17 Streetwear heroes packed (${heroes.size})`);
   for (const hero of heroes) {
     for (const clip of ['Idle', 'Walk', 'Dash', 'Attack', 'Skill', 'Hurt', 'Faint']) {
       const key = `sheets/streetwear/heroes/${hero}/${clip}`;
       const s = sheets[key];
+      // The mecha heroes ship without a Faint clip (decision 2026-10-24, docs/art/glitch-fix-and-mecha-plan.md).
+      if (clip === 'Faint' && !s && NO_FAINT_HEROES.has(hero)) continue;
       assert.ok(s, `${key} is packed`);
       const perDir = Object.keys(s.frames).filter((f) => f.startsWith('east/')).length;
       assert.ok(s.holds, `${key} carries holds`);
@@ -117,6 +121,6 @@ ok('pet: holds step, slow factor, one-shot length; flat fallback unchanged');
     }
   }
 }
-ok('data: all 16 hero sheets carry full holds; non-Idle clips keep their old length');
+ok('data: all 17 hero sheets carry full holds; non-Idle clips keep their old length');
 
 console.log('check:clip-holds passed');

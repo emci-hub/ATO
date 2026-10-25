@@ -1,0 +1,753 @@
+{
+  "sheets/streetwear/heroes/ironclad-kabuto/Attack": {
+    "sheet": "art/heroes/in-use/ironclad-kabuto/streetwear/hero_ironclad-kabuto_streetwear.combat.png",
+    "sheetW": 1063,
+    "sheetH": 995,
+    "frames": {
+      "east/frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 130,
+        "h": 124
+      },
+      "east/frame_001": {
+        "x": 131,
+        "y": 0,
+        "w": 130,
+        "h": 124
+      },
+      "east/frame_002": {
+        "x": 262,
+        "y": 0,
+        "w": 130,
+        "h": 124
+      },
+      "east/frame_003": {
+        "x": 393,
+        "y": 0,
+        "w": 130,
+        "h": 124
+      },
+      "east/frame_004": {
+        "x": 524,
+        "y": 0,
+        "w": 130,
+        "h": 124
+      },
+      "east/frame_005": {
+        "x": 655,
+        "y": 0,
+        "w": 130,
+        "h": 124
+      },
+      "east/frame_006": {
+        "x": 786,
+        "y": 0,
+        "w": 130,
+        "h": 124
+      },
+      "east/frame_007": {
+        "x": 917,
+        "y": 0,
+        "w": 130,
+        "h": 124
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 125,
+        "w": 130,
+        "h": 124
+      },
+      "west/frame_001": {
+        "x": 131,
+        "y": 125,
+        "w": 130,
+        "h": 124
+      },
+      "west/frame_002": {
+        "x": 262,
+        "y": 125,
+        "w": 130,
+        "h": 124
+      },
+      "west/frame_003": {
+        "x": 393,
+        "y": 125,
+        "w": 130,
+        "h": 124
+      },
+      "west/frame_004": {
+        "x": 524,
+        "y": 125,
+        "w": 130,
+        "h": 124
+      },
+      "west/frame_005": {
+        "x": 655,
+        "y": 125,
+        "w": 130,
+        "h": 124
+      },
+      "west/frame_006": {
+        "x": 786,
+        "y": 125,
+        "w": 130,
+        "h": 124
+      },
+      "west/frame_007": {
+        "x": 917,
+        "y": 125,
+        "w": 130,
+        "h": 124
+      }
+    },
+    "offsetX": 33,
+    "offsetY": 28,
+    "sourceW": 192,
+    "sourceH": 192,
+    "ms": 65,
+    "holds": [
+      90,
+      70,
+      45,
+      40,
+      45,
+      60,
+      80,
+      90
+    ],
+    "dirs": [
+      "east",
+      "west"
+    ],
+    "tier": "combat"
+  },
+  "sheets/streetwear/heroes/ironclad-kabuto/Dash": {
+    "sheet": "art/heroes/in-use/ironclad-kabuto/streetwear/hero_ironclad-kabuto_streetwear.combat.png",
+    "sheetW": 1063,
+    "sheetH": 995,
+    "frames": {
+      "east/frame_000": {
+        "x": 0,
+        "y": 500,
+        "w": 118,
+        "h": 123
+      },
+      "east/frame_001": {
+        "x": 119,
+        "y": 500,
+        "w": 118,
+        "h": 123
+      },
+      "east/frame_002": {
+        "x": 238,
+        "y": 500,
+        "w": 118,
+        "h": 123
+      },
+      "east/frame_003": {
+        "x": 357,
+        "y": 500,
+        "w": 118,
+        "h": 123
+      },
+      "east/frame_004": {
+        "x": 476,
+        "y": 500,
+        "w": 118,
+        "h": 123
+      },
+      "east/frame_005": {
+        "x": 595,
+        "y": 500,
+        "w": 118,
+        "h": 123
+      },
+      "east/frame_006": {
+        "x": 714,
+        "y": 500,
+        "w": 118,
+        "h": 123
+      },
+      "east/frame_007": {
+        "x": 833,
+        "y": 500,
+        "w": 118,
+        "h": 123
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 624,
+        "w": 118,
+        "h": 123
+      },
+      "west/frame_001": {
+        "x": 119,
+        "y": 624,
+        "w": 118,
+        "h": 123
+      },
+      "west/frame_002": {
+        "x": 238,
+        "y": 624,
+        "w": 118,
+        "h": 123
+      },
+      "west/frame_003": {
+        "x": 357,
+        "y": 624,
+        "w": 118,
+        "h": 123
+      },
+      "west/frame_004": {
+        "x": 476,
+        "y": 624,
+        "w": 118,
+        "h": 123
+      },
+      "west/frame_005": {
+        "x": 595,
+        "y": 624,
+        "w": 118,
+        "h": 123
+      },
+      "west/frame_006": {
+        "x": 714,
+        "y": 624,
+        "w": 118,
+        "h": 123
+      },
+      "west/frame_007": {
+        "x": 833,
+        "y": 624,
+        "w": 118,
+        "h": 123
+      }
+    },
+    "offsetX": 36,
+    "offsetY": 29,
+    "sourceW": 192,
+    "sourceH": 192,
+    "ms": 50,
+    "holds": [
+      40,
+      40,
+      50,
+      60,
+      60,
+      50,
+      50,
+      50
+    ],
+    "dirs": [
+      "east",
+      "west"
+    ],
+    "tier": "combat"
+  },
+  "sheets/streetwear/heroes/ironclad-kabuto/Hurt": {
+    "sheet": "art/heroes/in-use/ironclad-kabuto/streetwear/hero_ironclad-kabuto_streetwear.combat.png",
+    "sheetW": 1063,
+    "sheetH": 995,
+    "frames": {
+      "east/frame_000": {
+        "x": 0,
+        "y": 250,
+        "w": 120,
+        "h": 124
+      },
+      "east/frame_001": {
+        "x": 121,
+        "y": 250,
+        "w": 120,
+        "h": 124
+      },
+      "east/frame_002": {
+        "x": 242,
+        "y": 250,
+        "w": 120,
+        "h": 124
+      },
+      "east/frame_003": {
+        "x": 363,
+        "y": 250,
+        "w": 120,
+        "h": 124
+      },
+      "east/frame_004": {
+        "x": 484,
+        "y": 250,
+        "w": 120,
+        "h": 124
+      },
+      "east/frame_005": {
+        "x": 605,
+        "y": 250,
+        "w": 120,
+        "h": 124
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 375,
+        "w": 120,
+        "h": 124
+      },
+      "west/frame_001": {
+        "x": 121,
+        "y": 375,
+        "w": 120,
+        "h": 124
+      },
+      "west/frame_002": {
+        "x": 242,
+        "y": 375,
+        "w": 120,
+        "h": 124
+      },
+      "west/frame_003": {
+        "x": 363,
+        "y": 375,
+        "w": 120,
+        "h": 124
+      },
+      "west/frame_004": {
+        "x": 484,
+        "y": 375,
+        "w": 120,
+        "h": 124
+      },
+      "west/frame_005": {
+        "x": 605,
+        "y": 375,
+        "w": 120,
+        "h": 124
+      }
+    },
+    "offsetX": 37,
+    "offsetY": 28,
+    "sourceW": 192,
+    "sourceH": 192,
+    "ms": 140,
+    "holds": [
+      70,
+      90,
+      130,
+      170,
+      180,
+      200
+    ],
+    "dirs": [
+      "east",
+      "west"
+    ],
+    "tier": "combat"
+  },
+  "sheets/streetwear/heroes/ironclad-kabuto/Idle": {
+    "sheet": "art/heroes/in-use/ironclad-kabuto/streetwear/hero_ironclad-kabuto_streetwear.core.png",
+    "sheetW": 1007,
+    "sheetH": 753,
+    "frames": {
+      "east/frame_000": {
+        "x": 0,
+        "y": 508,
+        "w": 119,
+        "h": 122
+      },
+      "east/frame_001": {
+        "x": 120,
+        "y": 508,
+        "w": 119,
+        "h": 122
+      },
+      "east/frame_002": {
+        "x": 240,
+        "y": 508,
+        "w": 119,
+        "h": 122
+      },
+      "east/frame_003": {
+        "x": 360,
+        "y": 508,
+        "w": 119,
+        "h": 122
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 631,
+        "w": 119,
+        "h": 122
+      },
+      "west/frame_001": {
+        "x": 120,
+        "y": 631,
+        "w": 119,
+        "h": 122
+      },
+      "west/frame_002": {
+        "x": 240,
+        "y": 631,
+        "w": 119,
+        "h": 122
+      },
+      "west/frame_003": {
+        "x": 360,
+        "y": 631,
+        "w": 119,
+        "h": 122
+      }
+    },
+    "offsetX": 35,
+    "offsetY": 30,
+    "sourceW": 192,
+    "sourceH": 192,
+    "ms": 325,
+    "holds": [
+      400,
+      250,
+      400,
+      250
+    ],
+    "dirs": [
+      "east",
+      "west"
+    ],
+    "tier": "core"
+  },
+  "sheets/streetwear/heroes/ironclad-kabuto/Skill": {
+    "sheet": "art/heroes/in-use/ironclad-kabuto/streetwear/hero_ironclad-kabuto_streetwear.combat.png",
+    "sheetW": 1063,
+    "sheetH": 995,
+    "frames": {
+      "east/frame_000": {
+        "x": 0,
+        "y": 748,
+        "w": 132,
+        "h": 123
+      },
+      "east/frame_001": {
+        "x": 133,
+        "y": 748,
+        "w": 132,
+        "h": 123
+      },
+      "east/frame_002": {
+        "x": 266,
+        "y": 748,
+        "w": 132,
+        "h": 123
+      },
+      "east/frame_003": {
+        "x": 399,
+        "y": 748,
+        "w": 132,
+        "h": 123
+      },
+      "east/frame_004": {
+        "x": 532,
+        "y": 748,
+        "w": 132,
+        "h": 123
+      },
+      "east/frame_005": {
+        "x": 665,
+        "y": 748,
+        "w": 132,
+        "h": 123
+      },
+      "east/frame_006": {
+        "x": 798,
+        "y": 748,
+        "w": 132,
+        "h": 123
+      },
+      "east/frame_007": {
+        "x": 931,
+        "y": 748,
+        "w": 132,
+        "h": 123
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 872,
+        "w": 132,
+        "h": 123
+      },
+      "west/frame_001": {
+        "x": 133,
+        "y": 872,
+        "w": 132,
+        "h": 123
+      },
+      "west/frame_002": {
+        "x": 266,
+        "y": 872,
+        "w": 132,
+        "h": 123
+      },
+      "west/frame_003": {
+        "x": 399,
+        "y": 872,
+        "w": 132,
+        "h": 123
+      },
+      "west/frame_004": {
+        "x": 532,
+        "y": 872,
+        "w": 132,
+        "h": 123
+      },
+      "west/frame_005": {
+        "x": 665,
+        "y": 872,
+        "w": 132,
+        "h": 123
+      },
+      "west/frame_006": {
+        "x": 798,
+        "y": 872,
+        "w": 132,
+        "h": 123
+      },
+      "west/frame_007": {
+        "x": 931,
+        "y": 872,
+        "w": 132,
+        "h": 123
+      }
+    },
+    "offsetX": 23,
+    "offsetY": 29,
+    "sourceW": 192,
+    "sourceH": 192,
+    "ms": 70,
+    "holds": [
+      100,
+      80,
+      60,
+      45,
+      45,
+      60,
+      80,
+      90
+    ],
+    "dirs": [
+      "east",
+      "west"
+    ],
+    "tier": "combat"
+  },
+  "sheets/streetwear/heroes/ironclad-kabuto/Walk": {
+    "sheet": "art/heroes/in-use/ironclad-kabuto/streetwear/hero_ironclad-kabuto_streetwear.core.png",
+    "sheetW": 1007,
+    "sheetH": 753,
+    "frames": {
+      "north/frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 167,
+        "h": 126
+      },
+      "north/frame_001": {
+        "x": 168,
+        "y": 0,
+        "w": 167,
+        "h": 126
+      },
+      "north/frame_002": {
+        "x": 336,
+        "y": 0,
+        "w": 167,
+        "h": 126
+      },
+      "north/frame_003": {
+        "x": 504,
+        "y": 0,
+        "w": 167,
+        "h": 126
+      },
+      "north/frame_004": {
+        "x": 672,
+        "y": 0,
+        "w": 167,
+        "h": 126
+      },
+      "north/frame_005": {
+        "x": 840,
+        "y": 0,
+        "w": 167,
+        "h": 126
+      },
+      "east/frame_000": {
+        "x": 0,
+        "y": 127,
+        "w": 167,
+        "h": 126
+      },
+      "east/frame_001": {
+        "x": 168,
+        "y": 127,
+        "w": 167,
+        "h": 126
+      },
+      "east/frame_002": {
+        "x": 336,
+        "y": 127,
+        "w": 167,
+        "h": 126
+      },
+      "east/frame_003": {
+        "x": 504,
+        "y": 127,
+        "w": 167,
+        "h": 126
+      },
+      "east/frame_004": {
+        "x": 672,
+        "y": 127,
+        "w": 167,
+        "h": 126
+      },
+      "east/frame_005": {
+        "x": 840,
+        "y": 127,
+        "w": 167,
+        "h": 126
+      },
+      "south/frame_000": {
+        "x": 0,
+        "y": 254,
+        "w": 167,
+        "h": 126
+      },
+      "south/frame_001": {
+        "x": 168,
+        "y": 254,
+        "w": 167,
+        "h": 126
+      },
+      "south/frame_002": {
+        "x": 336,
+        "y": 254,
+        "w": 167,
+        "h": 126
+      },
+      "south/frame_003": {
+        "x": 504,
+        "y": 254,
+        "w": 167,
+        "h": 126
+      },
+      "south/frame_004": {
+        "x": 672,
+        "y": 254,
+        "w": 167,
+        "h": 126
+      },
+      "south/frame_005": {
+        "x": 840,
+        "y": 254,
+        "w": 167,
+        "h": 126
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 381,
+        "w": 167,
+        "h": 126
+      },
+      "west/frame_001": {
+        "x": 168,
+        "y": 381,
+        "w": 167,
+        "h": 126
+      },
+      "west/frame_002": {
+        "x": 336,
+        "y": 381,
+        "w": 167,
+        "h": 126
+      },
+      "west/frame_003": {
+        "x": 504,
+        "y": 381,
+        "w": 167,
+        "h": 126
+      },
+      "west/frame_004": {
+        "x": 672,
+        "y": 381,
+        "w": 167,
+        "h": 126
+      },
+      "west/frame_005": {
+        "x": 840,
+        "y": 381,
+        "w": 167,
+        "h": 126
+      }
+    },
+    "offsetX": 15,
+    "offsetY": 26,
+    "sourceW": 192,
+    "sourceH": 192,
+    "ms": 133,
+    "holds": [
+      140,
+      130,
+      130,
+      140,
+      130,
+      130
+    ],
+    "dirs": [
+      "north",
+      "east",
+      "south",
+      "west"
+    ],
+    "tier": "core"
+  },
+  "sheets/streetwear/heroes/ironclad-kabuto/rotations": {
+    "sheet": "art/heroes/in-use/ironclad-kabuto/streetwear/hero_ironclad-kabuto_streetwear.core.png",
+    "sheetW": 1007,
+    "sheetH": 753,
+    "frames": {
+      "north": {
+        "x": 480,
+        "y": 508,
+        "w": 119,
+        "h": 122
+      },
+      "east": {
+        "x": 600,
+        "y": 508,
+        "w": 119,
+        "h": 122
+      },
+      "south": {
+        "x": 720,
+        "y": 508,
+        "w": 119,
+        "h": 122
+      },
+      "west": {
+        "x": 840,
+        "y": 508,
+        "w": 119,
+        "h": 122
+      }
+    },
+    "offsetX": 35,
+    "offsetY": 30,
+    "sourceW": 192,
+    "sourceH": 192,
+    "ms": 100,
+    "dirs": [
+      "north",
+      "east",
+      "south",
+      "west"
+    ],
+    "tier": "core"
+  }
+}

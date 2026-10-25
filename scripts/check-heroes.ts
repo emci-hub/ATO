@@ -97,6 +97,7 @@ const EXPECTED_IDS = [
   'frost-lich',
   'velkhar',
   'void-raven',
+  'ironclad-kabuto',
 ] as const;
 
 /** Heroes reachable as the Avatar TODAY: the airport free loop owns EVERY hero
@@ -202,7 +203,7 @@ function diskFrames(dir: string): number {
 const heroes = allHeroes();
 
 // 1 — the roster itself.
-assert.equal(heroes.length, EXPECTED_IDS.length, 'the roster has sixteen Heroes');
+assert.equal(heroes.length, EXPECTED_IDS.length, 'the roster has seventeen Heroes');
 assert.deepEqual(
   [...heroes.map((hero) => hero.id)].sort(),
   [...EXPECTED_IDS].sort(),

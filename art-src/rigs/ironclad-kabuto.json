@@ -1,0 +1,31 @@
+{
+  "version": 1,
+  "hero": "ironclad-kabuto",
+  "slug": "hero.ironclad-kabuto.streetwear",
+  "canvas": [192, 192],
+  "rawDir": "art-src/pixellab/hero.ironclad-kabuto.streetwear/migrated/raw",
+  "footRow": 150,
+  "heightBand": [116, 124],
+  "lines": { "hip": 112, "shoulder": 62 },
+  "directions": {
+    "east": {
+      "parts": {
+        "prop": [[88, 102], [100, 104], [130, 118], [152, 126], [152, 134], [130, 130], [98, 112], [88, 108]]
+      }
+    },
+    "west": {
+      "parts": {
+        "prop": [[94, 106], [100, 106], [82, 124], [60, 136], [40, 142], [36, 138], [58, 128], [80, 112]]
+      }
+    }
+  },
+  "recipes": {
+    "breathing-idle": {
+      "offsets": [0, 1, 2, 1],
+      "capeOffsets": [0, 0, 0, 0],
+      "headExtra": [0, 0, 1, 0],
+      "ms": [400, 250, 400, 250]
+    }
+  },
+  "notes": "Ironclad Kabuto (M3 hero 1): nodachi (prop) moves rigidly with the hand; heavy armour, so a small breath (recipe overrides may need lowering); legs and boots locked below the hip line. Masks read off the 192 rotations (lowest pixel row 150, body rows 31-150)."
+}

@@ -1,0 +1,53 @@
+{
+  "tool": "pixellab",
+  "model": "skeleton-v3 (Walk) + v3 custom (Attack, Dash, Skill, Hurt)",
+  "prompt": "own-style nodachi set, see params.clips",
+  "negative": null,
+  "seed": null,
+  "size": "128 import, clips 172/176 px, padded to 192 (lowest pixel on row 150)",
+  "view": "low top-down",
+  "direction": null,
+  "palette": null,
+  "referenceImageIds": [],
+  "params": {
+    "pixellabCharacter": "10f7fdc6-8ba8-4087-b0d3-08b1dadeccf9",
+    "clips": {
+      "Walk": "animate_character skeleton-v3 template walking-6-frames, east + west + north + south (3 gens each; north/south were needed by check:streetwear-walk)",
+      "Attack": "animate_character v3 custom 'nodachi wide horizontal slash, sword stays in hand', 8 frames + reference, east (4) and west re-roll (4, first west roll swung the blade behind him)",
+      "Dash": "v3 custom 'dashing forward, nodachi held low behind', east + west (4 each)",
+      "Skill": "v3 custom 'plants the nodachi into the ground, calls a tidal surge, pulls it free', east (4) and west re-roll (4)",
+      "Hurt": "v3 custom 'flinching back from a heavy hit', 6 frames + reference, east + west (3 each)",
+      "Idle": "art engine breathing-idle (0 gens), rig art-src/rigs/ironclad-kabuto.json, 4 frames 400/250/400/250 (the clip-holds check pins 1300 ms), head settles one extra px on the low frame"
+    },
+    "tideTrail": "Attack frames 3-7 carry a tide-blue streak behind the blade tip (drawn by script, tip = farthest blade-light pixel above the legs)",
+    "discarded": "Attack east cross-punch template test (3 gens, lost the sword); first Attack west and Skill west rolls (8 gens, wrong-way swing / last frame turned)"
+  },
+  "cost": 50,
+  "createdAt": "2026-10-25T15:55:26.002Z",
+  "operator": "agent",
+  "picked": true,
+  "critique": {
+    "score": null,
+    "notes": "M3 hero 1; frames padded to 192, feet row 150; raw PixelLab output kept in m3-test/ (outside raw/)"
+  },
+  "dirMap": {
+    "animations\\Attack": "attack",
+    "animations\\Attack\\east": "e",
+    "animations\\Attack\\west": "w",
+    "animations\\Dash": "dash",
+    "animations\\Dash\\east": "e",
+    "animations\\Dash\\west": "w",
+    "animations\\Hurt": "hurt",
+    "animations\\Hurt\\east": "e",
+    "animations\\Hurt\\west": "w",
+    "animations\\Idle": "idle",
+    "animations\\Idle\\east": "e",
+    "animations\\Idle\\west": "w",
+    "animations\\Skill": "skill",
+    "animations\\Skill\\east": "e",
+    "animations\\Skill\\west": "w",
+    "animations\\Walk": "walk",
+    "animations\\Walk\\east": "e",
+    "animations\\Walk\\west": "w"
+  }
+}

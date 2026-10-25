@@ -4225,6 +4225,266 @@
     "source": "pet-actor:PET_FRAME_MS"
    }
   },
+  "heroes/ironclad-kabuto": {
+   "kind": "heroes",
+   "id": "ironclad-kabuto",
+   "skins": {
+    "streetwear": {
+     "idle": {
+      "Idle": {
+       "slot": "idle",
+       "frames": 4,
+       "ms": [
+        400,
+        250,
+        400,
+        250
+       ],
+       "timing": "sheet-holds",
+       "loop": true,
+       "dirs": {
+        "east": {
+         "frames": 4,
+         "first": "east/frame_000"
+        },
+        "west": {
+         "frames": 4,
+         "first": "west/frame_000"
+        }
+       },
+       "anchor": {
+        "footAt": 0.7865,
+        "groundAt": 0.7604
+       },
+       "cell": {
+        "w": 192,
+        "h": 192
+       },
+       "sheet": "art/heroes/in-use/ironclad-kabuto/streetwear/hero_ironclad-kabuto_streetwear.core.png",
+       "reducedMotion": "hold-first",
+       "legacyKey": "sheets/streetwear/heroes/ironclad-kabuto/Idle"
+      }
+     },
+     "locomotion": {
+      "Dash": {
+       "slot": "dash",
+       "frames": 8,
+       "ms": [
+        40,
+        40,
+        50,
+        60,
+        60,
+        50,
+        50,
+        50
+       ],
+       "timing": "sheet-holds",
+       "loop": false,
+       "dirs": {
+        "east": {
+         "frames": 8,
+         "first": "east/frame_000"
+        },
+        "west": {
+         "frames": 8,
+         "first": "west/frame_000"
+        }
+       },
+       "anchor": {
+        "footAt": 0.7865,
+        "groundAt": 0.7604
+       },
+       "cell": {
+        "w": 192,
+        "h": 192
+       },
+       "sheet": "art/heroes/in-use/ironclad-kabuto/streetwear/hero_ironclad-kabuto_streetwear.combat.png",
+       "reducedMotion": "play",
+       "legacyKey": "sheets/streetwear/heroes/ironclad-kabuto/Dash"
+      },
+      "Walk": {
+       "slot": "walk",
+       "frames": 6,
+       "ms": [
+        140,
+        130,
+        130,
+        140,
+        130,
+        130
+       ],
+       "timing": "sheet-holds",
+       "loop": true,
+       "dirs": {
+        "east": {
+         "frames": 6,
+         "first": "east/frame_000"
+        },
+        "north": {
+         "frames": 6,
+         "first": "north/frame_000"
+        },
+        "south": {
+         "frames": 6,
+         "first": "south/frame_000"
+        },
+        "west": {
+         "frames": 6,
+         "first": "west/frame_000"
+        }
+       },
+       "anchor": {
+        "footAt": 0.7865,
+        "groundAt": 0.7604
+       },
+       "cell": {
+        "w": 192,
+        "h": 192
+       },
+       "sheet": "art/heroes/in-use/ironclad-kabuto/streetwear/hero_ironclad-kabuto_streetwear.core.png",
+       "reducedMotion": "play",
+       "legacyKey": "sheets/streetwear/heroes/ironclad-kabuto/Walk"
+      }
+     },
+     "combat": {
+      "Attack": {
+       "slot": "attack",
+       "frames": 8,
+       "ms": [
+        90,
+        70,
+        45,
+        40,
+        45,
+        60,
+        80,
+        90
+       ],
+       "timing": "sheet-holds",
+       "loop": false,
+       "dirs": {
+        "east": {
+         "frames": 8,
+         "first": "east/frame_000"
+        },
+        "west": {
+         "frames": 8,
+         "first": "west/frame_000"
+        }
+       },
+       "anchor": {
+        "footAt": 0.7865,
+        "groundAt": 0.7604
+       },
+       "cell": {
+        "w": 192,
+        "h": 192
+       },
+       "sheet": "art/heroes/in-use/ironclad-kabuto/streetwear/hero_ironclad-kabuto_streetwear.combat.png",
+       "reducedMotion": "play",
+       "legacyKey": "sheets/streetwear/heroes/ironclad-kabuto/Attack"
+      },
+      "Skill": {
+       "slot": "skill",
+       "frames": 8,
+       "ms": [
+        100,
+        80,
+        60,
+        45,
+        45,
+        60,
+        80,
+        90
+       ],
+       "timing": "sheet-holds",
+       "loop": false,
+       "dirs": {
+        "east": {
+         "frames": 8,
+         "first": "east/frame_000"
+        },
+        "west": {
+         "frames": 8,
+         "first": "west/frame_000"
+        }
+       },
+       "anchor": {
+        "footAt": 0.7865,
+        "groundAt": 0.7604
+       },
+       "cell": {
+        "w": 192,
+        "h": 192
+       },
+       "sheet": "art/heroes/in-use/ironclad-kabuto/streetwear/hero_ironclad-kabuto_streetwear.combat.png",
+       "reducedMotion": "play",
+       "legacyKey": "sheets/streetwear/heroes/ironclad-kabuto/Skill"
+      }
+     },
+     "reaction": {
+      "Hurt": {
+       "slot": "hurt",
+       "frames": 6,
+       "ms": [
+        70,
+        90,
+        130,
+        170,
+        180,
+        200
+       ],
+       "timing": "sheet-holds",
+       "loop": false,
+       "dirs": {
+        "east": {
+         "frames": 6,
+         "first": "east/frame_000"
+        },
+        "west": {
+         "frames": 6,
+         "first": "west/frame_000"
+        }
+       },
+       "anchor": {
+        "footAt": 0.7865,
+        "groundAt": 0.7604
+       },
+       "cell": {
+        "w": 192,
+        "h": 192
+       },
+       "sheet": "art/heroes/in-use/ironclad-kabuto/streetwear/hero_ironclad-kabuto_streetwear.combat.png",
+       "reducedMotion": "play",
+       "legacyKey": "sheets/streetwear/heroes/ironclad-kabuto/Hurt"
+      }
+     }
+    }
+   },
+   "pets": {
+    "lines": [
+     {
+      "line": "solo_ironclad-kabuto",
+      "stages": "baby,child"
+     },
+     {
+      "line": "solo_ironclad-kabuto",
+      "stages": "teen,adult,god"
+     }
+    ],
+    "frameMs": {
+     "idle": 140,
+     "walk": 110,
+     "dash": 60,
+     "attack": 80,
+     "skill": 85,
+     "hurt": 140
+    },
+    "sleepSlowdown": 3,
+    "source": "pet-actor:PET_FRAME_MS"
+   }
+  },
   "heroes/kael": {
    "kind": "heroes",
    "id": "kael",

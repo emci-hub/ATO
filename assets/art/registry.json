@@ -1819,6 +1819,64 @@
       "part": "core"
     },
     {
+      "id": "hero.ironclad-kabuto.streetwear.combat",
+      "path": "assets/art/heroes/in-use/ironclad-kabuto/streetwear/hero_ironclad-kabuto_streetwear.combat.png",
+      "category": "heroes",
+      "type": "character",
+      "theme": "streetwear",
+      "placement": "floor",
+      "camera": "td-3q-low",
+      "size": {
+        "w": 1063,
+        "h": 995
+      },
+      "status": "approved",
+      "source": "pixellab",
+      "diskBytes": 252039,
+      "decodedBytes": 4230740,
+      "format": "png32",
+      "notes": "md5:7ec8f5d45f251f1131e13f3ee3511ed3",
+      "inUse": true,
+      "set": "ironclad-kabuto",
+      "variant": "streetwear",
+      "tags": [],
+      "usedBy": [
+        "assets/art/legacy-play-sheets.json",
+        "assets/play/sheets/streetwear/heroes/ironclad-kabuto/sheets.json",
+        "src/play/generated-play-sheets.ts"
+      ],
+      "part": "combat"
+    },
+    {
+      "id": "hero.ironclad-kabuto.streetwear.core",
+      "path": "assets/art/heroes/in-use/ironclad-kabuto/streetwear/hero_ironclad-kabuto_streetwear.core.png",
+      "category": "heroes",
+      "type": "character",
+      "theme": "streetwear",
+      "placement": "floor",
+      "camera": "td-3q-low",
+      "size": {
+        "w": 1007,
+        "h": 753
+      },
+      "status": "approved",
+      "source": "pixellab",
+      "diskBytes": 92697,
+      "decodedBytes": 3033084,
+      "format": "png8",
+      "notes": "md5:4445284e0836cee9e606010b5d725ad4",
+      "inUse": true,
+      "set": "ironclad-kabuto",
+      "variant": "streetwear",
+      "tags": [],
+      "usedBy": [
+        "assets/art/legacy-play-sheets.json",
+        "assets/play/sheets/streetwear/heroes/ironclad-kabuto/sheets.json",
+        "src/play/generated-play-sheets.ts"
+      ],
+      "part": "core"
+    },
+    {
       "id": "hero.kael.cast.atlas",
       "path": "assets/art/heroes/in-use/kael/cast/atlas.png",
       "type": "character",

@@ -1,6 +1,6 @@
 # ATO art library
 
-Generated. 575 live entries.
+Generated. 577 live entries.
 Open `assets/art/_contact/library.html` (desktop / file://) or `library-portable.html` on a phone.
 Every tile is a preview (animated main clip, still, or individual sprites) — not the raw sheet.
 Reuse before create. New art goes in `assets/art/<category>/in-use|unused/<set>/<variant>/`.
@@ -8,7 +8,7 @@ Viewer lists one card per set (not each clip/file).
 
 ## Categories
 
-- **heroes** (198: 56 in use / 142 unused) — Heroes
+- **heroes** (200: 58 in use / 142 unused) — Heroes
 - **enemies-bosses** (32: 24 in use / 8 unused) — Enemies / bosses
 - **ui** (26: 11 in use / 15 unused) — UI
 - **icons** (148: 67 in use / 81 unused) — Icons
@@ -262,6 +262,13 @@ Viewer lists one card per set (not each clip/file).
 | `pet.gorilla-titan.primal.south-east` | 244×244 | resource | — | — |
 | `pet.gorilla-titan.primal.south-west` | 244×244 | resource | — | — |
 | `pet.gorilla-titan.primal.west` | 244×244 | resource | — | — |
+
+## heroes · ironclad-kabuto · streetwear · in-use
+
+| id | size | status | score | usedBy |
+|---|---|---|---|---|
+| `hero.ironclad-kabuto.streetwear.combat` | 1063×995 | approved | — | assets/art/legacy-play-sheets.json, assets/play/sheets/streetwear/heroes/ironclad-kabuto/sheets.json, src/play/generated-play-sheets.ts |
+| `hero.ironclad-kabuto.streetwear.core` | 1007×753 | approved | — | assets/art/legacy-play-sheets.json, assets/play/sheets/streetwear/heroes/ironclad-kabuto/sheets.json, src/play/generated-play-sheets.ts |
 
 ## heroes · jaguar-sun-guardian · primal · unused
 

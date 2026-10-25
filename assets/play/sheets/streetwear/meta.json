@@ -396,6 +396,25 @@
       "groundAt": 0.7582,
       "bodyRatio": 0.5246,
       "clips": {}
+    },
+    "heroes/ironclad-kabuto": {
+      "footAt": 0.7865,
+      "groundAt": 0.7604,
+      "bodyRatio": 0.625,
+      "clips": {
+        "Attack": 8,
+        "Dash": 8,
+        "Hurt": 6,
+        "Idle": 4,
+        "Skill": 8,
+        "Walk": 6
+      },
+      "walkOrder": [
+        "north",
+        "east",
+        "south",
+        "west"
+      ]
     }
   },
   "fx": {

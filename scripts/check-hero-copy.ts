@@ -46,7 +46,8 @@ for (const hero of heroes) {
   const base = hero.folder.replace(/^assets\/play\//, '');
   assert.ok(
     sheetRegistry.includes(`sheets/${base.replace('skins/', '')}/rotations`) ||
-      sheetRegistry.includes(`${base}/rotations`),
+      sheetRegistry.includes(`${base}/rotations`) ||
+      sheetRegistry.includes(`sheets/streetwear/heroes/${hero.id}/rotations`),
     `${hero.id}: no packed rotations sheet — its grid tile would be blank`,
   );
 }

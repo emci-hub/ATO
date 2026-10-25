@@ -302,5 +302,24 @@
       "skill": "Heavy_attack_11_frames",
       "hurt": "Hurt_7_frames"
     }
+  },
+  {
+    "id": "ironclad-kabuto",
+    "name": "Ironclad Kabuto",
+    "acquire": "Free (airport)",
+    "role": "hero",
+    "folder": "assets/play/skins/cast/heroes/ironclad-kabuto",
+    "unlock": "free_farm",
+    "skillId": "skill_ironclad_kabuto",
+    "kit": { "behavior": "chain", "element": "tide" },
+    "face": "ew",
+    "clips": {
+      "idle": "Idle",
+      "walk": "Walk",
+      "dash": "Dash",
+      "attack": "Attack",
+      "skill": "Skill",
+      "hurt": "Hurt"
+    }
   }
 ]
