@@ -48,7 +48,7 @@ These are no longer requirements:
 
 A Story Library card may use the same sentence shape more than once. The old one-shape cap pushed a false "when" onto lines that were not the same event. Do not add a connector only to satisfy a shape. A real "even when" is fine. A "when" that glues two unrelated facts is not.
 
-Vary how a line opens. "You'd rather" must not start most lines in a pool. An opener used by more than about a third of the lines in a pool of three or more fails the check. A pool is the lines that share a slot, a trait, and a tier, and also the spoken lines on one assembled card. "You'd rather" and "You would rather" count as the same opener.
+Vary how a line opens. "You'd rather" must not start most lines in a pool. An opener used by more than about a third of the lines in a pool of three or more fails the check. A pool is the lines that share a slot, a trait, and a tier. A line written for one legend is its own pool, because a player never hears two legends in the same sitting. The spoken lines on one assembled card are a pool too. "You'd rather" and "You would rather" count as the same opener.
 
 Use a legend fact once on a card. The match line may carry it. The scene, the meaning, and any later match line do not repeat it.
 
@@ -108,7 +108,7 @@ Low confidence is a plain hedge. "This read is early" is enough. Do not costume 
 
 Story, insight, and legend copy that is stored as a line stays a finished line. Slots are only names, pronouns, the legend's name, a real deed, and the player's own answer: `{Subj}`, `{subj}`, `{Name}`, `{legend}`, `{deed}`, `{answer}`. `{deed}` is a short sourced clause. `{answer}` is the option the player chose. Do not invent a quotation.
 
-Each line keeps its id, eligibility, and priority. The highest-priority eligible line wins. A shown line does not repeat until the eligible pool is used. `STORY_LIBRARY_RUNTIME` stays off.
+Each line keeps its id, eligibility, and priority. The highest-priority eligible line wins. A shown line does not repeat until the eligible pool is used. Legends cards and category deep dives render from this library. There is no runtime switch back to a model.
 
 ## What the check enforces
 

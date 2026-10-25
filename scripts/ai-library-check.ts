@@ -196,10 +196,9 @@ async function main() {
     assert.doesNotMatch(vendors, /\b(user|user_id|userId|metadata|labels|safety_identifier|safetyIdentifier|cachedContent)\s*:/, 'no per-person field in a provider body');
     assert.doesNotMatch(vendors, /x-forwarded-for|x-real-ip|request\.headers/i, 'no client header forwarded to a provider');
     const fn = read('supabase/functions/ai-library/index.ts');
-    assert.match(fn, /await complete\(prompt, maxOutputTokens\)/, 'ai-library passes only the bucket-built prompt');
-    assert.doesNotMatch(fn, /complete\([^)]*(user|bucket|authHeader)/, 'never the user, the raw key or the auth header');
+    assert.doesNotMatch(fn, /await complete\(/, 'ai-library does not call the model');
     const fill = read('supabase/functions/ai-library-fill/index.ts');
-    assert.doesNotMatch(fill, /complete(Detailed)?\([^)]*user/i, 'the fill job never passes a user to a provider');
+    assert.doesNotMatch(fill, /completeDetailed\(/, 'the fill job does not call the model');
   }
   ok('AI data flow: same bucket = same prompt, no exact score; provider gets only prompt + settings from our server');
 
@@ -332,36 +331,29 @@ async function main() {
 
   // --- the Edge Function -------------------------------------------------------------------
   const edge = read('supabase/functions/ai-library/index.ts');
-  assert.match(edge, /from '\.\.\/_shared\/ai-library\.bundle\.js'/);
+  assert.doesNotMatch(edge, /from '\.\.\/_shared\/ai-library\.bundle\.js'/);
   assert.doesNotMatch(edge, /payload\.(prompt|card|text|cards)/, 'never takes a prompt or card text from the phone');
-  assert.ok(edge.indexOf("rpc('claim_library_write'") < edge.indexOf('await complete('), 'claim first, then the model');
-  assert.ok(edge.indexOf("planLibraryCall(kind, bucket, angleCounts)") < edge.indexOf("rpc('claim_library_write'"), 'the key is checked before anything is charged');
-  assert.match(edge, /ai_consent !== true/, 'consent enforced on the server');
-  assert.match(edge, /admin\.rpc\('library_add_cards'/, 'cards are stored with the service role');
-  assert.match(edge, /checkLibraryAnswer\(kind, bucket, angles, raw\)/);
-  assert.match(edge, /refund_ai_tokens/);
-  assert.match(edge, /admin\.rpc\('refund_ai_call'/, 'a failed call gives back the shared AI cap unit');
-  assert.match(edge, /if \(claimRow\.served\?\.ok\) return json/, 'a Legends library hit returns without a model call');
+  assert.match(edge, /kind === 'deep_dive' \|\| kind === 'legend'/);
+  assert.match(edge, /reason: 'library' \}, 410\)/);
+  assert.doesNotMatch(edge, /await complete\(|claim_library_write|ai-vendors|planLibraryCall/);
   assert.doesNotMatch(edge, /console\.log\([^)]*raw/, 'never logs the text');
-  ok('ai-library: consent, key check, claim, then the model; app checks; service-role store; refund on failure');
+  ok('ai-library: deep dives and legends are refused with 410 and no model call');
 
   // --- the phone -------------------------------------------------------------------------
   const client = read('src/lib/ai-library/client.ts');
-  assert.match(client, /functions\.invoke\('ai-library', \{ body: \{ kind, bucket, mode \} \}\)/, 'the phone sends only kind, bucket, mode');
+  assert.doesNotMatch(client, /functions\.invoke\('ai-library'|writeLibraryCard|serveLibraryCard|wantLibraryCards/, 'the phone does not serve or write a library card');
   const card = read('src/components/category-deep-dive-card.tsx');
   assert.match(card, /DEEP_DIVE_OPEN_LABEL = 'Open my deep dive · free'/);
-  assert.match(card, /\{DEEP_DIVE_NEW_LABEL\} · \{AI_PRICE_LABEL\}/, 'a brand-new one shows its price');
+  assert.doesNotMatch(card, /DEEP_DIVE_NEW_LABEL\} · \{AI_PRICE_LABEL\}/, 'a brand-new model card is not offered');
   assert.match(card, /<LibraryCardFooter libraryId=\{entry\.libraryId\} others=\{entry\.others\} \/>/);
   // Insights (2026-10-14): the app no longer reads Story cards from the
   // library (template-only); the server dropped Story on 2026-10-22 (A3 / S4).
   const fold = read('src/components/insights/insights-story-card.tsx');
   assert.doesNotMatch(fold, /serveLibraryCard|writeLibraryCard|wantLibraryCards/, 'the Story card never touches the AI library');
   const gen = read('src/lib/legend-figures/generate.ts');
-  assert.match(gen, /input\.free \? 'free_legend' : 'paid'/, 'the free Legends reveal is never charged');
+  assert.doesNotMatch(gen, /free_legend|writeLibraryCard/, 'Legends do not ask the server to write a card');
   assert.doesNotMatch(gen, /serveLibraryCard\('legend'/, 'Legends never use the free library serve');
-  // The old one-person deep-dive path (writeOld) was removed in roadmap A5; the library path saves the card under
-  // the library key, so it counts as fresh and the free button never charges twice.
-  assert.match(card, /dive: \{ \.\.\.served\.card, categoryId: def\.id, leansKey: key \}/, 'the library path saves under the library key (no repeat charge)');
+  assert.match(card, /dive: \{ \.\.\.dive, leansKey: key \}/, 'the story library path saves under the library key');
   assert.doesNotMatch(card, /writeOld|writeCategoryDeepDive/, 'the old one-person path is gone');
   assert.doesNotMatch(gen.replace(/\/\*[\s\S]*?\*\//g, ''), /writeLegendStory|generateText/, 'the old Legends one-person path is gone');
   assert.match(read('src/app/(tabs)/legends.tsx'), /revealLegendStory\(\{ \.\.\.input, consentGranted, free \}\)/);
@@ -369,8 +361,9 @@ async function main() {
   assert.equal(sharedCardLine(3), null);
   assert.equal(sharedCardLine(11), 'You and 11 others got this card.');
   const consent = read('src/components/ai-consent-card.tsx');
-  assert.match(consent, /shared between people with similar leanings and never include your name or your answers/);
-  ok('phone: kind + bucket only; free first, brand-new priced; footer on deep dives + Legends; consent says cards are shared');
+  assert.match(consent, /never include your name or your answers/);
+  assert.match(consent, /stored story library/);
+  ok('phone: no server write; footer on deep dives + Legends; consent names the story library');
 
   // --- wave95: Postgres regexes allow a repeat count of at most 255 --------------------
   // ('{3,300}' compiled fine in JS and in CREATE, then failed on the first live save.)
@@ -421,21 +414,19 @@ async function main() {
   assert.match(sql94, /cron\.schedule\(\s*'ai-library-fill',\s*'\*\/10 \* \* \* \*'/);
   assert.doesNotMatch(sql94, /from public\.trait_tracks|from public\.me\b/, 'no cross-account trait read');
   const fill = read('supabase/functions/ai-library-fill/index.ts');
-  assert.ok(fill.indexOf("rpc('library_fill_token_ok'") < fill.indexOf("rpc('library_fill_queue'"), 'the token is checked first');
-  assert.ok(fill.indexOf("rpc('library_fill_begin')") < fill.indexOf('await completeDetailed('), 'the cap is claimed before every model call');
-  assert.ok(fill.includes("p_source: 'seed'"));
-  assert.ok(fill.includes('checkLibraryAnswer(item.kind, item.bucket, plan.angles, raw)'), 'the app’s own checks');
-  assert.doesNotMatch(fill, /console\.log\([^)]*raw/, 'never logs the text');
-  ok('wave94: look-ahead keys capped per account, token in Vault, service-role fill, daily cap, fail skip, no trait read');
+  assert.match(fill, /reason: 'library' \}, 410\)/);
+  assert.doesNotMatch(fill, /completeDetailed|library_fill_begin|ai-vendors/);
+  assert.match(read('supabase/migrations/wave114_unschedule_ai_library.sql'), /cron\.unschedule\('ai-library-fill'\)/);
+  ok('wave94 SQL stays; the fill function refuses and wave114 unschedules the cron (not applied here)');
 
   // --- phone look-ahead ---------------------------------------------------------------
   const legendsScreen = read('src/app/(tabs)/legends.tsx');
   // The Story is template-only on Insights (2026-10-14): it asks the library for nothing.
   assert.ok(!fold.includes('wantLibraryCards'), 'the Story card sends no look-ahead');
-  assert.ok(legendsScreen.includes("wantLibraryCards('legend', buckets)"), 'Legends tells the server today’s frames');
-  assert.ok(legendsScreen.includes('planLegendReveal({ legend, frameAngleId: angleId, userId: start.userId, counts, told, tracks })'), 'one planner for reveal and look-ahead');
-  assert.ok(card.includes("wantLibraryCards('deep_dive', [diveBucketKey(def.id, leans)])"), 'a used-up deep-dive group is queued, free');
-  ok('the phone sends group keys ahead of time: Story, today’s Legends frames, a used-up deep dive');
+  assert.ok(!legendsScreen.includes('wantLibraryCards'), 'Legends does not queue a model fill');
+  assert.ok(legendsScreen.includes('planLegendReveal({ legend, frameAngleId: angleId, userId: start.userId, counts, told, tracks })'), 'one planner for the reveal');
+  assert.ok(!card.includes('wantLibraryCards'), 'a deep dive does not queue a model fill');
+  ok('the phone does not send group keys ahead for a model fill');
 
   // --- teams -------------------------------------------------------------------------------
   const glyphs = JSON.parse(

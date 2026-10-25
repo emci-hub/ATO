@@ -22,8 +22,7 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import { ThemedText } from '@/components/themed-text';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
-import { writeLibraryCard } from '@/lib/ai-library/client';
-import { DEEP_DIVE_LIBRARY, allDiveBuckets } from '@/lib/ai-library/deep-dive';
+import { allDiveBuckets } from '@/lib/ai-library/deep-dive';
 import { LIBRARY_KINDS, LIBRARY_VERSION } from '@/lib/ai-library/types';
 import { CATEGORY_DEFS } from '@/lib/categories';
 import { useMeContext } from '@/lib/me-context';
@@ -80,7 +79,7 @@ export function AiLibraryDev() {
   const [rows, setRows] = useState<Row[]>([]);
   const [armed, setArmed] = useState<string | null>(null);
   const [note, setNote] = useState<string | null>(null);
-  const [filling, setFilling] = useState(false);
+  const filling = false;
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const load = useCallback(async () => {
@@ -135,37 +134,7 @@ export function AiLibraryDev() {
 
   const fill = async () => {
     if (filling || !confirm('fill')) return;
-    setFilling(true);
-    setNote('Filling…');
-    try {
-      const counts = await supabase.rpc('library_bucket_counts', { p_kind: 'deep_dive', p_version: LIBRARY_VERSION.deep_dive });
-      if (counts.error) {
-        setNote(`Not started: ${counts.error.message}`);
-        return;
-      }
-      const have = (counts.data as Record<string, number> | null) ?? {};
-      const thin = CATEGORY_DEFS.flatMap((def) => allDiveBuckets(def.id))
-        .map((bucket) => ({ bucket, n: have[bucket] ?? 0 }))
-        .filter((row) => row.n < SEED_TARGET_PER_BUCKET)
-        .sort((a, b) => a.n - b.n);
-      let calls = 0;
-      let written = 0;
-      for (const row of thin) {
-        if (calls >= SEED_CALLS_PER_TAP) break;
-        calls += 1;
-        const res = await writeLibraryCard('deep_dive', row.bucket, 'seed', DEEP_DIVE_LIBRARY.readCard);
-        if (!res.ok && (res.reason === 'quota' || res.reason === 'missing' || res.reason === 'consent')) {
-          setNote(`Stopped: ${res.reason}. ${written} cards written.`);
-          return;
-        }
-        if (res.ok) written += res.written;
-        setNote(`Filling… ${calls} calls, ${written} cards`);
-      }
-      setNote(`${written} cards written in ${calls} calls. ${Math.max(thin.length - calls, 0)} thin buckets left.`);
-    } finally {
-      setFilling(false);
-      void load();
-    }
+    setNote('The writer is off. Legends cards and deep dives come from the story library.');
   };
 
   if (!devAccess.isRoot) {
@@ -238,7 +207,7 @@ export function AiLibraryDev() {
         accessibilityLabel={armed === 'fill' ? 'Tap again to fill the deep-dive library' : 'Fill the deep-dive library'}
         style={({ pressed }) => [styles.button, { borderColor: armed === 'fill' ? theme.accent : theme.border }, pressed && styles.pressed]}>
         <ThemedText type="smallBold">
-          {armed === 'fill' ? 'Tap again to confirm' : `Fill the deep-dive library (up to ${SEED_CALLS_PER_TAP} AI calls)`}
+          {armed === 'fill' ? 'Tap again to confirm' : 'The story library writer is off'}
         </ThemedText>
       </Pressable>
 
