@@ -112,8 +112,15 @@ assert.doesNotMatch(
 );
 ok('Home reads the shared gate');
 
-const explore = codeOnly(read('src/app/(tabs)/explore.tsx'));
-assert.match(explore, /isFullProfileDone/, 'Explore must gate Load categories on the shared signal');
+// IA P5: Categories moved from Explore to You (explore.tsx is only a redirect).
+const explore = codeOnly(read('src/app/(tabs)/you.tsx'));
+assert.match(explore, /isFullProfileDone/, 'You must gate Load categories on the shared signal');
+assert.match(
+  explore,
+  /unlocked=\{isFullProfileDone\(tracks, tracksReady\)\}/,
+  'You hands Categories the shared gate',
+);
+assert.doesNotMatch(codeOnly(read('src/app/(tabs)/explore.tsx')), /isFullProfileDone|bankTotalProgress/, 'the Explore route derives no gate of its own');
 const fold = codeOnly(read('src/components/questions-fold.tsx'));
 assert.match(fold, /isFullProfileDone/, 'Questions must gate the round on the shared signal');
 const story = codeOnly(read('src/components/insights/insights-story-card.tsx'));

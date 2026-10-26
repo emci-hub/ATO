@@ -316,18 +316,20 @@ assert.match(card, /if \(epochRef\.current !== epochAtStart\) return;/, 'a wipe 
 // Moved from Home to Explore (emci, 2026-10-09): between Categories and "How you've changed".
 const home = read('src/app/(tabs)/index.tsx');
 assert.doesNotMatch(home, /<CategoryDeepDiveCard/, 'no longer on Home');
-const explore = read('src/app/(tabs)/explore.tsx');
+// IA P5 (2026-10-26): the Explore tab is gone; its route file only redirects, and the card lives on You.
+const exploreRoute = read('src/app/(tabs)/explore.tsx');
+assert.match(exploreRoute, /<Redirect href="\/you\?section=categories" \/>/, 'explore.tsx is only the redirect to You');
+assert.doesNotMatch(exploreRoute, /CategoryDeepDiveCard|CategoriesFold/, 'no category UI left on the Explore route');
+const explore = read('src/app/(tabs)/you.tsx');
 const cardAt = explore.indexOf('<CategoryDeepDiveCard');
-// IA P4: ChangeCard ("How you've changed") moved from Explore to You.
 assert.ok(cardAt > explore.indexOf('<CategoriesFold') && explore.indexOf('<CategoriesFold') >= 0, 'after Categories');
-assert.doesNotMatch(explore, /<ChangeCard/, 'How you’ve changed left Explore (now on You)');
-assert.match(read('src/app/(tabs)/you.tsx'), /<ChangeCard userId=\{me\.id\} \/>/, 'How you’ve changed lives on You');
+assert.match(explore, /<ChangeCard userId=\{me\.id\} \/>/, 'How you’ve changed lives on You');
 // The crisis gate was removed with the crisis system (2026-10-14).
 assert.match(explore, /isFullProfileDone\(tracks, tracksReady\) \? \(\s*<CategoryDeepDiveCard/, 'after Questions are finished');
 assert.doesNotMatch(explore, /crisisToday/);
 assert.match(explore, /consentGranted=\{aiConsentFor\(me\) === 'granted'\}/, 'needs AI consent');
 assert.equal(explore.split('<CategoryDeepDiveCard').length - 1, 1);
-ok('one AI call, only on "Write my deep dive", after consent and the server claim; on Explore after Categories (How you’ve changed now lives on You), after Questions, no crisis gate');
+ok('one AI call, only on "Write my deep dive", after consent and the server claim; on You after Categories (Explore is only a redirect), after Questions, no crisis gate');
 
 const sql = read('supabase/migrations/wave90_category_deep_dive.sql');
 assert.match(sql, /create policy category_deep_dives_select_own on public\.category_deep_dives\s+for select using \(auth\.uid\(\) = user_id\);/);
