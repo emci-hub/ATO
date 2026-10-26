@@ -2,9 +2,9 @@
  * Home — the daily check-in (wave92, emci 2026-10-09).
  *
  * One tap a day: +5 ATO tokens, every 7th check-in +10. A missed day never
- * resets the count. Tokens pay for AI views (a Legends AI card or a deep dive;
- * the Story is free templates), so this card also says where tokens come from and what they
- * buy. No model call here: it only writes the ledger through the server.
+ * resets the count. The free legend reveal and the free deep dive do not cost tokens.
+ * An extra library page does. This card says where tokens come from. No model call
+ * here: it only writes the ledger through the server.
  */
 import { useCallback, useEffect, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
@@ -29,7 +29,7 @@ export const checkinWeekLine = (count: number) =>
     ? `Next check-in is 1 of 7 · the 7th pays +${ATO_TOKEN_EARN.checkin_week_bonus}.`
     : `${count} of 7 check-ins toward your next bonus · the 7th pays +${ATO_TOKEN_EARN.checkin_week_bonus}.`;
 export const checkinBalanceLine = (tokens: number) =>
-  `You have ${tokens} tokens. Each AI view costs ${AI_TOKEN_PRICE}: a Legends AI card or a deep dive on Explore.`;
+  `You have ${tokens} tokens. The free legend reveal and the free deep dive do not cost tokens. An extra library page costs ${AI_TOKEN_PRICE}.`;
 
 export function DailyCheckinCard({
   todayYmd,

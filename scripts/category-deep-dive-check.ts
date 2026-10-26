@@ -294,27 +294,25 @@ assert.doesNotMatch(card, /generateText\(/, 'the card never calls the model dire
 assert.ok(card.includes('const open = useCallback'), 'the button runs open()');
 assert.doesNotMatch(card, /writeOld|writeCategoryDeepDive|category-deep-dive\/generate/, 'the old one-person path is gone');
 // A missing server (wave93 not live) is only a note, never a fallback call: it maps to the "not switched on yet" line.
-assert.match(card, /outcome\.reason === 'missing'\s*\? DEEP_DIVE_UNAVAILABLE/, 'a missing server says deep dives are not switched on yet');
-assert.doesNotMatch(card, /outcome\.reason === 'missing'\) \{/, 'no fallback branch for a missing server');
-assert.match(card, /onPress=\{\(\) => void open\('library'\)\}/, 'the free library card is a tap');
-assert.match(card, /onPress=\{\(\) => void open\('new'\)\}/, 'the brand-new card is a tap');
+assert.doesNotMatch(card, /outcome\.reason === 'missing'/, 'a missing server is not a path anymore');
+assert.match(card, /onPress=\{\(\) => void open\('new'\)\}/, 'a paid extra page is a tap');
+assert.match(card, /claimCategoryDeepDive\(/, 'the paid page is claimed before it is shown');
+assert.match(card, /onPress=\{\(\) => void open\('library'\)\}/, 'the free story library card is a tap');
 assert.match(card, /if \(!def \|\| writingRef\.current \|\| leans\.length === 0\) return;/, 'a double tap does nothing');
 assert.match(card, /if \(epochRef\.current !== epochAtStart\) return;/, 'a wipe while writing is never written back');
 assert.doesNotMatch(card, /COPY_REVIEWED|[Dd]raft/, 'no draft badge in the app');
 // Consent, the server claim (no claim = no call) and the refund on failure now live only in the server:
 // ai-library checks consent, claims first (claim_library_write) and refunds a failed paid call.
 const libraryFn = read('supabase/functions/ai-library/index.ts');
-assert.ok(libraryFn.indexOf("ai_consent !== true") < libraryFn.indexOf("rpc('claim_library_write'"), 'consent before the claim (server)');
-assert.ok(libraryFn.indexOf("rpc('claim_library_write'") < libraryFn.indexOf('await complete('), 'the server claim before the call');
-assert.match(libraryFn, /refund_ai_tokens/, 'charged but no card → refunded (server)');
+assert.match(libraryFn, /kind === 'deep_dive' \|\| kind === 'legend'/);
+assert.match(libraryFn, /reason: 'library' \}, 410\)/);
+assert.doesNotMatch(libraryFn, /await complete\(|claim_library_write/);
 assert.match(read('src/lib/category-deep-dive/store.ts'), /PGRST202/, 'before wave90 is applied it says "not switched on yet", never "used"');
 // wave92: tokens decide how often (the server keeps a safety ceiling); the button shows the price.
-assert.match(card, /const affordable = tokens >= AI_TOKEN_PRICE;/, 'one deep dive needs one AI view of tokens');
-assert.match(card, /\{DEEP_DIVE_NEW_LABEL\} · \{AI_PRICE_LABEL\}/, 'the brand-new button shows its price');
-assert.match(card, /Or write one now for \$\{AI_PRICE_LABEL\}\.`/, 'the "read them all" note names the price too');
-assert.match(card, /DEEP_DIVE_AI_OFF = 'Turn on AI in the You tab/, 'the AI-off note says where the switch is');
-assert.match(card, /outcome\.reason === 'tokens'\s*\? AI_TOKENS_NEEDED/, 'too few tokens says how to earn more');
-assert.match(card, /outcome = await pending;/, 'a slow answer is waited for, never thrown away (the claim is spent)');
+assert.match(card, /AI_PRICE_LABEL/, 'the paid page shows its price');
+assert.doesNotMatch(card, /writeNewDive|generateText\(/, 'the paid page is not a model write');
+assert.match(card, /renderLibraryDive\(/, 'the tap assembles the story library');
+assert.match(card, /if \(epochRef\.current !== epochAtStart\) return;/, 'a wipe while writing is never written back');
 // Moved from Home to Explore (emci, 2026-10-09): between Categories and "How you've changed".
 const home = read('src/app/(tabs)/index.tsx');
 assert.doesNotMatch(home, /<CategoryDeepDiveCard/, 'no longer on Home');
@@ -347,8 +345,9 @@ assert.match(card, /opensLater \? \(/, 'a card saved earlier with an opening day
 ok('wave90: own rows only, written by RPC, one new card a day, wiped by Reset account');
 
 const consent = read('src/components/ai-consent-card.tsx');
-assert.match(consent, /AI_USE_DISCLOSURE_MODEL =\s*'[^']*category deep dives/, 'the disclosure names this AI use while the model path is on (Apple 5.1.2)');
-assert.match(consent, /AI_USE_DISCLOSURE = STORY_LIBRARY_RUNTIME \? AI_USE_DISCLOSURE_LIBRARY : AI_USE_DISCLOSURE_MODEL/);
+assert.match(consent, /AI_USE_DISCLOSURE =\s*'[^']*category deep dives/, 'the disclosure names category deep dives (Apple 5.1.2)');
+assert.match(consent, /No model writes them/);
+assert.doesNotMatch(consent, /STORY_LIBRARY_RUNTIME/);
 assert.match(consent, /category deep dives you ask for/, 'so does the consent ask');
 assert.equal(CATEGORY_DEEP_DIVE_COPY_REVIEWED, true, 'accepted by emci 2026-10-23 (roadmap A4; the table is pinned by check:copy-flags)');
 assert.match(read('src/components/dev-hub-panels.tsx'), /CATEGORY_DEEP_DIVE_COPY_REVIEWED/, 'listed on the dev hub copy list');

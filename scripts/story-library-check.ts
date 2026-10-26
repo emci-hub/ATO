@@ -20,7 +20,7 @@ import {
   SHOWS_MIN_WORDS,
   diveLineViolation,
 } from '../src/lib/category-deep-dive/dive';
-import { legendById } from '../src/lib/legend-figures/roster';
+import { legendById, LEGEND_ROSTER } from '../src/lib/legend-figures/roster';
 import {
   DIFFER_MAX_WORDS,
   DIFFER_MIN_WORDS,
@@ -34,7 +34,10 @@ import {
   titleViolation,
   type LegendPair,
 } from '../src/lib/legend-figures/story';
-import { STORY_LIBRARY_RUNTIME } from '../src/lib/story-library/flags';
+import { agreeSpoken, subjectVerbMismatch } from '../src/lib/story-library/agree';
+import { HAND_DEEDS } from '../src/lib/story-library/deeds';
+import { legendDeed } from '../src/lib/story-library/deed';
+import { LEGEND_LINES } from '../src/lib/story-library/legend-lines';
 import { STORY_LIBRARY } from '../src/lib/story-library/library';
 import { pickLine, speak } from '../src/lib/story-library/pick';
 import { reviewLibraryVoice } from '../src/lib/story-library/voice-review';
@@ -55,19 +58,20 @@ function between(text: string, min: number, max: number, label: string) {
   assert.ok(n >= min && n <= max, `${label} is ${n} words, want ${min}–${max}: ${text}`);
 }
 
-assert.equal(STORY_LIBRARY_RUNTIME, false, 'the story library flag ships off');
+assert.equal(existsSync(resolve(root, 'src/lib/story-library/flags.ts')), false, 'the story library flag is deleted');
 assert.match(
   read('src/components/ai-consent-card.tsx'),
-  /AI_USE_DISCLOSURE = STORY_LIBRARY_RUNTIME \? AI_USE_DISCLOSURE_LIBRARY : AI_USE_DISCLOSURE_MODEL/,
-  'while the flag is off the disclosure still names the model',
+  /AI_USE_DISCLOSURE =\s*\n\s*'ATO writes your Legends cards and your category deep dives from a stored story library/,
+  'the disclosure names the story library',
 );
-assert.match(read('src/lib/story-library/flags.ts'), /return false/, 'the flag default is written down');
+assert.doesNotMatch(read('src/components/ai-consent-card.tsx'), /STORY_LIBRARY_RUNTIME|Yes, use AI/);
+assert.doesNotMatch(read('src/lib/legend-figures/generate.ts'), /writeLibraryCard|STORY_LIBRARY_RUNTIME/);
+assert.doesNotMatch(read('src/components/category-deep-dive-card.tsx'), /writeLibraryCard|writeNewDive|openLibraryDive|STORY_LIBRARY_RUNTIME/);
+assert.doesNotMatch(read('src/app/(tabs)/legends.tsx'), /wantLibraryCards|STORY_LIBRARY_RUNTIME/);
 
 assert.equal(existsSync(resolve(root, 'src/lib/category-deep-dive/generate.ts')), false, 'the old deep-dive client writer stays deleted');
 assert.doesNotMatch(read('src/components/category-deep-dive-card.tsx'), /generateText\(/);
 assert.doesNotMatch(read('src/lib/legend-figures/generate.ts'), /generateText\(/);
-assert.match(read('src/components/category-deep-dive-card.tsx'), /STORY_LIBRARY_RUNTIME/);
-assert.match(read('src/app/(tabs)/legends.tsx'), /STORY_LIBRARY_RUNTIME/);
 assert.match(read('src/components/story-library-dev.tsx'), /validateLibrary/);
 assert.match(read('src/components/story-library-dev.tsx'), /Ending preview/);
 assert.match(read('src/components/story-library-dev.tsx'), /Tap again to approve/);
@@ -75,16 +79,17 @@ assert.match(read('src/components/story-library-dev.tsx'), /persistStoryLibraryD
 assert.match(read('src/app/dev-lab.tsx'), /<HubTool id="story-library">/);
 assert.match(read('src/lib/dev-hub-catalog.ts'), /id: 'story-library'/);
 
-const shutdown = read('docs/story-library/shutdown/unschedule-ai-library.sql');
-assert.match(shutdown, /DO NOT APPLY/);
+const shutdown = read('supabase/migrations/wave114_unschedule_ai_library.sql');
+assert.match(shutdown, /NOT APPLIED/);
 assert.match(shutdown, /cron\.unschedule\('ai-library-fill'\)/);
-assert.equal(existsSync(resolve(root, 'supabase/migrations/unschedule-ai-library.sql')), false, 'the unschedule is not a migration');
-assert.match(read('supabase/functions/ai-library/index.ts'), /await complete\(/, 'the live writer still calls the model');
-const writerNote = read('docs/story-library/shutdown/ai-library-writer-off.md');
-assert.match(writerNote, /do not deploy/i);
-assert.match(writerNote, /deep_dive/);
-assert.match(writerNote, /legend/);
-assert.match(writerNote, /before/);
+assert.equal(existsSync(resolve(root, 'docs/story-library/shutdown/unschedule-ai-library.sql')), false, 'the prepared SQL moved into wave114');
+const writer = read('supabase/functions/ai-library/index.ts');
+assert.match(writer, /reason: 'library' \}, 410\)/);
+assert.doesNotMatch(writer, /await complete\(|claim_library_write|ai-vendors/);
+assert.match(writer, /kind === 'deep_dive' \|\| kind === 'legend'/);
+const fill = read('supabase/functions/ai-library-fill/index.ts');
+assert.match(fill, /reason: 'library' \}, 410\)/);
+assert.doesNotMatch(fill, /completeDetailed|ai-vendors/);
 
 const expanded = expandGrammar({ start: 'Hello' }, '#start#', {
   categoryId: 'cat_openness',
@@ -326,6 +331,87 @@ console.log('notice:', lowDive.othersNotice);
 console.log('means:', lowDive.whatItMeansForYou);
 console.log('joke:', lowDive.joke);
 console.log('ruth differ:', ruthContrast.differ?.line);
+
+const PLACEHOLDER_FLIP = 'The other side of this leaning would not read the same way.';
+assert.equal(STORY_LIBRARY.lines.filter((line) => line.flip === PLACEHOLDER_FLIP).length, 0, 'placeholder flips are gone');
+for (const line of STORY_LIBRARY.lines) {
+  if (!line.flip.trim() || line.legendId || line.slot.startsWith('legend')) continue;
+  assert.match(line.flip, /strength/i, `${line.id} flip names a strength`);
+  assert.doesNotMatch(line.flip, /would not|worse|weaker|\black\b/i, `${line.id} flip`);
+}
+
+/** A non-name 5-word phrase may show up on at most 3 legends. The hour opener is the one shared frame. Flips are not spoken. */
+function repeatedLegendPhrases(lines: readonly { legendId?: string; text: string }[]): string[] {
+  const byPhrase = new Map<string, Set<string>>();
+  for (const line of lines) {
+    if (!line.legendId) continue;
+    const raw = line.text
+      .replace(/picture an hour with\s+\{legend\}\s*:/gi, ' ')
+      .replace(/\{(?:Subj|subj|Name|legend|answer|deed)\}/g, ' ')
+      .toLowerCase()
+      .replace(/[^a-z'\s-]/g, ' ');
+    const words = raw.split(/\s+/).filter(Boolean);
+    const seen = new Set<string>();
+    for (let i = 0; i + 5 <= words.length; i += 1) {
+      const phrase = words.slice(i, i + 5).join(' ');
+      if (seen.has(phrase)) continue;
+      seen.add(phrase);
+      const ids = byPhrase.get(phrase) ?? new Set<string>();
+      ids.add(line.legendId);
+      byPhrase.set(phrase, ids);
+    }
+  }
+  return [...byPhrase.entries()]
+    .filter(([, ids]) => ids.size > 3)
+    .map(([phrase, ids]) => `"${phrase}" on ${ids.size} legends`);
+}
+
+const three = Array.from({ length: 3 }, (_, i) => ({ legendId: `lf_${i}`, text: 'alpha beta gamma delta epsilon zeta' }));
+const four = [...three, { legendId: 'lf_3', text: 'alpha beta gamma delta epsilon zeta' }];
+assert.equal(repeatedLegendPhrases(three).length, 0, 'three legends may share a 5-word phrase');
+assert.ok(repeatedLegendPhrases(four).length > 0, 'a fourth legend sharing that phrase fails');
+const repeated = repeatedLegendPhrases(LEGEND_LINES);
+assert.equal(repeated.length, 0, repeated.slice(0, 8).join('\n'));
+assert.match(
+  LEGEND_LINES.find((line) => line.id === 'lf_hachiko-scene')?.text ?? '',
+  /\bhe'd\b/,
+  'Hachikō uses he',
+);
+assert.doesNotMatch(LEGEND_LINES.find((line) => line.id === 'lf_hachiko-scene')?.text ?? '', /\bthey\b/i);
+
+const SHAPE_NOISE = /\b(when|because|then)\b|,|\?|\d/;
+for (const legend of LEGEND_ROSTER) {
+  const deed = HAND_DEEDS[legend.id];
+  assert.ok(deed && deed.trim(), `missing hand deed ${legend.id}`);
+  assert.equal(legendDeed(legend), deed, legend.id);
+  assert.doesNotMatch(deed, SHAPE_NOISE, `${legend.id} deed ${deed}`);
+  const own = LEGEND_LINES.filter((line) => line.legendId === legend.id);
+  assert.ok(own.length >= 2 && own.length <= 4, `${legend.id} has ${own.length} lines`);
+}
+assert.match(
+  STORY_LIBRARY.lines.find((line) => line.id === 'ruth-extraversion-differ-low')?.text ?? '',
+  /recharge with time to yourself/,
+  'the reserved Ruth line stays',
+);
+assert.equal(legendDeed({ id: 'missing', facts: [], famousFor: '', whoTheyWere: '' }), 'did the known work');
+
+assert.equal(subjectVerbMismatch('Last time this came up, she still try something new'), 'past tense she try');
+assert.equal(subjectVerbMismatch('She will try something new before you pick one'), 'before you pick one');
+assert.equal(subjectVerbMismatch('Last time this came up, she still tried something new'), null);
+assert.equal(
+  subjectVerbMismatch(agreeSpoken('She like trying new things, and she turn ordinary tasks into a game.', PRONOUNS.she)),
+  null,
+);
+for (const line of STORY_LIBRARY.lines) {
+  for (const pronoun of [PRONOUNS.you, PRONOUNS.she, PRONOUNS.he, PRONOUNS.they]) {
+    const spoken = speak(line.text, pronoun, 'Alex', {
+      legend: 'Marie Curie',
+      deed: 'coined the word radioactivity',
+      answer: 'I make the shared doc anyway',
+    });
+    assert.equal(subjectVerbMismatch(spoken), null, `${line.id} ${pronoun.id}: ${spoken}`);
+  }
+}
 
 const voice = reviewLibraryVoice(STORY_LIBRARY);
 assert.equal(

@@ -5,12 +5,14 @@
  */
 import type { LegendFigure } from '@/lib/legend-figures/types';
 
-const CURIE_DEED = 'coined the word radioactivity';
+import { HAND_DEEDS } from './deeds';
+
 const FALLBACK = 'did the known work';
 const SHAPE_NOISE = /\b(when|because|then)\b|,|\?/;
 
 export function legendDeed(legend: Pick<LegendFigure, 'id' | 'facts' | 'whoTheyWere' | 'famousFor'>): string {
-  if (legend.id === 'lf_marie_curie') return CURIE_DEED;
+  const hand = HAND_DEEDS[legend.id];
+  if (hand) return hand;
   const raw = legend.facts[0]?.text || legend.famousFor || legend.whoTheyWere || '';
   const words = raw
     .toLowerCase()

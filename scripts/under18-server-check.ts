@@ -586,10 +586,10 @@ function main() {
 
   // 6. Edge Functions: the paid path still claims (gated) before any model call.
   const lib = lf(readFileSync(resolve(root, 'supabase/functions/ai-library/index.ts'), 'utf8'));
-  const claimAt = lib.indexOf("caller.rpc('claim_library_write'");
-  assert.ok(claimAt > 0 && claimAt < lib.indexOf('await complete('), 'ai-library claims (as the caller) before the model call');
+  assert.match(lib, /reason: 'library' \}, 410\)/);
+  assert.doesNotMatch(lib, /await complete\(|claim_library_write/);
   assert.ok(existsSync(resolve(root, 'docs/under18-server.md')), 'docs/under18-server.md');
-  ok('ai-library reaches the model only after claim_library_write, which is gated');
+  ok('ai-library refuses deep dives and legends and does not call a model');
 
   console.log(`\n${passed} under18-server checks passed`);
 }

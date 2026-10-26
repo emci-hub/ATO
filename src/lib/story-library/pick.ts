@@ -7,6 +7,7 @@
 import type { LineSlot, PronounSet, StoryLine } from './types';
 import { sentenceShape, type SentenceShape } from '@/lib/voice/player-copy';
 
+import { agreeSpoken } from './agree';
 import { unseenOrReset } from './shown';
 
 export interface PickContext {
@@ -51,13 +52,14 @@ export function speak(
   extras: { legend?: string; answer?: string; deed?: string } = {},
 ): string {
   const who = pronoun.id === 'you' ? pronoun.subjCap : name;
-  return text
+  const filled = text
     .replaceAll('{Name}', who)
     .replaceAll('{Subj}', pronoun.subjCap)
     .replaceAll('{subj}', pronoun.subj)
     .replaceAll('{legend}', extras.legend ?? '')
     .replaceAll('{deed}', extras.deed ?? '')
     .replaceAll('{answer}', extras.answer ?? '');
+  return agreeSpoken(filled, pronoun);
 }
 
 function hash(seed: string): number {
