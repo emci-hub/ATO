@@ -17,7 +17,7 @@ apply — `src/play/neon-viper.ts` forces the Neon Viper tokens.
 
 ## Forbidden for Play work
 `src/app/**` (except `src/app/play.tsx` — the Play shell mount only; no Soft/Zen
-chrome or copy) · Soft/Zen/Quest/Anime screens · `src/app/copy/**` (except the
+chrome or copy) · Soft/Zen/Quest/Anime screens · `src/content/copy/**` (except the
 LF-only `library.md` fix). Play never restyles the app or adds app copy.
 
 ## Forbidden for App/Soft/Zen work
@@ -32,7 +32,7 @@ the game.
 
 `npm run check:play-isolation` (also part of `check:ota-gate`) fails any changeset
 that mixes Play paths with non-Play app paths. The allowlist (never counted):
-`src/app/play.tsx`, `src/app/copy/library.md`, `PROJECT_CONTEXT.md`, `AGENTS.md`,
+`src/app/play.tsx`, `src/content/copy/library.md`, `PROJECT_CONTEXT.md`, `AGENTS.md`,
 `CLAUDE.md`, `.cursor/**`, `.gitattributes`, `package.json`, `scripts/ota-gate.ts`,
 `scripts/check-play-isolation.ts`, `docs/**`, `src/art/**`, `assets/art/**`,
 `art-src/**`, `scripts/art-*`, `scripts/check-art-*`.

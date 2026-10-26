@@ -16,7 +16,7 @@ import {
 } from '../src/lib/voice/library';
 import type { VoiceMe } from '../src/lib/voice/types';
 
-const library = readFileSync(resolve('src/app/copy/library.md'), 'utf8');
+const library = readFileSync(resolve('src/content/copy/library.md'), 'utf8');
 
 const ALLOWED_LIBRARY_TERMS = new Set([
   'growth mindset',

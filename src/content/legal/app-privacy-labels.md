@@ -1,6 +1,6 @@
 # App Privacy nutrition labels
 
-Copy these answers into App Store Connect → App Privacy. They must match `PrivacyInfo.xcprivacy`, `app.json` `ios.privacyManifests` and `src/app/legal/privacy.md` (`check:floor` compares the data types and the Linked column). No ATT / cross-app tracking (`NSPrivacyTracking = false`). This is not legal advice; open items are in `docs/legal/OPEN-QUESTIONS.md`.
+Copy these answers into App Store Connect → App Privacy. They must match `PrivacyInfo.xcprivacy`, `app.json` `ios.privacyManifests` and `src/content/legal/privacy.md` (`check:floor` compares the data types and the Linked column). No ATT / cross-app tracking (`NSPrivacyTracking = false`). This is not legal advice; open items are in `docs/legal/OPEN-QUESTIONS.md`.
 
 ## Tracking
 

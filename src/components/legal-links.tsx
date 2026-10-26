@@ -1,7 +1,7 @@
 /**
  * Privacy Policy + Terms links (master plan Step 10, roadmap M8; Apple 5.1.1).
  * Shown on the sign-up screen and on You. They open the published landing pages, which carry the same text
- * as src/app/legal/*.md (check:floor compares them).
+ * as src/content/legal/*.md (check:floor compares them).
  */
 import { Linking, Pressable, StyleSheet, View } from 'react-native';
 

@@ -99,8 +99,8 @@ assert.equal(
 assert.ok(!existsSync(resolve(root, 'src/components/voice-preset-picker.tsx')), 'the Sage voice picker is deleted');
 ok('voice_preset previews are static local copy; the Sage voice picker is gone');
 
-assert.ok(!existsSync(resolve(root, 'src/app/voice/sage.txt')), 'sage.txt stays deleted');
-const voiceRef = read('src/app/voice/voice-reference.txt');
+assert.ok(!existsSync(resolve(root, 'src/content/voice/sage.txt')), 'sage.txt stays deleted');
+const voiceRef = read('src/content/voice/voice-reference.txt');
 assert.doesNotMatch(voiceRef, /supportive coach/i);
 assert.doesNotMatch(voiceRef, /You are Sage/i);
 assert.doesNotMatch(voiceRef, /\bSage\b/, 'voice reference never names Sage');
