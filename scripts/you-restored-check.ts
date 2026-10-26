@@ -18,15 +18,19 @@ function ok(label: string) {
 const root = resolve(__dirname, '..');
 const read = (rel: string) => readFileSync(resolve(root, rel), 'utf8').replace(/\r\n/g, '\n');
 
-const you = read('src/app/(tabs)/you.tsx');
+const youTab = read('src/app/(tabs)/you.tsx');
+const you = read('src/app/settings.tsx'); // IA P1: the controls moved to Settings
+assert.match(youTab, /router\.push\('\/settings'\)/, 'You has a Settings row that opens /settings');
+assert.match(read('src/app/(tabs)/index.tsx'), /accessibilityLabel="Settings"/, 'Home has the Settings gear');
 assert.match(you, /<AppearancePicker \/>/);
 assert.match(you, /<CityPicker\s+value=\{me\.city\}\s+onChange=\{\(slug\) => \{\s+void saveCity\(slug\);/);
 assert.match(you, /await setCity\(me\.id, slug\);\s+await refresh\(\);/, 'saving a city refreshes the account');
 assert.match(you, /<SettingsFold title="Account">\s+<BirthdayRow me=\{me\} onUpdated=\{\(\) => refresh\(\)\} \/>/);
 assert.match(you, /<NotificationPrefsFold \/>/);
 assert.doesNotMatch(you, /<SharePoster/, 'the poster stays off You: the identity card already shares');
-assert.doesNotMatch(you, /AppVersionDevUnlock|you-dev-tools|push-test-card|sentry-test-card/, 'no dev tool on You (dev-fab / prod-you pins)');
-ok('You mounts the appearance picker, city picker, birthday (Account fold) and notification preferences; no poster, no dev tools');
+assert.doesNotMatch(you, /AppVersionDevUnlock|you-dev-tools|push-test-card|sentry-test-card/, 'no dev tool on Settings (dev-fab / prod-you pins)');
+assert.doesNotMatch(youTab, /AppVersionDevUnlock|you-dev-tools|push-test-card|sentry-test-card/, 'no dev tool on You (dev-fab / prod-you pins)');
+ok('Settings mounts the appearance picker, city picker, birthday (Account fold) and notification preferences; no poster, no dev tools');
 
 const fold = read('src/components/notification-prefs-fold.tsx');
 const rows = [...fold.matchAll(/\{ kind: '(\w+)', label: (?:"([^"]+)"|'([^']+)') \}/g)].map((m) => `${m[1]}:${m[2] ?? m[3]}`);
@@ -68,7 +72,7 @@ ok('the two dead files (optional fill, old Explore panel) stay deleted');
   ok('Home shows the earned name (display only, no write, no model call)');
 }
 
-// The AI on/off switch lives on You only (emci 2026-10-04). Home keeps the
+// The AI on/off switch lives on Settings only (emci 2026-10-04). Home keeps the
 // unconditional AI-use disclosure (Apple 5.1.2) and the one-time ask; it no
 // longer shows the on/off row after an answer.
 {
@@ -77,10 +81,10 @@ ok('the two dead files (optional fill, old Explore panel) stay deleted');
   assert.doesNotMatch(home, /Turn off AI|Turn on AI'|Sage&apos;s AI · /, 'no on/off row text on Home');
   assert.match(home, /\{AI_USE_DISCLOSURE\}/, 'the disclosure stays on Home');
   assert.match(home, /\{offerConsent \? \(\s*<AiConsentCard\s+context="home"/, 'the first-time ask stays on Home');
-  assert.match(you, /<SettingsFold title="ATO's AI" defaultOpen>/, 'the switch is on You');
-  assert.match(you, /saveAiConsent\(consent !== 'granted'\)/, 'You turns it on and off');
+  assert.match(you, /<SettingsFold title="ATO's AI" defaultOpen>/, 'the switch is on Settings');
+  assert.match(you, /saveAiConsent\(consent !== 'granted'\)/, 'Settings turns it on and off');
   assert.match(read('src/lib/me.ts'), /AI_CONSENT_NEEDED_COPY = 'AI is off\. Turn on AI in You to load this\.'/, 'the "AI is off" message points to You');
-  ok('AI on/off is on You only; Home keeps the disclosure and the first-time ask');
+  ok('AI on/off is on Settings only; Home keeps the disclosure and the first-time ask');
 }
 
 console.log(`\n${passed} you-restored checks passed`);

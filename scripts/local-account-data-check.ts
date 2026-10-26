@@ -35,7 +35,7 @@ function read(rel: string): string {
 const lib = read('src/lib/local-account-data.ts');
 const supabaseLib = read('src/lib/supabase.ts');
 const deleteLib = read('src/lib/delete-account.ts');
-const you = read('src/app/(tabs)/you.tsx');
+const you = read('src/app/settings.tsx'); // sign out / delete moved off You to Settings (IA P1)
 const insight = read('src/lib/insight/today-insight.ts');
 const hook = read('src/hooks/use-daily-insight.ts');
 const home = read('src/app/(tabs)/index.tsx');

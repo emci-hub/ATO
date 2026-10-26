@@ -124,6 +124,7 @@ function RootNavigator() {
             <Stack.Protected guard={isAuthed && hasMe}>
               <Stack.Screen name="(tabs)" />
               <Stack.Screen name="week" />
+              <Stack.Screen name="settings" />
               <Stack.Screen name="chat" />
               <Stack.Screen name="dev-lab" />
               <Stack.Screen name="ai-lab" />

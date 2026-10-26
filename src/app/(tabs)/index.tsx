@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ScrollView, StyleSheet, Pressable, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 
 import { Appear } from '@/components/motion';
 import { ProgressRing, useRoundProgress } from '@/components/progress-ring';
@@ -32,12 +33,9 @@ import { fullProfileProgress, isFullProfileDone } from '@/lib/full-profile-gate'
 import { writeWidgetLine } from '@/lib/insight/today-insight';
 import type { TraitTrack } from '@/lib/trait-stability';
 import { ATO_TOKEN_EARN, atoTokenBalanceOf } from '@/lib/ato-tokens';
-import { hubAccess } from '@/lib/dev-access';
-import { DEV_TOOLS_AVAILABLE } from '@/lib/dev-mode';
 import { recipeForAccount } from '@/lib/kenney/registry';
 import { ROUND_RING_TITLE, roundRingLine } from '@/lib/polish-copy';
 import { traitShapePoints } from '@/lib/trait-shape';
-import { useDevAccessUnlocked } from '@/lib/dev-access-unlock';
 import { useSession } from '@/hooks/use-session';
 import { controlBorderColor, NO_PINCH_ZOOM } from '@/lib/theme/chrome';
 import { nextRoundLabel } from '@/lib/questions/staged-intake-copy';
@@ -73,8 +71,7 @@ export default function HomeScreen() {
   const theme = useTheme();
   const { session } = useSession();
   const userId = session?.user.id;
-  const { me, refresh: refreshMe, devAccess } = useMeContext();
-  const devUnlocked = useDevAccessUnlocked();
+  const { me, refresh: refreshMe } = useMeContext();
   const params = useLocalSearchParams<{ focus?: string }>();
   const [busy, setBusy] = useState<'consent' | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -262,57 +259,10 @@ export default function HomeScreen() {
     }
   }
 
-  // 'admin' (a release build, root only) still gets the link: Admin lives in the Hub.
-  const canSeeHub =
-    hubAccess({
-      toolsAvailable: DEV_TOOLS_AVAILABLE,
-      isDev: __DEV__ || devUnlocked,
-      isRoot: devAccess.isRoot,
-      capabilities: devAccess.capabilities,
-    }) !== 'none';
-
   /*
-    Kept in BOTH states, unlike everything else pre-profile: dev-lab is how the
-    dev-test user's persona presets get applied, which is the only way to reach
-    a finished profile without answering 50 questions by hand. Gated on dev
-    access / __DEV__ exactly as before, so a real account never sees it.
+    The dev rows (Dev Tools Hub, Pixel lab) moved to /settings under Developer
+    (IA phase P1); they keep the same hubAccess / __DEV__ gates there.
   */
-  const devBox =
-    canSeeHub || __DEV__ ? (
-      <ThemedView type="backgroundElement" style={styles.boxCard}>
-        <ThemedText type="code" themeColor="textSecondary" style={styles.boxKicker}>
-          dev
-        </ThemedText>
-        {canSeeHub ? (
-          <Pressable
-            onPress={() => router.push('/dev-lab')}
-            style={({ pressed }) => [styles.boxRow, pressed && styles.pressed]}>
-            <View style={styles.boxRowText}>
-              <ThemedText type="smallBold">Dev Tools Hub</ThemedText>
-              <ThemedText type="small" themeColor="textSecondary">
-                Where this account is, jump, tests, admin
-              </ThemedText>
-            </View>
-            <ThemedText themeColor="textSecondary">›</ThemedText>
-          </Pressable>
-        ) : null}
-        {__DEV__ ? (
-          <>
-            <Pressable
-              onPress={() => router.push('/pixel-lab')}
-              style={({ pressed }) => [styles.boxRow, pressed && styles.pressed]}>
-              <View style={styles.boxRowText}>
-                <ThemedText type="smallBold">Pixel lab</ThemedText>
-                <ThemedText type="small" themeColor="textSecondary">
-                  Dev: faces + growth tiers
-                </ThemedText>
-              </View>
-              <ThemedText themeColor="textSecondary">›</ThemedText>
-            </Pressable>
-          </>
-        ) : null}
-      </ThemedView>
-    ) : null;
 
   /*
     Apple 5.1.2: the AI-use disclosure is UNCONDITIONAL. It renders before the
@@ -374,7 +324,18 @@ export default function HomeScreen() {
           {/* The "Home" title, like Explore and You (emci, 2026-10-07), with one
               small line under it. */}
           <View style={styles.header}>
-            <ThemedText type="subtitle">{HOME_TITLE}</ThemedText>
+            <View style={styles.headerTop}>
+              <ThemedText type="subtitle">{HOME_TITLE}</ThemedText>
+              {/* Settings live on their own screen (IA phase P1). */}
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Settings"
+                hitSlop={8}
+                onPress={() => router.push('/settings')}
+                style={({ pressed }) => [styles.gearButton, pressed && styles.pressed]}>
+                <MaterialCommunityIcons name="cog-outline" size={24} color={theme.textSecondary} />
+              </Pressable>
+            </View>
             <ThemedText type="small" themeColor="textSecondary">
               {params.focus === 'check' ? 'Check today.' : homeSageLede(theme.id)}
             </ThemedText>
@@ -519,8 +480,6 @@ export default function HomeScreen() {
               {consentBlock}
             </>
           )}
-
-          {devBox}
         </ScrollView>
       </SafeAreaView>
     </ThemedView>
@@ -553,22 +512,17 @@ const styles = StyleSheet.create({
     padding: Spacing.four,
     gap: Spacing.two,
   },
-  boxCard: {
-    borderRadius: Spacing.four,
-    padding: Spacing.three,
-    gap: Spacing.one,
-  },
-  boxKicker: {
-    textTransform: 'uppercase',
-    paddingBottom: Spacing.one,
-  },
-  boxRow: {
+  headerTop: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical: Spacing.two,
-    paddingHorizontal: Spacing.one,
-    borderRadius: Spacing.two,
+    gap: Spacing.two,
+  },
+  gearButton: {
+    width: 44,
+    height: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   aiDisclosure: {
     textAlign: 'center',

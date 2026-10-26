@@ -68,9 +68,9 @@ assert.match(hub, /useDevAccessUnlocked/);
 assert.match(hub, /PRE_LAUNCH_DEV \|\| devUnlocked/);
 ok('Dev Tools Hub gate accepts the session unlock alongside PRE_LAUNCH_DEV');
 
-const home = read('src/app/(tabs)/index.tsx');
+const home = read('src/app/settings.tsx');
 assert.match(home, /useDevAccessUnlocked/);
 assert.match(home, /__DEV__ \|\| devUnlocked/);
-ok('Home dev row gate accepts the session unlock alongside __DEV__');
+ok('Settings dev row gate (moved off Home, IA P1) accepts the session unlock alongside __DEV__');
 
 console.log(`\n${passed}/${passed} dev-unlock checks passed.`);

@@ -138,7 +138,7 @@ assert.match(ui, /twoTap\.confirm\(`remove:/, 'Remove takes two taps');
 assert.match(ui, /CIRCLE_REPORT_REASON_IDS\.map/, 'Report lists the six fixed reasons');
 assert.match(copy, /export const CIRCLE_SUPPORT_EMAIL = '([^']+)'/);
 const supportEmail = copy.match(/export const CIRCLE_SUPPORT_EMAIL = '([^']+)'/)![1];
-assert.match(read('src/app/(tabs)/you.tsx'), new RegExp(`'${supportEmail!.replace('.', '\\.')}'`), 'same address as You → Send feedback');
+assert.match(read('src/app/settings.tsx'), new RegExp(`'${supportEmail!.replace('.', '\\.')}'`), 'same address as Settings → Send feedback');
 assert.ok(!/from\('connections'\)\s*\.insert/.test(read('src/lib/circle.ts')), 'circle.ts never inserts a connection');
 ok('Circle tab: ⋯ on every friend row → Report / Block (2 taps); support email matches You');
 
