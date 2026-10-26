@@ -1,7 +1,6 @@
 import type { VoicePreset } from './preset';
 import type { TraitAxis } from '@/lib/traits';
 import type { TraitTrack } from '@/lib/trait-stability';
-import type { AiProviderId } from '@/lib/ai/types';
 
 export type TalkStyle = 'quiet' | 'even' | 'loud';
 
@@ -10,8 +9,6 @@ export type Tone = 'lift' | 'even' | 'cut';
 
 /** Where a card's content came from. */
 export type VoiceSource = 'bank' | 'generated';
-
-export type ProviderId = AiProviderId;
 
 export type CheckStatus = 'done' | 'skipped';
 

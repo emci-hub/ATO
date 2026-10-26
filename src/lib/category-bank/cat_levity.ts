@@ -8,21 +8,21 @@ export const CAT_LEVITY: BarCard = {
       summary: [
         'You bring a joke into a tense moment, and you still say what you actually think.',
         'When things get tense, you lighten the mood and help people look for a fix.',
-        'You lighten a hard moment, and you still say it plain.',
+        'You lighten a hard moment, and you still speak plainly.',
       ],
       strength: [
         'You ease the tension, so the person across from you can keep talking.',
         'You make a hard talk feel less sharp for the person sitting with you.',
-        'In one tense talk you can make a joke and still give the other person a fair turn.',
+        'In a tense talk, you can make a joke and still give the other person a fair turn.',
       ],
       watchOut: [
         'Sometimes your joke lands at the wrong moment for someone who is upset.',
-        'Sometimes people think you aren’t taking it seriously.',
-        'Sometimes the joke covers a thing you needed to say in plain words.',
+        'Sometimes people think you aren’t taking things seriously.',
+        'Sometimes a joke covers what you needed to say in plain words.',
       ],
       tryThis: [
         'Ask how someone feels before you joke about a tense moment, so they feel heard.',
-        'Say the serious part first in your next hard talk, so the joke doesn’t hide it.',
+        'Say the serious part first in your next hard talk, so a joke doesn’t hide it.',
         'Wait a moment before your next joke in a tense talk, so other people can speak.',
       ],
     },
@@ -50,9 +50,9 @@ export const CAT_LEVITY: BarCard = {
     },
     low: {
       summary: [
-        'You take a conflict seriously, and you stay quiet rather than joke or argue.',
-        'When there’s tension, you stay serious and you stay out of the back-and-forth.',
-        'You handle a hard moment quietly, and you leave the jokes out of it.',
+        'You take conflict seriously rather than joke or argue.',
+        'When there’s tension, you stay out of the back-and-forth.',
+        'You handle a hard moment quietly rather than joking.',
       ],
       strength: [
         'You treat other people’s problems with real care.',

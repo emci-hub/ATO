@@ -127,7 +127,6 @@ function RootNavigator() {
               <Stack.Screen name="settings" />
               <Stack.Screen name="chat" />
               <Stack.Screen name="dev-lab" />
-              <Stack.Screen name="ai-lab" />
             </Stack.Protected>
 
             {/* Outer guard: labs and Play (Divecore) never open to an age-gated account. */}

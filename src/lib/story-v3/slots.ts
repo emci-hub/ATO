@@ -111,7 +111,7 @@ export const KEYED_TIPS: Record<string, string> = {
   'cat_drive|low': 'Watch out: a closet fix works once. Empty it later.',
   'cat_agency|high': 'Watch out: treating everything as yours to fix can wear you out.',
   'cat_agency|low': 'Watch out: rolling with the day can leave the choices to someone else.',
-  'cat_social|high': 'Watch out: a lot of energy can fill the room. Leave a quiet person a turn.',
+  'cat_social|high': 'Watch out: a big presence can fill the room. Leave a quiet person a turn.',
   'cat_social|low': 'Watch out: slipping away quietly can leave friends wondering where you went. A quick text helps.',
   'cat_communication|high': 'Watch out: saying it straight can land harder than you meant. Keep the kind version.',
   'cat_communication|low': 'Watch out: stepping back still needs one clear line.',

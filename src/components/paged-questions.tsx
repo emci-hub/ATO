@@ -97,7 +97,7 @@ export function PagedQuestions({
   storageKey: string;
   /** Already-flat, caller-ordered row list — this component never assumes where the questions come from. */
   rows: readonly CategoryQuestionRow[];
-  /** Caller-supplied secondary line under "Page X of Y" (e.g. "16 of 16 axes complete", "12 of 25 answered"). */
+  /** Caller-supplied secondary line under "Page X of Y" (e.g. "16 of 16 traits complete", "12 of 25 answered"). */
   progressLabel: string;
   /** Hides every option everywhere, same meaning as Full Profile's old global lock. */
   locked?: boolean;

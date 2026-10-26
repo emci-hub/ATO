@@ -6,14 +6,14 @@ export const CAT_DRIVE: BarCard = {
   cells: {
     high: {
       summary: [
-        'You pick the goal, you believe you can do it, and you want the people you like in on it.',
-        'When you set a goal, you start, and you want someone you care about there for the finish.',
+        'You set your own goals and want the people close to you involved.',
+        'You want the people you care about with you when you reach a goal.',
         'You work harder when the task is yours, the bar is high, and a friend is in the room.',
       ],
       strength: [
         'You take the goal in your own hands and bring your full attention to the first hour of it.',
-        'When the task is hard, you trust yourself and stay with it past the boring middle.',
-        'You show up for your goal and for the people doing it with you, and they can tell.',
+        'You stay committed to difficult tasks even when progress feels slow.',
+        'You show up reliably for your goals and for the people working with you.',
       ],
       watchOut: [
         'Sometimes you stack so many goals that rest gets pushed to next week.',
@@ -21,14 +21,14 @@ export const CAT_DRIVE: BarCard = {
         'Sometimes you start before you’ve checked whether the others are ready to go.',
       ],
       tryThis: [
-        'Pick one goal to pause this week, so the rest of them still have your hours.',
-        'Ask a teammate or a friend how their goal is going, so the week isn’t only yours.',
+        'Pick one goal to pause this week so you can focus on the rest.',
+        'Ask a teammate or a friend how their goal is going.',
         'Take one evening off the goal list, so you come back with something left.',
       ],
     },
     mid: {
       summary: [
-        'Some tasks get you out of the chair, and others sit on the list until they turn urgent.',
+        'Some tasks motivate you right away, while others wait until they become urgent.',
         'You push hard for the work you care about and put less into the task that feels like a chore.',
         'You can push hard on a goal, but it depends on who is with you and what the work is for.',
       ],
@@ -51,13 +51,13 @@ export const CAT_DRIVE: BarCard = {
     low: {
       summary: [
         'You work best with a clear next step and a steady pace, not a big goal you have to invent.',
-        'When a goal looks big, you take it slowly and you like someone to point at the next step.',
+        'When a goal looks big, you prefer having someone point out the next step.',
         'You pick a calm plan with clear steps over a push you have to lead alone.',
       ],
       strength: [
         'You follow a clear plan and do the work carefully, one step at a time.',
-        'You think before you jump into a new task, which keeps you from a lot of redo.',
-        'You can feel fine without chasing the next big goal on the board.',
+        'You think before you jump into a new task, which saves you from having to redo work.',
+        'You can feel fine without chasing the next big goal.',
       ],
       watchOut: [
         'Sometimes you wait for someone else to name the goal instead of naming one yourself.',

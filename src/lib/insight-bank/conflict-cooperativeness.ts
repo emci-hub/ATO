@@ -222,7 +222,7 @@ export const CONFLICT_COOPERATIVENESS_IDEAS: readonly InsightIdea[] = [
       'Suggest an option when the group is stuck, so you help decide and not just follow.',
     ],
     watch: [
-      'Notice how often you pick last.',
+      'Notice how often you let others choose first.',
       'Notice how a friend reacts when you share a preference.',
     ],
   }),
@@ -250,7 +250,7 @@ export const CONFLICT_COOPERATIVENESS_IDEAS: readonly InsightIdea[] = [
     ],
     why: 'Calming things down helps in the moment, but agreeing before you mean it can build up into resentment.',
     try: [
-      'Take a short pause before you agree in a heated talk, so you answer from what you think.',
+      'Take a short pause before you agree in a heated talk, so you can say what you actually think.',
       'Say “I want to think about that” when a request feels too big, so you have room to answer well.',
     ],
     watch: [
@@ -271,7 +271,7 @@ export const CONFLICT_COOPERATIVENESS_IDEAS: readonly InsightIdea[] = [
     ],
     watch: [
       'Notice when a mix of two ideas turns out worse than either.',
-      'Notice whether you share your own pick or only the middle.',
+      'Notice whether you share your own pick or only the middle option.',
     ],
   }),
   idea('ftw_conflict_cooperativeness_h_12', ['conflict_cooperativeness:high'], {
@@ -280,7 +280,7 @@ export const CONFLICT_COOPERATIVENESS_IDEAS: readonly InsightIdea[] = [
       'You usually let go of being right if it keeps the peace.',
       'When someone argues a point, you tend to drop yours to avoid a long debate.',
     ],
-    why: 'Letting go of being right saves the argument, but a point you drop may be one worth keeping.',
+    why: 'A point you drop to avoid an argument may be worth keeping.',
     try: [
       'Keep one point you believe in during your next debate, so you practice staying with it kindly.',
       'Say “I see it differently, and that’s okay,” so you can disagree without a fight.',
@@ -312,30 +312,30 @@ export const CONFLICT_COOPERATIVENESS_IDEAS: readonly InsightIdea[] = [
       'You usually keep your own plan when others want to change theirs.',
       'When friends decide to go somewhere else, you tend to say you’ll do your own thing.',
     ],
-    why: 'Following your own plan keeps you reliable to yourself, but friends might feel you don’t want to join them.',
+    why: 'Following your own plan keeps you true to yourself, but friends might feel you don’t want to join them.',
     try: [
-      'Join the group for the first hour and then head to your own plan, so you share some time.',
+      'Join the group for the first hour before heading to your own plan, so you share some time.',
       'Tell the group why your plan matters to you, so they know it isn’t about them.',
     ],
     watch: [
       'Notice how friends react when you stay with your plan.',
-      'Notice whether you’d have enjoyed the new plan.',
+      'Notice whether you would enjoy someone else’s plan.',
     ],
   }),
   idea('ftw_conflict_cooperativeness_l_09', ['conflict_cooperativeness:low'], {
     focus: [
       'When you work on a team project, you tend to want it done your way.',
       'You usually have a clear idea of how a task should go and push to keep it.',
-      'When a teammate does a task differently than you would, you tend to redo it.',
+      'When a teammate does a task differently than you would, you often want to redo it.',
     ],
     why: 'A clear sense of the right way gets you good results, but teammates may feel their work isn’t trusted.',
     try: [
       'Let a teammate finish a task their way once this week, so you see what they bring.',
-      'Name the goal you both share before you talk about how, so the method is easier to flex.',
+      'Name the goal you both share before you talk about how, so the method is easier to adjust.',
     ],
     watch: [
-      'Notice how often you redo someone’s work.',
-      'Notice whether their way turned out fine.',
+      'Notice how often you want to redo someone’s work.',
+      'Notice whether a teammate\'s approach worked out.',
     ],
   }),
   idea('ftw_conflict_cooperativeness_l_10', ['conflict_cooperativeness:low'], {
@@ -363,11 +363,11 @@ export const CONFLICT_COOPERATIVENESS_IDEAS: readonly InsightIdea[] = [
     why: 'Holding to a limit keeps things fair, but a small exception can sometimes help a person at little cost to you.',
     try: [
       'Ask what the exception is really for before you answer, so you decide on the reason.',
-      'Pick one small rule to bend this week for someone who needs it, so you see what changes.',
+      'Pick one small rule to bend this week for someone who needs it.',
     ],
     watch: [
       'Notice which rules you hold most firmly and why.',
-      'Notice how people respond when you explain the reason.',
+      'Notice how people respond when you explain your reasons.',
     ],
   }),
   idea('ftw_conflict_cooperativeness_l_12', ['conflict_cooperativeness:low'], {
@@ -378,11 +378,11 @@ export const CONFLICT_COOPERATIVENESS_IDEAS: readonly InsightIdea[] = [
     ],
     why: 'Knowing what you want helps a group decide, but others may stop offering ideas if yours always lead.',
     try: [
-      'Ask each person for one must-have before you plan, so everyone gets something.',
-      'Let someone else choose one part of the plan, so the trip feels shared.',
+      'Ask each person for one must-have before you plan.',
+      'Let someone else choose one part of a shared plan.',
     ],
     watch: [
-      'Notice whether the others sound excited about the plan.',
+      'Notice whether others sound excited about a shared plan.',
       'Notice who contributes ideas and who goes along.',
     ],
   }),

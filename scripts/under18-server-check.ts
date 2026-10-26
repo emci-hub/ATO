@@ -228,7 +228,6 @@ export const OPEN: Record<string, OpenClass> = {
   // Reads of the caller's own rows only (same as the table SELECT policies, left open)
   'home_bootstrap()': 'own_read',
   'bank_answered()': 'own_read',
-  'ai_provider_counts()': 'own_read',
   // Safety: reporting stays possible
   'library_report(uuid)': 'safety',
   'is_message_party(uuid)': 'safety',

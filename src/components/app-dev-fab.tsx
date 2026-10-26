@@ -178,7 +178,7 @@ function AppDevPanel({
     }
   };
 
-  const go = (href: '/dev-lab' | '/ai-lab') => {
+  const go = (href: '/dev-lab') => {
     onClose();
     router.push(href);
   };
@@ -219,12 +219,6 @@ function AppDevPanel({
           onPress={() => go('/dev-lab')}
           accessibilityRole="button">
           <ThemedText type="smallBold">Full Dev Tools Hub</ThemedText>
-        </Pressable>
-        <Pressable
-          style={({ pressed }) => [styles.button, { borderColor: theme.textSecondary }, pressed && styles.pressed]}
-          onPress={() => go('/ai-lab')}
-          accessibilityRole="button">
-          <ThemedText type="smallBold">AI lab</ThemedText>
         </Pressable>
       </View>
     </View>
