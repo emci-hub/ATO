@@ -318,8 +318,8 @@ ok('label table Linked column matches app.json for all 12 types');
   assert.match(links, /TERMS_URL = 'https:\/\/ato\.emgens\.com\/terms\.html'/);
   assert.equal((links.match(/accessibilityRole="link"/g) ?? []).length, 2, 'both links are labelled links');
   assert.match(read('src/app/auth/index.tsx'), /<LegalLinks \/>/, 'sign-up shows the links');
-  assert.match(read('src/app/(tabs)/you.tsx'), /<LegalLinks \/>/, 'You shows the links');
-  ok('Privacy + Terms links on sign-up and You open ato.emgens.com/{privacy,terms}.html');
+  assert.match(read('src/app/settings.tsx'), /<LegalLinks \/>/, 'Settings shows the links');
+  ok('Privacy + Terms links on sign-up and Settings open ato.emgens.com/{privacy,terms}.html');
 }
 
 assert.equal(
@@ -426,6 +426,7 @@ assert.match(read('src/app/_layout.tsx'), /Sentry\.wrap/);
 ok('Sentry JS init + native crash handling + Expo plugin + wrap are wired');
 
 const youTab = read('src/app/(tabs)/you.tsx');
+const settingsTab = read('src/app/settings.tsx');
 // PARKED (ISOLATION_PLAN §7 Card F, 2026-09-15): You no longer mounts the
 // dev-tools slot — the screen is down to sign out, delete account, AI consent
 // and build/update info (RunningUpdateLine, restored same day). The two
@@ -479,26 +480,26 @@ assert.doesNotMatch(sage, /setAiConsent/);
 // its own "Sage's AI" fold, and the three-state row collapsed to a toggle plus
 // the full consent card while the answer is still pending — so "Not set yet"
 // is no longer a label, the card itself is that state.
-assert.match(youTab, /ATO(&apos;|')s AI/);
-assert.match(youTab, /'On'/);
-assert.match(youTab, /'Off'/);
-assert.match(youTab, /<AiConsentCard/);
-assert.match(youTab, /setAiConsent/);
+assert.match(settingsTab, /ATO(&apos;|')s AI/);
+assert.match(settingsTab, /'On'/);
+assert.match(settingsTab, /'Off'/);
+assert.match(settingsTab, /<AiConsentCard/);
+assert.match(settingsTab, /setAiConsent/);
 // The Account fold is back (2026-10-04) but holds only the birthday row: AI
 // consent stays in its own "ATO's AI" fold, never inside Account.
 {
-  const at = youTab.indexOf('<SettingsFold title="Account">');
-  const accountFold = youTab.slice(at, youTab.indexOf('</SettingsFold>', at));
+  const at = settingsTab.indexOf('<SettingsFold title="Account">');
+  const accountFold = settingsTab.slice(at, settingsTab.indexOf('</SettingsFold>', at));
   assert.ok(at >= 0 && !/AiConsentCard|setAiConsent|saveAiConsent/.test(accountFold), 'consent is not in the Account fold');
 }
-ok('AiConsentCard is inline on Home and still reachable on You; the AI-use disclosure is unconditional on both');
+ok('AiConsentCard is inline on Home and still reachable on Settings (moved off You, IA P1); the AI-use disclosure is unconditional on both');
 
 // The crisis system was removed 2026-10-14 (it existed only because Sage read
 // what people typed). One static helpline row on You replaced it
 // (check:helpline-row pins it).
-assert.ok(youTab.indexOf('<CrisisRegionPicker') === -1, 'no region picker');
-assert.match(youTab, /<HelplineRow \/>/);
-ok('no crisis region picker; the static helpline row is on You');
+assert.ok(settingsTab.indexOf('<CrisisRegionPicker') === -1, 'no region picker');
+assert.match(settingsTab, /<HelplineRow \/>/);
+ok('no crisis region picker; the static helpline row is on Settings');
 
 // Same no-flash promise, new home (2026-10-14): the focus card on Insights
 // paints from the cached insight and reconciles against daily_insights.

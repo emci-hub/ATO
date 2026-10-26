@@ -174,6 +174,10 @@ for (const { rel, label } of PARKED_SCREENS) {
  */
 const YOU = 'src/app/(tabs)/you.tsx';
 const youCode = codeOnly(read(YOU));
+// IA P1: sign out, delete account and AI consent moved to the pushed Settings screen.
+const SETTINGS = 'src/app/settings.tsx';
+const settingsCode = codeOnly(read(SETTINGS));
+assert.match(youCode, /router\.push\('\/settings'\)/, 'You has a Settings row that opens /settings');
 
 // INVERTED 2026-10-01 (was: You must still read as parked). emci un-parked You:
 // a full-screen "Rebuilt" notice over a half-working screen made the working
@@ -183,22 +187,22 @@ assert.ok(youCode.includes('<AtoTokenCard me={me} />'), 'the token balance is vi
 // 2026-10-14: the saved-facts list ("Teach Sage") is hidden; the data stays
 // until docs/sage-cleanup.md drops it.
 assert.ok(!youCode.includes('SageFactsCard'), 'the saved-facts list is hidden on You');
-assert.match(youCode, /<DeleteAccountSheet/, 'delete account must stay reachable on You (App Store 5.1.1(v))');
-assert.match(youCode, /Delete account/, 'the delete-account control must be labelled');
+assert.match(settingsCode, /<DeleteAccountSheet/, 'delete account must stay reachable on Settings (App Store 5.1.1(v))');
+assert.match(settingsCode, /Delete account/, 'the delete-account control must be labelled');
 // Roadmap A5 (VoiceOver): the delete control and the sheet's close X announce themselves, and the
 // sheet no longer promises to delete "saved facts" (that feature and its column are gone).
-assert.match(youCode, /accessibilityRole="button"\s+accessibilityLabel="Delete account"\s+onPress=\{\(\) => setDeleting\(true\)\}/, 'the delete control has a role and a label');
+assert.match(settingsCode, /accessibilityRole="button"\s+accessibilityLabel="Delete account"\s+onPress=\{\(\) => setDeleting\(true\)\}/, 'the delete control has a role and a label');
 const deleteSheet = codeOnly(read('src/components/delete-account-sheet.tsx'));
 assert.match(deleteSheet, /accessibilityRole="button"\s+accessibilityLabel="Close"/, 'the sheet close X has a role and a label');
 assert.doesNotMatch(read('src/components/delete-account-sheet.tsx'), /saved facts/i, 'the delete sheet no longer lists saved facts');
 assert.match(read('src/components/delete-account-sheet.tsx'), /like your answers, profile cards and Legends/, 'pass: it names what is really saved');
 assert.doesNotMatch('Everything you saved in ATO, like your answers, profile cards and Legends', /saved facts/i, 'pass pair: the new wording');
 assert.match('Everything you saved in ATO, including saved facts', /saved facts/i, 'fail pair: the old wording would be caught');
-assert.match(youCode, /supabase\.auth\.signOut\(\)/, 'sign out must stay reachable on You');
-assert.match(youCode, /clearLocalAccountData\(\)/, "signing out must still clear this account's local keys");
-assert.match(youCode, /setAiConsent\(/, 'AI consent must stay changeable on You (Apple 5.1.2)');
-assert.match(youCode, /\{AI_USE_DISCLOSURE\}/, 'the AI-use disclosure must RENDER beside the consent control, not just be imported');
-ok('You keeps delete account, sign out and AI consent, and shows tokens; saved facts are hidden');
+assert.match(settingsCode, /supabase\.auth\.signOut\(\)/, 'sign out must stay reachable on Settings');
+assert.match(settingsCode, /clearLocalAccountData\(\)/, "signing out must still clear this account's local keys");
+assert.match(settingsCode, /setAiConsent\(/, 'AI consent must stay changeable on Settings (Apple 5.1.2)');
+assert.match(settingsCode, /\{AI_USE_DISCLOSURE\}/, 'the AI-use disclosure must RENDER beside the consent control, not just be imported');
+ok('Settings keeps delete account, sign out and AI consent (You routes there), You shows tokens; saved facts are hidden');
 
 // ---------------------------------------------------------------------------
 // Circle is a real tab again: a friend list that opens chat, with no Divecore UI.

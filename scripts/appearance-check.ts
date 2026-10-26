@@ -59,21 +59,23 @@ ok(`Neon filled button uses a darker cyan fill (${neonFill?.toFixed(2)}:1), not 
 const root = path.resolve(__dirname, '..');
 const srcFile = (rel: string) => fs.readFileSync(path.join(root, rel), 'utf8');
 const picker = fs.readFileSync(path.join(root, 'src/components/appearance-picker.tsx'), 'utf8');
-const you = fs.readFileSync(path.join(root, 'src/app/(tabs)/you.tsx'), 'utf8');
+const you = fs.readFileSync(path.join(root, 'src/app/settings.tsx'), 'utf8');
 const layout = fs.readFileSync(path.join(root, 'src/app/_layout.tsx'), 'utf8');
 const plan = fs.readFileSync(path.join(root, 'docs/archive/OLD_PLAN.md'), 'utf8');
 const now = fs.readFileSync(path.join(root, 'docs/NOW.md'), 'utf8');
 
 // Parked 2026-09-15 (Card F), RESTORED 2026-10-04 (emci: "bring those back"):
-// the picker is mounted on You again, right after the build line.
+// the picker is mounted on Settings (moved off You in IA P1), right after the build line.
 assert.match(you, /import \{ AppearancePicker \} from '@\/components\/appearance-picker';/);
-assert.match(you, /<RunningUpdateLine \/>[\s\S]{0,400}<AppearancePicker \/>/);
+assert.match(you, /<AppearancePicker \/>/);
+assert.match(you, /<RunningUpdateLine \/>/);
+assert.ok(you.indexOf('<AppearancePicker />') < you.indexOf('<RunningUpdateLine />'), 'picker sits above the build line on Settings');
 assert.match(picker, /Soft is the default/);
 assert.match(layout, /AppearanceProvider/);
 assert.match(plan, /Soft \/ Zen \/ Quest \/ Neon \/ Anime/);
 assert.doesNotMatch(plan, /Colors: Ink \/ Paper \/ Steel \/ Bloom/);
 assert.match(now, /intentional deviation/i);
-ok('You picker, launch provider, and docs are wired');
+ok('Settings picker, launch provider, and docs are wired');
 
 const tabs = fs.readFileSync(path.join(root, 'src/components/app-tabs.tsx'), 'utf8');
 const tabBar = fs.readFileSync(path.join(root, 'src/components/themed-tab-bar.tsx'), 'utf8');

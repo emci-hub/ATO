@@ -130,10 +130,10 @@ function main() {
   // Parked 2026-09-15 (Card F), RESTORED 2026-10-04 (emci): the birthday row is
   // back on You inside an Account fold, with its confirm-before-change flow and
   // the 18+ re-check asserted below.
-  const you = readFileSync(resolve(__dirname, '../src/app/(tabs)/you.tsx'), 'utf8');
-  assert.ok(you.indexOf('<SettingsFold title="Account">') >= 0, 'the Account fold is back on You');
+  const you = readFileSync(resolve(__dirname, '../src/app/settings.tsx'), 'utf8');
+  assert.ok(you.indexOf('<SettingsFold title="Account">') >= 0, 'the Account fold is on Settings');
   assert.match(you, /<BirthdayRow me=\{me\} onUpdated=\{\(\) => refresh\(\)\} \/>/, 'the birthday row is mounted with a refresh');
-  ok('You has the Account fold with the birthday editor');
+  ok('Settings has the Account fold with the birthday editor');
 
   const birthdayRow = readFileSync(resolve(__dirname, '../src/components/birthday-row.tsx'), 'utf8');
   const bornOnFields = readFileSync(resolve(__dirname, '../src/components/born-on-fields.tsx'), 'utf8');
@@ -317,10 +317,11 @@ function under18AccessBlock(under15BornOn: string) {
   const sheet = read('src/components/delete-account-sheet.tsx');
   assert.match(sheet, /if \(preview\) \{\s*setError\([^)]*\);\s*return;\s*\}\s*setWorking\(true\);/, 'preview mode returns before deleteAccount');
   assert.match(sheet, /preview = false,/, 'preview is off unless the dev preview asks');
+  assert.doesNotMatch(read('src/app/settings.tsx'), /preview=\{/, 'Settings never opens the sheet in preview mode');
   assert.doesNotMatch(read('src/app/(tabs)/you.tsx'), /preview=\{/, 'You never opens the sheet in preview mode');
   const supportEmail = /SUPPORT_EMAIL = '([^']+)'/.exec(screen)?.[1];
-  const feedbackEmail = /FEEDBACK_EMAIL = '([^']+)'/.exec(read('src/app/(tabs)/you.tsx'))?.[1];
-  assert.ok(supportEmail && supportEmail === feedbackEmail, 'support address matches You / legal');
+  const feedbackEmail = /FEEDBACK_EMAIL = '([^']+)'/.exec(read('src/app/settings.tsx'))?.[1];
+  assert.ok(supportEmail && supportEmail === feedbackEmail, 'support address matches Settings / legal');
   ok('block + confirm-age: Sign out, Email support, and the existing Delete account sheet; no other write');
 
   // Confirm-age: the onboarding date fields and the guarded setBornOn path.

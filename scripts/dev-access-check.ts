@@ -104,10 +104,15 @@ assert.match(layout, /<Stack\.Protected guard=\{isAuthed && hasMe\}>[\s\S]*name=
 assert.doesNotMatch(layout, /<Stack\.Protected guard=\{PRE_LAUNCH_DEV\}>[\s\S]*name="dev-lab"/);
 ok('dev-lab is on the authed stack so TestFlight can open it');
 
-const home = read('src/app/(tabs)/index.tsx');
+const home = read('src/app/settings.tsx');
 assert.match(home, /hubAccess\(\{/);
 assert.match(home, /router\.push\('\/dev-lab'\)/);
-ok('Home Dev Tools Hub row uses the same root/grant gate');
+ok('Settings Dev Tools Hub row (moved off Home, IA P1) uses the same root/grant gate');
+const homeTab = read('src/app/(tabs)/index.tsx');
+assert.match(homeTab, /accessibilityLabel="Settings"/);
+assert.match(homeTab, /router\.push\('\/settings'\)/);
+assert.doesNotMatch(homeTab, /router\.push\('\/dev-lab'\)/);
+ok('Home keeps only the Settings gear; the dev rows are not on Home');
 
 // The 'dawn' trace surface went with the card lane. dev_trace_steps' CHECK
 // constraint still lists it (surface in ('sage','explore','dawn','talk')), so

@@ -125,7 +125,11 @@ const you = read('src/app/(tabs)/you.tsx');
 // The two things that MUST stay true of a public build are unchanged and
 // still asserted: the sentry/push probe cards are never imported directly,
 // and you-dev-tools guards itself.
-assert.match(you, /RunningUpdateLine/);
+const settings = read('src/app/settings.tsx');
+assert.match(settings, /RunningUpdateLine/);
+assert.doesNotMatch(settings, /from '@\/components\/sentry-test-card'/);
+assert.doesNotMatch(settings, /from '@\/components\/push-test-card'/);
+assert.doesNotMatch(settings, /require\('@\/components\/you-dev-tools'\)/);
 assert.doesNotMatch(you, /from '@\/components\/sentry-test-card'/);
 assert.doesNotMatch(you, /from '@\/components\/push-test-card'/);
 assert.doesNotMatch(you, /require\('@\/components\/you-dev-tools'\)/);

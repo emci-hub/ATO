@@ -179,7 +179,8 @@ ok('You is parked down to its account controls: no poster, no profile card, no n
 // static helpline row instead (pinned in full by check:helpline-row).
 assert.ok(!existsSync(resolve(root, 'src/components/crisis-region-picker.tsx')), 'crisis-region-picker.tsx stays deleted');
 assert.ok(!existsSync(resolve(root, 'src/components/crisis-card.tsx')), 'crisis-card.tsx stays deleted');
-assert.match(you, /<HelplineRow \/>/);
-ok('You shows the static helpline row; the crisis picker and card are gone');
+assert.match(read('src/app/settings.tsx'), /<HelplineRow \/>/);
+assert.match(you, /router\.push\('\/settings'\)/, 'You routes to Settings');
+ok('Settings shows the static helpline row (moved off You, IA P1); the crisis picker and card are gone');
 
 console.log(`\n${passed} checks passed`);

@@ -54,12 +54,14 @@ const urls = [...row.matchAll(/openURL\(([^)]*)\)/g)].map((m) => m[1]!.trim());
 assert.deepEqual(urls.sort(), ["'tel:988'", 'HELPLINE_URL'].sort());
 ok('static: no network, no storage, no detection, no region guess; two fixed links only');
 
-const you = read('src/app/(tabs)/you.tsx');
+const you = read('src/app/settings.tsx');
+assert.match(read('src/app/(tabs)/you.tsx'), /router\.push\('\/settings'\)/, 'You routes to Settings');
+assert.doesNotMatch(read('src/app/(tabs)/you.tsx'), /<HelplineRow/, 'the row left You with the other settings');
 assert.match(you, /import \{ HelplineRow \} from '@\/components\/helpline-row';/);
 assert.equal((you.match(/<HelplineRow \/>/g) ?? []).length, 1, 'exactly one helpline row');
 // It sits in the Settings section (after the Settings heading).
 assert.ok(you.indexOf('<HelplineRow />') > you.indexOf('{SETTINGS_TITLE}'), 'the row is in Settings');
-ok('one row, rendered in Settings on You');
+ok('one row, rendered on the Settings screen (moved off You, IA P1)');
 
 // The crisis system is gone, not hidden.
 for (const gone of [

@@ -1,154 +1,36 @@
-import * as Linking from 'expo-linking';
-import * as Updates from 'expo-updates';
-import { useState } from 'react';
+import { useRouter } from 'expo-router';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { AiConsentCard, AI_USE_DISCLOSURE } from '@/components/ai-consent-card';
-import { AppearancePicker } from '@/components/appearance-picker';
-import { BirthdayRow } from '@/components/birthday-row';
-import { CityPicker } from '@/components/city-picker';
-import { NotificationPrefsFold } from '@/components/notification-prefs-fold';
-import { DeleteAccountSheet } from '@/components/delete-account-sheet';
-import { HelplineRow } from '@/components/helpline-row';
-import { LegalLinks } from '@/components/legal-links';
 import { AtoTokenCard } from '@/components/ato-token-card';
 import { IdentityCard } from '@/components/identity-card';
-import { YourWeekCard } from '@/components/your-week-card';
-import { RunningUpdateLine } from '@/components/running-update-line';
-import { SettingsFold } from '@/components/settings-fold';
+import { NAV_PIXEL_HEADER_INSET } from '@/components/nav-pixel';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { YourWeekCard } from '@/components/your-week-card';
 import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
-import { NAV_PIXEL_HEADER_INSET } from '@/components/nav-pixel';
-import { useSession } from '@/hooks/use-session';
-import { useTheme } from '@/hooks/use-theme';
-import { DEV_PIN_AVAILABLE, useDevPinUnlocked } from '@/lib/dev-pin';
 import { useMeContext } from '@/lib/me-context';
-import { DevUnlockRow } from '@/play/dev-unlock-row';
-import { aiConsentFor, setAiConsent, setCity } from '@/lib/me';
-import { clearLocalAccountData } from '@/lib/local-account-data';
 import { SETTINGS_TITLE } from '@/lib/polish-copy';
-import { supabase } from '@/lib/supabase';
-import { controlBorderColor, NO_PINCH_ZOOM } from '@/lib/theme/chrome';
-
-export const FEEDBACK_EMAIL = 'support@emgens.com';
-export const SEND_FEEDBACK_LABEL = 'Send feedback';
+import { NO_PINCH_ZOOM } from '@/lib/theme/chrome';
 
 /**
- * You — no longer shown as parked (2026-10-01, emci): the full-screen "Rebuilt"
- * notice is gone because half the screen works. It now also shows the ATO token
- * balance + recent history. The saved-facts list ("Teach Sage") is hidden since
- * 2026-10-14; the data stays until docs/sage-cleanup.md drops it.
- * The rest below is the history of what was kept alive while it was parked.
+ * You — who you are, your tokens, and your week. Every settings control (look,
+ * city, birthday, notifications, AI consent, help, legal, sign out, delete
+ * account, build info, developer rows) moved to the pushed `/settings` screen
+ * (IA phase P1, docs/ato-ia-runner.md); this screen keeps one "Settings ›" row.
  *
- * Was: PARKED, with four things deliberately kept alive (emci 2026-09-15,
- * ISOLATION_PLAN §7 Card F / O-1; build/update info restored 2026-09-15).
- *
- * Everything this screen used to hold is gone pending rebuild: the profile
- * card and share poster, growth bars and milestone badges, invites and
- * referrals, the scan sheet, city / birthday / appearance /
- * voice / talk-style pickers, notification prefs, tokens, AI usage, password
- * settings, facts, Kenney credits, and the dev-tools slot.
- *
- * What stays, and why it is not up for parking:
- * 1. **Delete account** — App Store review requires in-app account deletion
- *    (guideline 5.1.1(v)). Parking it would fail review outright.
- * 2. **Sign out** — without it there is no way off an account on a device.
- * 3. **AI consent** — Apple 5.1.2, and it is the switch Legends cards and
- *    category deep dives read. It must be revocable somewhere other than the
- *    one-time ask on Home.
- * 4. **Build/update info** (`RunningUpdateLine`) — app version + build, the
- *    running OTA update's short id, when it was published (local time),
- *    channel/runtime, and an "Original build" vs "OTA update" label. Not a
- *    safety/App-Store invariant like 1-3, but load-bearing for support: it is
- *    how emci tells which OTA a bug report is actually running, and it is
- *    a 5-tap shortcut to `/dev-lab` (dev-gated).
- *
- * These four are the whole screen. The AI-use disclosure renders
- * unconditionally beside the consent control, exactly as on Home.
+ * The saved-facts list ("Teach Sage") has been hidden since 2026-10-14; the
+ * data stays until docs/sage-cleanup.md drops it.
  */
 export default function YouScreen() {
-  const theme = useTheme();
-  const { session } = useSession();
+  const router = useRouter();
   const { me, refresh } = useMeContext();
-  const pinUnlocked = useDevPinUnlocked();
-  const [signingOut, setSigningOut] = useState(false);
-  const [deleting, setDeleting] = useState(false);
-  const [consentBusy, setConsentBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [feedbackNote, setFeedbackNote] = useState<string | null>(null);
-
-  const hasAppleIdentity = !!session?.user.identities?.some(
-    (identity) => identity.provider === 'apple',
-  );
-  const consent = me ? aiConsentFor(me) : 'pending';
-
-  async function handleSignOut() {
-    setSigningOut(true);
-    const { error: signOutError } = await supabase.auth.signOut();
-    if (signOutError) {
-      console.log('[you] signOut error:', signOutError.message);
-    }
-    // Not just the session: every `ato.*` key this account wrote stays on the
-    // device otherwise, and the next account signed in here reads it back.
-    await clearLocalAccountData();
-    setSigningOut(false);
-    // The session guard in the root layout flips isAuthed to false on
-    // SIGNOUT and declaratively routes back to /auth.
-  }
-
-  /** Opens a pre-addressed email. The running update id rides along so a report maps to its OTA. */
-  async function sendFeedback() {
-    setFeedbackNote(null);
-    const subject = encodeURIComponent('ATO feedback');
-    const body = encodeURIComponent(`
-
-—
-Update: ${Updates.updateId ?? 'original build'}`);
-    try {
-      await Linking.openURL(`mailto:${FEEDBACK_EMAIL}?subject=${subject}&body=${body}`);
-    } catch (err) {
-      console.log('[you] feedback mail error:', err);
-      setFeedbackNote(`No mail app found. Email ${FEEDBACK_EMAIL}`);
-    }
-  }
-
-  async function saveCity(slug: string | null) {
-    if (!me) return;
-    setError(null);
-    try {
-      await setCity(me.id, slug);
-      await refresh();
-    } catch (err) {
-      console.log('[you] setCity error:', err);
-      setError(err instanceof Error ? err.message : 'Couldn’t save your city. Try again.');
-    }
-  }
-
-  async function saveAiConsent(value: boolean) {
-    if (!me || consentBusy) return;
-    setConsentBusy(true);
-    setError(null);
-    try {
-      await setAiConsent(me.id, value);
-      await refresh();
-    } catch (err) {
-      console.log('[you] setAiConsent error:', err);
-      setError('Couldn’t save your choice. Try again.');
-    } finally {
-      setConsentBusy(false);
-    }
-  }
 
   return (
     <ThemedView style={styles.container}>
       <SafeAreaView style={styles.safeArea}>
-        {/* The dev PIN box is the last thing on this screen: lift it above the keyboard,
-            and let Unlock take the first tap instead of only dismissing the keyboard. */}
         <ScrollView
           {...NO_PINCH_ZOOM}
-          automaticallyAdjustKeyboardInsets
           keyboardShouldPersistTaps="handled"
           contentContainerStyle={styles.scrollContent}>
           <View style={styles.header}>
@@ -164,138 +46,23 @@ Update: ${Updates.updateId ?? 'original build'}`);
           {/* The last seven days in three counts. Local + one read, no AI. */}
           {me ? <YourWeekCard me={me} /> : null}
 
-          <RunningUpdateLine />
-
-          <ThemedText type="code" themeColor="textSecondary" style={styles.sectionHead}>
-            {SETTINGS_TITLE}
-          </ThemedText>
-
-          {/* Restored 2026-10-04 (emci): themes, city, birthday, notifications.
-              The share poster is not back — the identity card above already has
-              "Share my card". */}
-          <AppearancePicker />
-
-          {me ? (
-            <>
-              <CityPicker
-                value={me.city}
-                onChange={(slug) => {
-                  void saveCity(slug);
-                }}
-              />
-              <SettingsFold title="Account">
-                <BirthdayRow me={me} onUpdated={() => refresh()} />
-              </SettingsFold>
-            </>
-          ) : null}
-
-          <NotificationPrefsFold />
-
-          {/* One static helpline row (emci 2026-10-14). Never generated. */}
-          <HelplineRow />
-
-          <SettingsFold title="ATO's AI" defaultOpen>
-            <View style={styles.body}>
-              <ThemedText type="small" themeColor="textSecondary">
-                {AI_USE_DISCLOSURE}
-              </ThemedText>
-              {consent === 'pending' ? (
-                <AiConsentCard
-                  context="home"
-                  busy={consentBusy}
-                  onGrant={() => saveAiConsent(true)}
-                  onDeny={() => saveAiConsent(false)}
-                />
-              ) : (
-                <Pressable
-                  accessibilityRole="button"
-                  disabled={consentBusy || !me}
-                  onPress={() => {
-                    void saveAiConsent(consent !== 'granted');
-                  }}
-                  style={({ pressed }) => [styles.detailRow, pressed && styles.pressed]}>
-                  <ThemedText type="small" themeColor="textSecondary">
-                    ATO&apos;s AI
-                  </ThemedText>
-                  <ThemedText type="small">
-                    {consentBusy ? 'Saving…' : consent === 'granted' ? 'On' : 'Off'}
-                  </ThemedText>
-                </Pressable>
-              )}
-              {error ? <ThemedText themeColor="textSecondary">{error}</ThemedText> : null}
-            </View>
-          </SettingsFold>
-
-          <Pressable
-            accessibilityRole="link"
-            onPress={() => {
-              void sendFeedback();
-            }}
-            style={({ pressed }) => [styles.deleteLink, pressed && styles.pressed]}>
-            <ThemedText type="link">{SEND_FEEDBACK_LABEL}</ThemedText>
-          </Pressable>
-          {feedbackNote ? (
-            <ThemedText type="small" themeColor="textSecondary" selectable>
-              {feedbackNote}
-            </ThemedText>
-          ) : null}
-
-          <LegalLinks />
-
-          <Pressable
-            onPress={handleSignOut}
-            disabled={signingOut}
-            style={({ pressed }) => [
-              styles.signOutButton,
-              { backgroundColor: theme.backgroundElement, borderColor: controlBorderColor(theme) },
-              pressed && styles.pressed,
-              signingOut && styles.disabled,
-            ]}>
-            <ThemedText type="smallBold" style={{ color: '#E5484D' }}>
-              {signingOut ? 'Signing out…' : 'Sign out'}
-            </ThemedText>
-          </Pressable>
-
-          {/* Deletion lives below sign-out and opens a confirmation sheet — it
-              never deletes on this tap. */}
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel="Delete account"
-            onPress={() => setDeleting(true)}
-            style={({ pressed }) => [styles.deleteLink, pressed && styles.pressed]}>
-            <ThemedText type="small" themeColor="textSecondary" style={styles.deleteLinkText}>
-              Delete account
-            </ThemedText>
+            accessibilityLabel={SETTINGS_TITLE}
+            onPress={() => router.push('/settings')}
+            style={({ pressed }) => [styles.settingsRow, pressed && styles.pressed]}>
+            <ThemedView type="backgroundElement" style={styles.settingsCard}>
+              <ThemedText type="smallBold">{SETTINGS_TITLE}</ThemedText>
+              <ThemedText themeColor="textSecondary">›</ThemedText>
+            </ThemedView>
           </Pressable>
-
-          {/* The dev PIN box — the SAME component, PIN and lock as Divecore's hub.
-              Entering it shows the DEV bubble on every screen (and unlocks Divecore's
-              kit too). Gone once unlocked, and never shown outside pre-launch. */}
-          {DEV_PIN_AVAILABLE && !pinUnlocked ? <DevUnlockRow /> : null}
-          {pinUnlocked ? (
-            <ThemedText type="small" themeColor="textSecondary" style={styles.deleteLinkText}>
-              Dev tools unlocked — use the DEV button.
-            </ThemedText>
-          ) : null}
         </ScrollView>
       </SafeAreaView>
-
-      <DeleteAccountSheet
-        visible={deleting}
-        onClose={() => setDeleting(false)}
-        hasAppleIdentity={hasAppleIdentity}
-      />
     </ThemedView>
   );
 }
 
 const styles = StyleSheet.create({
-  sectionHead: {
-    textTransform: 'uppercase',
-    letterSpacing: 1,
-    paddingTop: Spacing.three,
-    paddingHorizontal: Spacing.one,
-  },
   container: {
     flex: 1,
     flexDirection: 'row',
@@ -314,34 +81,18 @@ const styles = StyleSheet.create({
   header: {
     paddingRight: NAV_PIXEL_HEADER_INSET,
   },
-  body: {
-    gap: Spacing.two,
-    paddingHorizontal: Spacing.three,
-    paddingBottom: Spacing.two,
+  settingsRow: {
+    minHeight: 44,
   },
-  detailRow: {
+  settingsCard: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical: Spacing.two,
-  },
-  signOutButton: {
-    borderRadius: Spacing.three,
-    borderWidth: 1,
+    borderRadius: Spacing.four,
     paddingVertical: Spacing.three,
-    alignItems: 'center',
-  },
-  deleteLink: {
-    alignItems: 'center',
-    paddingVertical: Spacing.two,
-  },
-  deleteLinkText: {
-    textDecorationLine: 'underline',
+    paddingHorizontal: Spacing.four,
   },
   pressed: {
     opacity: 0.8,
-  },
-  disabled: {
-    opacity: 0.6,
   },
 });

@@ -205,10 +205,12 @@ ok('app button: root / grant / unlock only (not PRE_LAUNCH_DEV), hidden on Play,
   assert.doesNotMatch(pin, /String\.fromCharCode|PLAY_DEV_PIN/, 'the PIN itself is not copied into the app lock');
 
   // The box on You is the same component Divecore shows, and it goes away once unlocked.
-  const you = read('src/app/(tabs)/you.tsx');
-  assert.ok(you.includes("import { DevUnlockRow } from '@/play/dev-unlock-row';"), 'You shows Divecore’s own PIN box');
+  const you = read('src/app/settings.tsx');
+  assert.ok(you.includes("import { DevUnlockRow } from '@/play/dev-unlock-row';"), 'Settings shows Divecore’s own PIN box');
   assert.ok(you.includes('{DEV_PIN_AVAILABLE && !pinUnlocked ? <DevUnlockRow /> : null}'), 'shown only pre-launch and only while locked');
-  assert.ok(!you.includes('AppVersionDevUnlock') && !you.includes('verifyDevUnlockPassword'), 'the old server-password door is not on You');
+  assert.ok(!you.includes('AppVersionDevUnlock') && !you.includes('verifyDevUnlockPassword'), 'the old server-password door is not on Settings');
+  const youTab = read('src/app/(tabs)/you.tsx');
+  assert.ok(!youTab.includes('DevUnlockRow') && !youTab.includes('verifyDevUnlockPassword'), 'no dev door on You any more');
 
   // The Hub opens with the PIN; the pre-launch flag alone no longer opens it.
   const hub = read('src/app/dev-lab.tsx');

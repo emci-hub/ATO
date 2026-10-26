@@ -112,7 +112,7 @@ assert.equal(groupIdFromManifest({ extra: { eas: { group: 'abc' } } }), 'abc');
 assert.equal(groupIdFromManifest({}), null);
 ok('reads group from manifest metadata or extra.eas');
 
-const you = read('src/app/(tabs)/you.tsx');
+const you = read('src/app/settings.tsx');
 const hub = read('src/app/dev-lab.tsx');
 const line = read('src/components/running-update-line.tsx');
 // RESTORED (ISOLATION_PLAN §7 Card F, 2026-09-15; build/update info restore,
@@ -128,7 +128,7 @@ assert.match(line, /Updates\.createdAt/);
 assert.match(line, /formatPublishedAt/);
 assert.match(line, /\/dev-lab/);
 assert.doesNotMatch(line, /\/ai-lab/);
-ok('You Settings and Dev Tools Hub both show the running-update line');
+ok('Settings (moved off You, IA P1) and Dev Tools Hub both show the running-update line');
 
 // App version + build number, no expo-application. Pinned so a later edit
 // can't quietly drop these or silently re-add the missing native dependency.
