@@ -82,7 +82,7 @@ export function DepthDive({
     try {
       const { wrote } = await recordStandaloneScenario(me.id, axis, pole);
       if (!wrote) {
-        setError('A told answer already sits here, so this did not change it.');
+        setError('You already answered this, so this did not change it.');
         return;
       }
       await afterWrite();

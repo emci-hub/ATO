@@ -19,7 +19,7 @@ import { ThemedView } from '@/components/themed-view';
 import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { useAccountDataEpoch } from '@/lib/account-data-epoch';
-import { AI_TAP_TIMEOUT_MS } from '@/lib/ai/timeouts';
+import { TAP_TIMEOUT_MS } from '@/lib/tap-timeout';
 import { AI_TOKEN_PRICE, AI_TOKENS_NEEDED, atoTokenBalanceOf } from '@/lib/ato-tokens';
 import { refundAiTokens } from '@/lib/ato-tokens-server';
 import { PRE_LAUNCH_DEV } from '@/lib/dev-mode';
@@ -82,7 +82,7 @@ export const legendsPaidLine = (tokens: number) =>
   `Want another from the story library? It costs ${AI_TOKEN_PRICE} tokens (you have ${tokens}).`;
 export const LEGENDS_PAID_FAILED =
   'The legend card did not load, so this reveal was not saved. If tokens were charged for this try, they come back once today.';
-export const LEGENDS_PAID_QUOTA = 'That’s the most extra legend reveals for today. Come back tomorrow.';
+export const LEGENDS_PAID_QUOTA = 'No more extra legend reveals today. Come back tomorrow.';
 export const HALL_CHAPTERS_COPY = 'You’ve met every legend here. The frames now hide new chapters about them.';
 export const HALL_EMPTY_COPY = 'Nothing left to reveal in this hall today. Try another hall.';
 export const HALL_ALL_TOLD_COPY = 'You’ve heard every story in this hall.';
@@ -317,7 +317,7 @@ export default function LegendsScreen() {
         await hydrateStoryLibraryDevice();
         let story;
         try {
-          story = await withTimeout(revealLegendStory({ ...input, consentGranted, free }), AI_TAP_TIMEOUT_MS, 'legend-story');
+          story = await withTimeout(revealLegendStory({ ...input, consentGranted, free }), TAP_TIMEOUT_MS, 'legend-story');
         } catch {
           if (charged) await refundAiTokens('legend');
           story = fallbackLegendStory(input);

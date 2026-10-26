@@ -198,16 +198,16 @@ export const CONSCIENTIOUSNESS_IDEAS: readonly InsightIdea[] = [
     focus: [
       'Before a trip, you tend to pack early and double-check the list.',
       'You usually have your bag, tickets and plans sorted well before you leave.',
-      'When you travel, you tend to prepare for problems that may never come.',
+      'You tend to prepare early for problems that may never happen.',
     ],
     why: 'Preparing well means fewer surprises, but extra planning can take time you might have enjoyed more.',
     try: [
       'Drop one item from your next packing list, so you practice trusting that you can buy it if needed.',
-      'Set a time to stop packing and stick to it, so the prep doesn’t take over your evening.',
+      'Set a time to stop preparing and stick to it, so the prep doesn’t take over your evening.',
     ],
     watch: [
       'Notice which prep tasks you do for peace of mind and not because you need them.',
-      'Notice how you feel once the bag is closed.',
+      'Notice how you feel once you finish preparing.',
     ],
   }),
   idea('ftw_conscientiousness_h_08', ['conscientiousness:high'], {
@@ -223,7 +223,7 @@ export const CONSCIENTIOUSNESS_IDEAS: readonly InsightIdea[] = [
     ],
     watch: [
       'Notice when you feel guilty about sitting still.',
-      'Notice how you feel after a day with nothing on the list.',
+      'Notice how you feel after a day with nothing planned.',
     ],
   }),
   idea('ftw_conscientiousness_h_09', ['conscientiousness:high'], {
@@ -232,7 +232,7 @@ export const CONSCIENTIOUSNESS_IDEAS: readonly InsightIdea[] = [
       'You usually notice when someone else doesn’t follow through, and it bothers you.',
       'You tend to remember it when a friend says they’ll do something and doesn’t.',
     ],
-    why: 'Your own reliability makes it easy to notice gaps in others, but they may not know how much it matters to you.',
+    why: 'Your own reliability makes it easy to notice when others fall short.',
     try: [
       'Next time someone misses a deadline, ask what got in the way, so you understand before you decide how you feel.',
       'Tell a coworker or friend what you need from them and by when, so you aren’t relying on guesses.',

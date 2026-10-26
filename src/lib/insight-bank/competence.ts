@@ -213,16 +213,16 @@ export const COMPETENCE_IDEAS: readonly InsightIdea[] = [
   idea('ftw_competence_h_08', ['competence:high'], {
     focus: [
       'When you don’t know something, you tend to find it hard to say so in front of others.',
-      'You usually prefer to look it up quietly than ask in a meeting.',
-      'When a topic is new to you, you tend to act as if you know it while you learn.',
+      'You usually prefer to look it up quietly rather than ask in a meeting.',
+      'When a topic is new to you, you tend to act as if you already know it.',
     ],
-    why: 'Staying confident helps you move, but saying “I don’t know” can build more trust than you expect.',
+    why: 'Saying “I don’t know” can build more trust than you expect.',
     try: [
-      'Say “I’m not sure, let me find out” once this week, so you see how people react.',
-      'Ask one question in a meeting where you don’t know the answer, so others feel free to ask too.',
+      'Say “I’m not sure, let me find out” once this week.',
+      'Ask one question in a meeting when you don’t know the answer.',
     ],
     watch: [
-      'Notice when you pretend to know and what you feel after.',
+      'Notice how you feel when you pretend to know something.',
       'Notice how people respond when someone else admits they don’t know.',
     ],
   }),
@@ -234,7 +234,7 @@ export const COMPETENCE_IDEAS: readonly InsightIdea[] = [
     ],
     why: 'Stepping in helps teams that are stuck, but others may not get the chance to grow if you take the lead every time.',
     try: [
-      'Ask a teammate to take the lead on one part, and offer to back them up, so they build their own skills.',
+      'Ask a teammate to take the lead on one part and offer to back them up.',
       'Wait ten seconds before you volunteer next time, so someone else can speak first.',
     ],
     watch: [
@@ -248,7 +248,7 @@ export const COMPETENCE_IDEAS: readonly InsightIdea[] = [
       'You usually trust the way you already work, since it has served you well.',
       'When a coworker suggests a change to your process, you tend to explain why yours is better.',
     ],
-    why: 'Trusting your methods keeps you quick, but another way can sometimes be faster or catch a problem you missed.',
+    why: 'Another way can sometimes be faster or catch a problem you missed.',
     try: [
       'Try a coworker’s method once on a small task, so you can compare it with yours.',
       'Ask “what does your way do better?” the next time someone suggests a change, so you hear the reason.',
@@ -271,7 +271,7 @@ export const COMPETENCE_IDEAS: readonly InsightIdea[] = [
     ],
     watch: [
       'Notice how a friend reacts to your help.',
-      'Notice when you jump in because it’s hard to watch someone struggle.',
+      'Notice when you jump in before someone asks for help.',
     ],
   }),
   idea('ftw_competence_h_12', ['competence:high'], {
@@ -351,7 +351,7 @@ export const COMPETENCE_IDEAS: readonly InsightIdea[] = [
     ],
     watch: [
       'Notice what changes in your work when someone is watching.',
-      'Notice how closely the observer was actually paying attention.',
+      'Notice how closely people actually pay attention when you work.',
     ],
   }),
   idea('ftw_competence_l_11', ['competence:low'], {
@@ -362,7 +362,7 @@ export const COMPETENCE_IDEAS: readonly InsightIdea[] = [
     ],
     why: 'Checking your work catches real mistakes, but after a few passes the extra checking mostly adds stress.',
     try: [
-      'Decide how many checks you’ll do before you start, then stop at that number, so the work gets sent.',
+      'Decide how many checks you will do before you start, and stick to that number.',
       'Ask a coworker to look at it once, so you share the checking.',
     ],
     watch: [
@@ -373,7 +373,7 @@ export const COMPETENCE_IDEAS: readonly InsightIdea[] = [
   idea('ftw_competence_l_12', ['competence:low'], {
     focus: [
       'When you get a compliment on your skills, you tend to explain it away.',
-      'You usually say “anyone could have done it” when someone praises you.',
+      'You tend to dismiss praise as something anyone could have done.',
       'When a boss says you did well, you tend to wonder what you got wrong.',
     ],
     why: 'Staying modest keeps you grounded, but brushing off praise can hide the proof that you are doing well.',

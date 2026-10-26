@@ -223,7 +223,7 @@ export const AUTONOMY_IDEAS: readonly InsightIdea[] = [
     ],
     watch: [
       'Notice which parts of your day you want to control most.',
-      'Notice how others cope when they can’t tell what you’re doing.',
+      'Notice how others respond when they do not know what you are working on.',
     ],
   }),
   idea('ftw_autonomy_h_09', ['autonomy:high'], {
@@ -232,14 +232,14 @@ export const AUTONOMY_IDEAS: readonly InsightIdea[] = [
       'You usually prefer to reach your own conclusion before hearing what others think.',
       'When people tell you what to do, you tend to want to do the opposite.',
     ],
-    why: 'Wanting to decide for yourself keeps your choices your own, but advice is often meant as care and can have useful facts in it.',
+    why: 'Deciding for yourself keeps your choices your own, even when advice has useful facts.',
     try: [
       'Say “thanks, I’ll think about it” to unwanted advice, so you keep both the peace and your choice.',
       'Pick one piece of advice you got this month and test it, so you see whether it holds up.',
     ],
     watch: [
       'Notice when you reject advice before you’ve heard all of it.',
-      'Notice how often advice turned out to be useful.',
+      'Notice how often advice turns out to be useful.',
     ],
   }),
   idea('ftw_autonomy_h_10', ['autonomy:high'], {
@@ -255,7 +255,7 @@ export const AUTONOMY_IDEAS: readonly InsightIdea[] = [
     ],
     watch: [
       'Notice how the group feels when you step away.',
-      'Notice how you feel when you return to them.',
+      'Notice how you feel when you return to working with others.',
     ],
   }),
   idea('ftw_autonomy_h_11', ['autonomy:high'], {
@@ -264,7 +264,7 @@ export const AUTONOMY_IDEAS: readonly InsightIdea[] = [
       'You usually prefer to own a piece of the work from start to finish.',
       'You tend to want a clear area that is yours when you work on a team.',
     ],
-    why: 'Owning a piece gives you pride in the result, but the parts have to fit together, and that takes some back-and-forth.',
+    why: 'Owning your own piece still requires checking that the parts fit together.',
     try: [
       'Check in with your teammate halfway through a split job, so the pieces fit at the end.',
       'Share what you’re planning for your part in two sentences, so others can plan around it.',
@@ -276,7 +276,7 @@ export const AUTONOMY_IDEAS: readonly InsightIdea[] = [
   }),
   idea('ftw_autonomy_h_12', ['autonomy:high'], {
     focus: [
-      'When you ask for help, you tend to want it on your terms and not take over.',
+      'When you ask for help, you tend to want it on your terms without anyone taking over.',
       'You usually accept help best when it leaves the decision to you.',
       'When someone helps you too much, you tend to feel your choices are being taken away.',
     ],
@@ -298,7 +298,7 @@ export const AUTONOMY_IDEAS: readonly InsightIdea[] = [
     ],
     why: 'Clear goals help you do solid work, but waiting for them can slow you down when no one has time to explain.',
     try: [
-      'Write down what you think a good result looks like and send it to your boss, so you can start with a check.',
+      'Write down what you think a good result looks like and check it with the person who asked before you start.',
       'Ask one question about the goal before you begin, so you know what to aim at.',
     ],
     watch: [
@@ -383,7 +383,7 @@ export const AUTONOMY_IDEAS: readonly InsightIdea[] = [
     ],
     watch: [
       'Notice when you have a view you don’t share.',
-      'Notice how your leader reacts when you offer one.',
+      'Notice how your leader reacts when you offer an idea.',
     ],
   }),
 ];

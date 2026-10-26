@@ -168,7 +168,7 @@ const CHIP_COPY: Record<
     value: unlocked ? TRAIT_AXES.length : '—',
     label: unlocked
       ? `Full picture, unlocked. All ${TRAIT_AXES.length} axes have settled.`
-      : 'Full picture, locked. Not every axis has settled yet.',
+      : 'Full picture, locked. Not every trait has settled yet.',
   }),
 };
 

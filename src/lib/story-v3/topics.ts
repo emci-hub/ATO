@@ -209,7 +209,7 @@ export const STORY_STAR_TOPICS: readonly TopicTemplate[] = [
       narrator('You start again, and this time they hear you.'),
       narrator('The mute button sulks in the corner of the screen.'),
     ],
-    next: 'a slides deck that opens on the wrong file.',
+    next: 'a slide deck that opens on the wrong file.',
     leans: {
       high: {
         title: 'Saint of Take Two',
