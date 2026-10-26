@@ -40,15 +40,14 @@ import { controlBorderColor } from '@/lib/theme/chrome';
 
 /**
  * Routes that live under `(tabs)/` but are never a bar/More destination —
- * they are pushed from inside another tab (Roll, from Legends). They still
- * need a trigger registered INSIDE `TabList`, exactly like the More-parked
- * tabs below, or the navigator has no route to navigate to. `/roll` shipped
- * without one and was only reachable through an `as Href` cast that hid the
- * gap from typecheck. Deliberately NOT in `NAV_TABS`: entries there become
- * user-placeable bar slots and show up in More and the edit pool.
+ * they are reached by a push or a redirect. They still need a trigger
+ * registered INSIDE `TabList`, exactly like the More-parked tabs below, or the
+ * navigator has no route to navigate to. Deliberately NOT in `NAV_TABS`:
+ * entries there become user-placeable bar slots and show up in More and the
+ * edit pool. (IA P6: Roll left this list — "Your reveals" is a root Stack
+ * screen, `src/app/roll.tsx`, pushed from Legends.)
  */
 const HIDDEN_TAB_ROUTES: readonly { name: string; href: Href }[] = [
-  { name: 'roll', href: '/roll' },
   // Explore was removed from the bar (IA phase P5) but its route file stays as a redirect to
   // /you?section=categories, so old deep links and pushes still land; it needs a trigger to be navigable.
   { name: 'explore', href: '/explore' },

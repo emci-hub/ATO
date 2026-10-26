@@ -1,5 +1,5 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import { router, useFocusEffect } from 'expo-router';
+import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -260,6 +260,16 @@ export default function LegendsScreen() {
     [today, tracks, persist],
   );
 
+  // IA P6: "Reveal in Legends ›" on Your reveals pushes `/legends?hall=<hall>`.
+  // Open that hall once the screen has loaded (only a known hall; opening never spends).
+  const { hall: hallParam } = useLocalSearchParams<{ hall?: string }>();
+  useEffect(() => {
+    if (!hallParam || !ready || !today || !localRef.current) return;
+    const wanted = LEGEND_HALLS.find((h) => h === hallParam);
+    if (wanted) chooseHall(wanted);
+    router.setParams({ hall: undefined });
+  }, [hallParam, ready, today, local, chooseHall]);
+
   const loadFriends = useCallback(async (legendId: string) => {
     const names = await fetchCircleFriends(legendId);
     setFriends((prev) => ({ ...prev, [legendId]: names }));
@@ -440,6 +450,15 @@ export default function LegendsScreen() {
           <ThemedText type="small" themeColor="textSecondary">
             {LEGENDS_LEDE}
           </ThemedText>
+          {ready ? (
+            <Pressable
+              onPress={() => router.push('/roll')}
+              accessibilityRole="button"
+              accessibilityLabel="Your reveals"
+              style={({ pressed }) => [styles.link, pressed && styles.pressed]}>
+              <ThemedText type="linkPrimary">Your reveals ›</ThemedText>
+            </Pressable>
+          ) : null}
 
           {!ready ? null : !unlocked ? (
             <View style={[styles.panel, { backgroundColor: theme.backgroundElement, borderColor: theme.border }]}>

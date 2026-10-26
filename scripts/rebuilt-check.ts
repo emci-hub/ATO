@@ -59,7 +59,8 @@ const PARKED_SCREENS: { rel: string; label: string }[] = [
   // Legends was rebuilt 2026-10-08 as the museum of legends (src/lib/legend-figures):
   // its gates are pinned in legend-roster-check.ts, no-auto-ai-check.ts and
   // milestones-check.ts instead.
-  { rel: 'src/app/(tabs)/roll.tsx', label: 'Roll' },
+  // Roll left this list in IA P6: it is now "Your reveals" (src/app/roll.tsx), a real
+  // display-only screen pinned at the bottom of this file.
   // Card F (2026-09-15): everything outside the Home / Questions / Explore
   // spine. `you.tsx` is NOT here on purpose — it is parked but deliberately
   // keeps sign out, delete account and AI consent alive (App Store 5.1.1(v)),
@@ -226,5 +227,29 @@ const divecoreSheet = codeOnly(read('src/play/circle-visits-ui.tsx'));
 assert.doesNotMatch(divecoreSheet, /blockCirclePeer|reportCirclePeer|sendCircleRequest|respondCircleRequest|unblockCirclePeer|TextInput|circle-compare/, 'the Divecore sheet no longer carries the safety tools');
 assert.ok(!isTabParked('circle'), 'Circle is offered in the bar and More');
 ok('Circle is a real tab: friends, Message, requests, ⋯ menu (Report/Block), Blocked, support line; no Divecore UI');
+
+// ---------------------------------------------------------------------------
+// Roll is a real screen again (IA P6): "Your reveals", display only.
+// ---------------------------------------------------------------------------
+
+assert.ok(!existsSync(resolve(root, 'src/app/(tabs)/roll.tsx')), 'the parked (tabs)/roll.tsx is gone (moved to src/app/roll.tsx)');
+const rollSrc = read('src/app/roll.tsx');
+const rollCode = codeOnly(rollSrc);
+assert.match(rollSrc, /export default function/, 'Roll still exports a mountable route component');
+assert.doesNotMatch(rollCode, /<RebuiltNotice|rebuilt-notice/, 'Roll is a real screen now, not a Rebuilt notice');
+assert.match(rollCode, /YOUR_REVEALS_TITLE = 'Your reveals'/, 'the screen is titled Your reveals');
+// Paid reveals happen ONLY in Legends: this screen never claims, spends, refunds, writes or calls a model.
+for (const { pattern, label } of FORBIDDEN) {
+  assert.doesNotMatch(rollCode, pattern, `Your reveals reaches ${label}`);
+}
+assert.doesNotMatch(
+  rollCode,
+  /claimLegendStory|claim_legend|refundAiTokens|revealLegendStory|saveServerEntry|saveLocalState|resendMissingEntries|ato-tokens-server|generate'/,
+  'Your reveals never spends, refunds, reveals or saves — paying happens only in Legends',
+);
+assert.match(rollCode, /fetchServerMuseum\(\)/, 'met legends come from the saved museum, read like Legends does');
+assert.match(rollCode, /<LegendStoryCard/, 'a met legend opens its saved story card');
+assert.match(rollCode, /pathname: '\/legends', params: \{ hall \}/, 'each hall row opens that hall in Legends');
+ok('Roll is "Your reveals": a real screen, no Rebuilt notice, display only (no spend, claim, save or model call)');
 
 console.log(`\n${passed} rebuilt checks passed`);

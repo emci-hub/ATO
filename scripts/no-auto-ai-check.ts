@@ -56,6 +56,8 @@ const KEPT: string[] = [
   // Museum of legends (2026-10-08): the story is written only on "Meet them".
   'src/app/(tabs)/legends.tsx',
   'src/components/legend-figure-card.tsx',
+  // Your reveals (IA P6): display only, pushed from Legends.
+  'src/app/roll.tsx',
   // Category deep dive on Home (2026-10-08): written only on its button.
   'src/components/category-deep-dive-card.tsx',
 ];
