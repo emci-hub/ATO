@@ -3,7 +3,6 @@ import { StyleSheet, View } from 'react-native';
 
 import { BankFinishFold } from '@/components/bank-finish-fold';
 import { PagedQuestions } from '@/components/paged-questions';
-import { ProfileCharacter } from '@/components/profile-character';
 import { SkeletonCard } from '@/components/motion';
 import { SetDoneMoment, type SetDoneMomentState } from '@/components/set-done-moment';
 import { SetProgress } from '@/components/set-progress';
@@ -255,8 +254,7 @@ export function QuestionsFold({
   return (
     <View style={styles.body}>
       <SetDoneMoment moment={moment} me={me} tracks={tracks} onClose={() => setMoment(null)} />
-      {/* The character shows once the first read (the 48) is in; after set 25 the binder takes over. */}
-      {fullProfileLocked && !loading && progress && progress.stage !== 'complete' ? <ProfileCharacter tracks={tracks} /> : null}
+      {/* "This is you so far" (the profile character) lives on You now (IA phase P2). */}
       {content}
     </View>
   );
