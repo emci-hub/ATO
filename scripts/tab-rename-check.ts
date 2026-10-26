@@ -10,6 +10,7 @@ import { resolve } from 'node:path';
 import {
   DEFAULT_NAV_LAYOUT,
   LEGACY_TAB_ID_MAP,
+  NAV_LAYOUT_VERSION,
   normalizeNavLayout,
   PARKED_PINNED_IDS,
   PINNED_IDS,
@@ -37,25 +38,29 @@ assert.deepEqual(PARKED_PINNED_IDS, [], 'Insights is a real tab, never parked');
 assert.deepEqual(LEGACY_TAB_ID_MAP, { sage: 'insights' });
 assert.equal(SLOT_COUNT, 4);
 assert.equal(POOL_SLOTS, 2);
-assert.deepEqual(DEFAULT_NAV_LAYOUT.slots, ['home', 'insights', 'questions', 'explore']);
+assert.deepEqual(DEFAULT_NAV_LAYOUT.slots, ['home', 'insights', 'you', 'play']);
 ok('Home + Insights pinned, nothing parked, five buttons with More');
 
-// Saved layouts that say "sage" migrate in place, keeping the user's order.
-assert.deepEqual(normalizeNavLayout({ slots: ['home', 'questions', 'explore', 'you', 'sage'] }).slots, [
+// Saved layouts that say "sage" migrate in place, keeping the user's order. Since IA P3 every layout saved
+// before NAV_LAYOUT_VERSION resets once on read, so the migration is exercised on current-version layouts
+// (and on the write path); an unversioned legacy layout resets to the default.
+const V = NAV_LAYOUT_VERSION;
+assert.deepEqual(normalizeNavLayout({ slots: ['home', 'sage', 'explore', 'you'] }).slots, DEFAULT_NAV_LAYOUT.slots, 'an unversioned legacy layout resets once');
+assert.deepEqual(normalizeNavLayout({ slots: ['home', 'questions', 'explore', 'you', 'sage'], version: V }).slots, [
   'home',
   'questions',
   'explore',
   'insights',
 ]);
-assert.deepEqual(normalizeNavLayout({ slots: ['sage', 'home', 'legends', 'you'] }).slots, [
+assert.deepEqual(normalizeNavLayout({ slots: ['sage', 'home', 'legends', 'you'], version: V }).slots, [
   'insights',
   'home',
   'legends',
   'you',
 ]);
-assert.deepEqual(normalizeNavLayout(['home', 'explore', 'sage', 'you']).slots, ['home', 'explore', 'insights', 'you']);
+assert.deepEqual(normalizeNavLayout(['home', 'explore', 'sage', 'you'], { resetShort: false }).slots, ['home', 'explore', 'insights', 'you']);
 // "sage" and "insights" both present → one Insights, never two.
-const both = normalizeNavLayout({ slots: ['home', 'sage', 'insights', 'explore', 'you'] }).slots;
+const both = normalizeNavLayout({ slots: ['home', 'sage', 'insights', 'explore', 'you'], version: V }).slots;
 assert.equal(both.filter((id) => id === 'insights').length, 1);
 assert.ok(!(both as string[]).includes('sage'));
 // Writes migrate too (the edit screen commits with resetShort: false).
@@ -64,7 +69,7 @@ assert.deepEqual(
   ['home', 'insights', 'legends'],
 );
 // Junk never wins, including prototype keys.
-assert.deepEqual(normalizeNavLayout({ slots: ['toString', 'constructor', 'sage'] }).slots, DEFAULT_NAV_LAYOUT.slots);
+assert.deepEqual(normalizeNavLayout({ slots: ['toString', 'constructor', 'sage'], version: V }).slots, DEFAULT_NAV_LAYOUT.slots);
 assert.deepEqual(normalizeNavLayout(null).slots, DEFAULT_NAV_LAYOUT.slots);
 ok('saved "sage" layouts migrate to "insights" on read and write, in place, once');
 

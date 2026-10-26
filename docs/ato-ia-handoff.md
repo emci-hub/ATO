@@ -5,13 +5,25 @@ State of the IA runner (`docs/ato-ia-runner.md`). The runner does ONLY the first
 ## Checklist
 - [x] P1 — Settings screen
 - [x] P2 — "This is you so far" on You
-- [ ] P3 — New tab bar + one-time layout reset
+- [x] P3 — New tab bar + one-time layout reset
 - [ ] P4 — Explore → You, part 1
 - [ ] P5 — Explore → You, part 2 + remove Explore
 - [ ] P6 — Roll = "Your reveals"
 - [ ] P7 — Cleanup
 
 ## Log
+
+### P3 — New tab bar + one-time layout reset (2026-10-26, branch `ia/p3-tab-bar`, stacked on `ia/p2-you-so-far`, draft PR, no merge, no OTA)
+Files: `src/lib/nav/nav-order.ts` (pool id `play`, `PUSHED_TAB_IDS`, `NAV_LAYOUT_VERSION = 3` stored inside the layout JSON, default
+`['home','insights','you','play']`), `src/components/app-tabs.tsx` (`PushTabButton` pushes `/play`, no hidden tab trigger for it),
+`src/components/nav-more-sheet.tsx` ("Open Divecore" row only when Play is not on the bar), checks `nav-check` + `tab-rename-check`.
+`nav-context.tsx` needed no change (the version rides through `normalizeNavLayout` in `me.ts`; no DB schema change).
+- Lessons: (1) the reset is a READ rule keyed on `version !== 3`; the edit screen's write path (`resetShort:false`) stamps the
+  version, so a user's later edit is never reset. (2) Every old test that fed an unversioned layout to `normalizeNavLayout` now
+  resets to the default, so those inputs got `version: NAV_LAYOUT_VERSION` (or the write path); new pins assert that unversioned
+  and v2 layouts reset, that a v3 layout is kept, and that a saved edit is stamped. (3) More now lists Questions, Explore, Legends,
+  Circle (registry order). (4) Needs a phone look: fresh account bar, an old custom layout resetting once, a re-edited layout
+  persisting, Play opening Divecore from the bar.
 
 ### P2 — "This is you so far" on You (2026-10-26, branch `ia/p2-you-so-far`, stacked on `ia/p1-settings`, draft PR, no merge, no OTA)
 Files: `src/app/(tabs)/you.tsx` (same `fetchHomeBootstrap` + `requestIdRef` / `loadedOnceRef` / `tracksUserId` guards as

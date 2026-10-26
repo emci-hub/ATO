@@ -11,9 +11,11 @@ import { resolve } from 'node:path';
 
 import {
   DEFAULT_NAV_LAYOUT,
+  NAV_LAYOUT_VERSION,
   NAV_TABS,
   NAV_TAB_IDS,
   PARKED_PINNED_IDS,
+  PUSHED_TAB_IDS,
   PINNED_IDS,
   POOL_SLOTS,
   SLOT_COUNT,
@@ -53,16 +55,43 @@ assert.equal(SLOT_COUNT, 4);
 assert.equal(POOL_SLOTS, 2);
 assert.deepEqual(PARKED_PINNED_IDS, []);
 assert.equal(VISIBLE_SLOT_COUNT, 4);
-assert.deepEqual(DEFAULT_NAV_LAYOUT, { slots: ['home', 'insights', 'questions', 'explore'] });
+// IA P3 (2026-10-26): the default bar is Home · Insights · You · Play · More.
+assert.deepEqual(DEFAULT_NAV_LAYOUT, { slots: ['home', 'insights', 'you', 'play'] });
 assert.deepEqual(
   DEFAULT_NAV_LAYOUT.slots.filter((id) => !isTabParked(id)),
-  ['home', 'insights', 'questions', 'explore'],
-  'what the bar actually shows: Home, Insights, Questions, Explore',
+  ['home', 'insights', 'you', 'play'],
+  'what the bar actually shows: Home, Insights, You, Play',
 );
 assert.ok(!isTabParked('legends') && !poolIdsInLayout(DEFAULT_NAV_LAYOUT).includes('legends'), 'Legends is in More');
-assert.ok(!poolIdsInLayout(DEFAULT_NAV_LAYOUT).includes('you'), 'You is in More');
+assert.ok(!poolIdsInLayout(DEFAULT_NAV_LAYOUT).includes('questions') && !poolIdsInLayout(DEFAULT_NAV_LAYOUT).includes('explore'), 'Questions and Explore are in More');
+assert.ok(poolIdsInLayout(DEFAULT_NAV_LAYOUT).includes('you') && poolIdsInLayout(DEFAULT_NAV_LAYOUT).includes('play'), 'You and Play are on the bar');
 assert.equal(DEFAULT_NAV_LAYOUT.slots.length, SLOT_COUNT);
-ok('bar shows Home / Insights / Questions / Explore + fixed More; You and Legends are in More');
+ok('bar shows Home / Insights / You / Play + fixed More; Questions, Explore, Legends and Circle are in More');
+
+// Play is a pool id whose destination is the pushed root screen /play (no tab trigger).
+assert.equal(NAV_TABS.play.href, '/play');
+assert.equal(NAV_TABS.play.label, 'Play');
+assert.equal(NAV_TABS.play.icon, 'play-circle');
+assert.deepEqual(PUSHED_TAB_IDS, ['play']);
+ok('Play is a registry pool tab that pushes /play');
+
+// NAV_LAYOUT_VERSION lives inside the layout JSON: an older or missing version resets ONCE on read
+// (including a fully valid old layout); a layout saved from the edit screen is stamped and kept.
+assert.equal(NAV_LAYOUT_VERSION, 3);
+const oldLayout = { slots: ['home', 'insights', 'questions', 'explore'] };
+assert.deepEqual(normalizeNavLayout(oldLayout).slots, DEFAULT_NAV_LAYOUT.slots, 'an unversioned layout resets to the new bar');
+assert.deepEqual(normalizeNavLayout({ ...oldLayout, version: 2 }).slots, DEFAULT_NAV_LAYOUT.slots, 'an older version resets too');
+assert.deepEqual(
+  normalizeNavLayout({ slots: ['home', 'insights', 'questions', 'explore'], version: NAV_LAYOUT_VERSION }).slots,
+  ['home', 'insights', 'questions', 'explore'],
+  'a current-version layout the user chose is kept',
+);
+assert.equal(normalizeNavLayout(null).version, NAV_LAYOUT_VERSION);
+const stamped = normalizeNavLayout({ slots: ['home', 'insights', 'legends', 'explore'] }, { resetShort: false });
+assert.equal(stamped.version, NAV_LAYOUT_VERSION, 'a saved edit is stamped with the current version');
+assert.deepEqual(stamped.slots, ['home', 'insights', 'legends', 'explore'], 'and keeps the user’s order');
+assert.deepEqual(normalizeNavLayout(stamped).slots, stamped.slots, 'so the next read does not reset it again');
+ok('layout version 3: old layouts reset once, edited layouts are stamped and persist');
 
 // The default layout carries home + insights exactly once and exactly POOL_SLOTS pool ids.
 const defaultPool = poolIdsInLayout(DEFAULT_NAV_LAYOUT);
@@ -80,14 +109,14 @@ assert.deepEqual(normalizeNavLayout(['nope', 7]).slots, DEFAULT_NAV_LAYOUT.slots
 ok('normalizeNavLayout(null/empty/invalid) yields the exact default layout');
 
 // Interleaving is preserved (home/insights can sit anywhere).
-const interleaved = normalizeNavLayout({ slots: ['explore', 'home', 'insights', 'you'] });
+const interleaved = normalizeNavLayout({ slots: ['explore', 'home', 'insights', 'you'], version: NAV_LAYOUT_VERSION });
 assert.deepEqual(interleaved.slots, ['explore', 'home', 'insights', 'you']);
-const insightsFirst = normalizeNavLayout({ slots: ['insights', 'you', 'home', 'legends'] });
+const insightsFirst = normalizeNavLayout({ slots: ['insights', 'you', 'home', 'legends'], version: NAV_LAYOUT_VERSION });
 assert.deepEqual(insightsFirst.slots, ['insights', 'you', 'home', 'legends']);
 ok('normalizeNavLayout preserves home/insights interleaving');
 
 // Bare array shape is accepted too.
-assert.deepEqual(normalizeNavLayout(['home', 'insights', 'legends', 'questions']).slots, [
+assert.deepEqual(normalizeNavLayout(['home', 'insights', 'legends', 'questions'], { resetShort: false }).slots, [
   'home',
   'insights',
   'legends',
@@ -98,9 +127,9 @@ ok('normalizeNavLayout accepts a bare array as well as { slots }');
 // Saved layouts that say "sage" migrate to "insights" in place (check:tab-rename
 // pins the details). A layout with fewer than POOL_SLOTS pool tabs resets ONCE
 // on read; a fuller layout keeps the user's first two picks.
-assert.deepEqual(normalizeNavLayout({ slots: ['home', 'explore', 'sage'] }).slots, DEFAULT_NAV_LAYOUT.slots);
+assert.deepEqual(normalizeNavLayout({ slots: ['home', 'explore', 'sage'], version: NAV_LAYOUT_VERSION }).slots, DEFAULT_NAV_LAYOUT.slots);
 assert.deepEqual(
-  normalizeNavLayout({ slots: ['home', 'legends', 'explore', 'you', 'sage'] }).slots,
+  normalizeNavLayout({ slots: ['home', 'legends', 'explore', 'you', 'sage'], version: NAV_LAYOUT_VERSION }).slots,
   ['home', 'legends', 'explore', 'insights'],
   'a saved choice keeps its order; the third pool tab moves to More',
 );
@@ -113,7 +142,7 @@ assert.match(read('src/lib/me.ts'), /normalizeNavLayout\(layout, \{ resetShort: 
 ok('a short saved layout resets once; a full one keeps its order; an edited one is padded');
 
 // Duplicates dropped; invalid ids dropped; too many pool ids trimmed to POOL_SLOTS.
-const duped = normalizeNavLayout({ slots: ['home', 'home', 'insights', 'explore', 'explore', 'you', 'around', 'nope'] });
+const duped = normalizeNavLayout({ slots: ['home', 'home', 'insights', 'explore', 'explore', 'you', 'around', 'nope'], version: NAV_LAYOUT_VERSION });
 assert.equal(duped.slots.length, SLOT_COUNT);
 assert.equal(duped.slots.filter((s) => s === 'home').length, 1);
 assert.equal(poolIdsInLayout(duped).length, POOL_SLOTS);
@@ -219,7 +248,16 @@ assert.doesNotMatch(overlay, /main\.push|more\.push/);
 assert.doesNotMatch(overlay, /homeFirst/);
 ok('edit overlay drags the visible slots via Sortable.Flex, enforces the 3-pool cap, and commits atomically');
 
+// The Play slot pushes /play (a root screen) and registers no tab trigger.
+assert.match(tabs, /PUSHED_TAB_IDS/);
+assert.match(tabs, /function PushTabButton/);
+assert.match(tabs, /router\.push\(href as never\)/);
+assert.match(tabs, /\.filter\(\(id\) => !\(PUSHED_TAB_IDS as readonly string\[\]\)\.includes\(id\)\)/, 'no hidden tab trigger for a pushed slot');
+ok('the Play bar slot pushes /play and gets no tab trigger');
+
 const sheet = read('src/components/nav-more-sheet.tsx');
+assert.match(sheet, /moreIds\.includes\('play'\)/, 'the Divecore row shows only when Play is not on the bar');
+assert.match(sheet, /accessibilityLabel="Open Divecore"/);
 assert.match(sheet, /moreIds/);
 assert.match(sheet, /router\.push\(NAV_TABS\[id\]\.href[\s\S]*?onClose\(\)/);
 assert.match(sheet, /backdropDismiss/);

@@ -55,7 +55,7 @@ export function NavMoreSheet({
           </View>
 
           <ScrollView contentContainerStyle={styles.list}>
-            {moreIds.map((id) => (
+            {moreIds.filter((id) => id !== 'play').map((id) => (
               <Pressable
                 key={id}
                 accessibilityRole="button"
@@ -91,29 +91,32 @@ export function NavMoreSheet({
               </Pressable>
             ))}
 
-            <Pressable
-              key="play"
-              accessibilityRole="button"
-              accessibilityLabel="Open Divecore"
-              onPress={() => {
-                // Push first so closing the Modal cannot unmount before
-                // the route is received (same pattern as the rows above).
-                router.push('/play');
-                onClose();
-              }}
-              style={({ pressed }) => [
-                styles.row,
-                { borderColor: controlBorderColor(theme) },
-                pressed && styles.pressed,
-              ]}>
-              <MaterialCommunityIcons name="play-circle" size={22} color={theme.accent} />
-              <ThemedText type="smallBold" style={styles.rowLabel}>
-                Divecore
-              </ThemedText>
-              <ThemedText type="small" themeColor="textSecondary">
-                ›
-              </ThemedText>
-            </Pressable>
+            {/* "Open Divecore" shows only when Play is not already a bar slot (IA phase P3). */}
+            {moreIds.includes('play') ? (
+              <Pressable
+                key="play"
+                accessibilityRole="button"
+                accessibilityLabel="Open Divecore"
+                onPress={() => {
+                  // Push first so closing the Modal cannot unmount before
+                  // the route is received (same pattern as the rows above).
+                  router.push('/play');
+                  onClose();
+                }}
+                style={({ pressed }) => [
+                  styles.row,
+                  { borderColor: controlBorderColor(theme) },
+                  pressed && styles.pressed,
+                ]}>
+                <MaterialCommunityIcons name="play-circle" size={22} color={theme.accent} />
+                <ThemedText type="smallBold" style={styles.rowLabel}>
+                  Divecore
+                </ThemedText>
+                <ThemedText type="small" themeColor="textSecondary">
+                  ›
+                </ThemedText>
+              </Pressable>
+            ) : null}
           </ScrollView>
         </SafeAreaView>
       </View>

@@ -1,5 +1,5 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import type { Href } from 'expo-router';
+import { router, type Href } from 'expo-router';
 import { TabList, TabSlot, Tabs, TabTrigger, type TabTriggerSlotProps } from 'expo-router/ui';
 import { useState } from 'react';
 import { Pressable, StyleSheet } from 'react-native';
@@ -20,6 +20,7 @@ import {
   NAV_TAB_IDS,
   PARKED_PINNED_IDS,
   PARKED_TAB_IDS,
+  PUSHED_TAB_IDS,
   type BarSlotId,
   type ReorderableTabId,
 } from '@/lib/nav/nav-order';
@@ -108,6 +109,18 @@ export default function AppTabs() {
         </TabTrigger>
       );
     }
+    // Play (Divecore) is a root Stack screen, not a tab route: its slot pushes /play.
+    if ((PUSHED_TAB_IDS as readonly string[]).includes(id)) {
+      return (
+        <PushTabButton
+          key={id}
+          label={NAV_TABS[id as ReorderableTabId].label}
+          icon={NAV_TABS[id as ReorderableTabId].icon}
+          href={NAV_TABS[id as ReorderableTabId].href}
+          onLongPress={startEditing}
+        />
+      );
+    }
     return (
       <TabTrigger key={id} name={id} href={NAV_TABS[id].href} asChild>
         <NavTabButton
@@ -145,15 +158,17 @@ export default function AppTabs() {
             </ThemedText>
           </Pressable>
 
-          {moreIds.map((id) => (
-            <TabTrigger
-              key={`hidden-${id}`}
-              name={id}
-              href={NAV_TABS[id].href}
-              style={styles.hidden}
-              accessible={false}
-            />
-          ))}
+          {moreIds
+            .filter((id) => !(PUSHED_TAB_IDS as readonly string[]).includes(id))
+            .map((id) => (
+              <TabTrigger
+                key={`hidden-${id}`}
+                name={id}
+                href={NAV_TABS[id].href}
+                style={styles.hidden}
+                accessible={false}
+              />
+            ))}
 
           {lockedTabs
             .filter((id) => !isTabParked(id))
@@ -196,6 +211,34 @@ export default function AppTabs() {
       />
       {editing ? <NavEditOverlay lockedTabs={lockedTabs} /> : null}
     </>
+  );
+}
+
+/** A bar slot whose destination is a pushed root screen (Play), so it has no tab trigger. */
+function PushTabButton({
+  label,
+  icon,
+  href,
+  onLongPress,
+}: {
+  label: string;
+  icon: string;
+  href: Href;
+  onLongPress?: () => void;
+}) {
+  const theme = useTheme();
+  return (
+    <Pressable
+      onPress={() => router.push(href as never)}
+      onLongPress={onLongPress}
+      accessibilityRole="button"
+      accessibilityLabel={`Open ${label}`}
+      style={({ pressed }) => [styles.tabButton, pressed && styles.pressed]}>
+      <MaterialCommunityIcons name={icon as never} size={22} color={theme.textSecondary} />
+      <ThemedText type="small" themeColor="textSecondary">
+        {label}
+      </ThemedText>
+    </Pressable>
   );
 }
 
