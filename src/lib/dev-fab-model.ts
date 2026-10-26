@@ -69,12 +69,12 @@ export type AppDevSection =
 /** Per screen: its name in the kit and the sections that test it. */
 export const APP_DEV_SCREENS: Record<string, { label: string; sections: readonly AppDevSection[] }> = {
   '/': { label: 'Home', sections: ['daily-line', 'mini-guy', 'ai-consent'] },
-  '/explore': { label: 'Explore', sections: ['traits', 'band-stepper'] },
   '/intake-sweep': {
     label: 'Questions',
     sections: ['intake-status', 'next-round', 'tokens-today', 'jump', 'preview'],
   },
-  '/you': { label: 'You', sections: ['you-tools', 'ai-consent', 'local-data'] },
+  // The trait bands moved here from Explore (IA phase P5), so their dev tools follow them.
+  '/you': { label: 'You', sections: ['you-tools', 'ai-consent', 'local-data', 'traits', 'band-stepper'] },
 };
 
 /** Useful on any screen; shown under the screen's own tools, collapsed. */

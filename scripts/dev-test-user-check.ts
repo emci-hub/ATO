@@ -310,13 +310,18 @@ function main() {
   const questionsTab = read('src/app/(tabs)/intake-sweep.tsx');
   assert.match(questionsTab, /const dataEpoch = useAccountDataEpoch\(\);/);
   assert.match(questionsTab, /key=\{dataEpoch\}/, 'the fold remounts, dropping its round and stamps');
-  assert.match(read('src/app/(tabs)/explore.tsx'), /\}, \[userId, me, dataEpoch\]\);/);
+  // IA P5: Explore's tracks reload moved to You. It has no epoch of its own: the reload callback is keyed on
+  // [userId, me, timeZone] (a jump / wipe refreshes `me`) and refires on every focus.
+  const youTab = read('src/app/(tabs)/you.tsx');
+  assert.match(youTab, /\}, \[userId, me, timeZone\]\);/, 'You reloads its tracks when the account row moves');
+  assert.match(youTab, /useFocusEffect\(\s*useCallback\(\(\) => \{\s*void reloadTracks\(\);/, 'and on every focus');
+  assert.doesNotMatch(read('src/app/(tabs)/explore.tsx'), /dataEpoch|fetchTraitTracks/, 'the Explore route no longer loads anything');
   const catFold = read('src/components/categories-fold.tsx');
   assert.match(catFold, /\}, \[me\.id, me\.updated_at, dataEpoch\]\);/);
   // The stored category card (2026-10-07) is computed from those tracks each
   // render, so the tracks reload above is the whole refresh; no statements fetch.
   assert.doesNotMatch(catFold, /loadStatements|fetchCurrentStatements/);
-  ok('Questions, Explore and the categories card reload when the account-data epoch moves');
+  ok('Questions, You (was Explore) and the categories card reload when the account-data epoch moves');
 
   /* -------------------------------------------------------------------------
    * The Hub panels.

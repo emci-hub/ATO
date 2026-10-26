@@ -13,7 +13,6 @@ import type { Href } from 'expo-router';
 
 /** Pool tabs a user can place into slots 1–4 (and see in More). Extensible. */
 export type ReorderableTabId =
-  | 'explore'
   | 'you'
   | 'questions'
   | 'around'
@@ -53,7 +52,6 @@ export interface NavTabMeta {
  * file). Nothing else in the slot/drag/edit logic references tab ids directly.
  */
 export const NAV_TABS: Record<ReorderableTabId, NavTabMeta> = {
-  explore: { label: 'Explore', href: '/explore', icon: 'compass-outline' },
   around: { label: 'Around', href: '/around', icon: 'map-marker-radius-outline' },
   you: { label: 'You', href: '/you', icon: 'account' },
   // Not gated on a friend: Add by handle lives inside this tab, so a gate would lock out the first friend.

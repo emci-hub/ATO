@@ -568,7 +568,18 @@ assert.doesNotMatch(exploreScreen, /<ShapeCard/, 'Explore no longer renders the 
 // solved by deleting surfaces instead — SageExploreObservations and
 // SageInsightSpend are now parked too (Isolation Plan Card 5, 2026-09-15) —
 // so the extra route no longer earns its navigation cost.
-assert.match(exploreScreen, /CategoriesFold/);
+// IA P5 (2026-10-26): Categories now sits on You; the Explore route file is only a redirect.
+assert.match(exploreScreen, /<Redirect href="\/you\?section=categories" \/>/, 'explore.tsx is only the redirect (route file kept)');
+assert.doesNotMatch(exploreScreen, /CategoriesFold|CategoryDeepDiveCard|FullProfileFold|fetchTraitTracks/, 'no content left on the Explore route');
+assert.equal(exploreScreen.trim().split('\n').filter((l) => /^\s*(import|export)\b/.test(l)).length, 2, 'one import, one default export');
+assert.match(youScreen, /<CategoriesFold/);
+// Legends and Circle are reached from You now (Circle only when its tab is unlocked).
+assert.match(youScreen, /<NavRow label="Legends" onPress=\{\(\) => router\.push\('\/legends'\)\} \/>/, 'You has the Legends row');
+assert.match(
+  youScreen,
+  /isTabUnlocked\('circle', \{ hasCircle \}\) \? \(\s*<NavRow label="Circle" onPress=\{\(\) => router\.push\('\/circle'\)\} \/>/,
+  'You has the Circle row, gated by isTabUnlocked',
+);
 assert.doesNotMatch(exploreScreen, /'\/categories'/);
 assert.ok(
   !existsSync('src/app/(tabs)/categories.tsx'),
@@ -580,11 +591,26 @@ assert.doesNotMatch(exploreScreen, /SageTitleCard/);
 assert.doesNotMatch(exploreScreen, /IntakeSettings/);
 assert.doesNotMatch(exploreScreen, /RollHistoryFold/);
 assert.doesNotMatch(exploreScreen, /SageInsightSpend/);
-assert.match(navOrder, /explore: \{ label: 'Explore', href: '\/explore'/);
+assert.doesNotMatch(navOrder, /explore: \{ label: 'Explore'/, 'Explore is no longer a nav registry entry');
+assert.match(tabs, /\{ name: 'explore', href: '\/explore' \}/, 'the hidden trigger keeps the redirect route navigable');
+{
+  // '/explore' may only be named by the hidden trigger (comments aside), never by a link in src/.
+  const { readdirSync, statSync } = await import('node:fs');
+  const hits: string[] = [];
+  const walk = (dir: string) => {
+    for (const name of readdirSync(resolve(__dirname, '..', dir))) {
+      const rel = `${dir}/${name}`;
+      if (statSync(resolve(__dirname, '..', rel)).isDirectory()) walk(rel);
+      else if (/\.tsx?$/.test(name) && read(rel).split(/\r?\n/).some((l) => !/^\s*(\*|\/\/|\/\*)/.test(l) && /['"`]\/explore['"`]/.test(l))) hits.push(rel.split('\\').join('/'));
+    }
+  };
+  walk('src');
+  assert.deepEqual(hits, ['src/components/app-tabs.tsx'], 'only the hidden tab trigger names /explore');
+}
 assert.match(tabs, /NavEditOverlay/);
 assert.doesNotMatch(sage, /routeExplore|SageExploreObservations|ExplorePinnedCategories|SageStoryFold|SageTitleCard/);
 assert.doesNotMatch(sage, /EXPLORE_LEDE|EXPLORE_LABEL/);
-ok('Explore is its own tab; Insights stays clean; Home has no inner tabs; the Story lives on Insights');
+ok('Explore is no longer a tab (redirect only); Insights stays clean; Home has no inner tabs; the Story lives on Insights');
 
 const you = read('src/app/(tabs)/you.tsx');
 assert.doesNotMatch(you, /ExplorePanel|HomeInnerTabs|explore_entries/);
@@ -640,11 +666,11 @@ assert.match(catFold, /\{pairsOf\(readings\)\.map\(\(pair\) =>/, 'every category
 assert.match(catFold, /for \(let i = 0; i < items\.length; i \+= 2\) out\.push\(items\.slice\(i, i \+ 2\)\);/);
 assert.doesNotMatch(catFold, /SettingsFold/, 'the category list is never folded away');
 assert.match(
-  exploreScreen,
+  youScreen,
   /unlocked=\{isFullProfileDone\(tracks, tracksReady\)\}/,
-  'Explore must pass the shared gate, not its own derivation',
+  'You must pass the shared gate to Categories, not its own derivation',
 );
-ok('Explore categories open a stored card behind unlock and readiness, with no model call');
+ok('Categories (on You) open a stored card behind unlock and readiness, with no model call');
 
 console.log(`\nAll ${passed} explore checks passed.`);
 }

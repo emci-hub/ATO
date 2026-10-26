@@ -141,17 +141,19 @@ const questionsTab = read('src/app/(tabs)/intake-sweep.tsx');
 // IA P4: trait bands moved from Explore to You; Full Profile stays on Explore.
 const youTab = read('src/app/(tabs)/you.tsx');
 assert.ok(youTab.indexOf('<TraitBandsFold') >= 0, 'trait bands render on You');
-assert.doesNotMatch(exploreTab, /<TraitBandsFold/, 'trait bands left Explore');
-assert.ok(exploreTab.indexOf('<FullProfileFold') >= 0, 'Full Profile stays on Explore');
+assert.doesNotMatch(exploreTab, /<TraitBandsFold|<FullProfileFold/, 'nothing renders on the Explore route');
+// IA P5 (2026-10-26): the Explore tab is gone; its route file only redirects, and Full Profile moved to You.
+assert.match(exploreTab, /<Redirect href="\/you\?section=categories" \/>/, 'explore.tsx is only the redirect');
+assert.ok(youTab.indexOf('<FullProfileFold') >= 0, 'Full Profile now renders on You');
 // PARKED (ISOLATION_PLAN §7 Card D, 2026-09-15): `OptionalIntakeFill` is off the
 // Questions tab. Its own logic is still covered by check:optional-intake; the
 // component has no mount site until the optional fill is rebuilt.
 assert.ok(questionsTab.indexOf('<OptionalIntakeFill') === -1);
-assert.match(exploreTab, /from '@\/components\/full-profile-fold'/);
+assert.match(youTab, /from '@\/components\/full-profile-fold'/);
 assert.match(youTab, /from '@\/components\/trait-bands-fold'/);
 assert.doesNotMatch(questionsTab, /from '@\/components\/optional-intake'/);
 assert.match(fold, /SettingsFold title=\{`\$\{FULL_PROFILE_LABEL\}/);
-ok('Full Profile sits on Explore, trait bands on You; fill-later lives on the Questions tab');
+ok('Full Profile and trait bands sit on You (Explore only redirects); fill-later lives on the Questions tab');
 
 const poster = read('src/components/share-poster.tsx');
 const handlePage = read('src/app/[handle].tsx');

@@ -49,6 +49,9 @@ import { controlBorderColor } from '@/lib/theme/chrome';
  */
 const HIDDEN_TAB_ROUTES: readonly { name: string; href: Href }[] = [
   { name: 'roll', href: '/roll' },
+  // Explore was removed from the bar (IA phase P5) but its route file stays as a redirect to
+  // /you?section=categories, so old deep links and pushes still land; it needs a trigger to be navigable.
+  { name: 'explore', href: '/explore' },
 ];
 export default function AppTabs() {
   const theme = useTheme();

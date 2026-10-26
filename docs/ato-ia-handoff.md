@@ -7,11 +7,25 @@ State of the IA runner (`docs/ato-ia-runner.md`). The runner does ONLY the first
 - [x] P2 — "This is you so far" on You
 - [x] P3 — New tab bar + one-time layout reset
 - [x] P4 — Explore → You, part 1
-- [ ] P5 — Explore → You, part 2 + remove Explore
+- [x] P5 — Explore → You, part 2 + remove Explore
 - [ ] P6 — Roll = "Your reveals"
 - [ ] P7 — Cleanup
 
 ## Log
+
+### P5 — Explore → You, part 2 + remove Explore (2026-10-26, branch `ia/p5-explore-to-you-2`, stacked on `ia/p4-explore-to-you-1`, draft PR, no merge, no OTA)
+Files: `src/app/(tabs)/you.tsx` (CategoriesFold + CategoryDeepDiveCard with the same props/gates, FullProfileFold, `Legends ›` / `Circle ›`
+NavRows, `section` now also `categories|profile|tokens`), `src/app/(tabs)/explore.tsx` (now only `<Redirect href="/you?section=categories" />`),
+`src/lib/nav/nav-order.ts` ('explore' removed from `ReorderableTabId` / `NAV_TABS`; a saved layout holding it loses it and backfills),
+`src/components/app-tabs.tsx` (hidden `explore` trigger in `HIDDEN_TAB_ROUTES` so the redirect route stays navigable),
+`src/components/category-teaser.tsx` + `src/lib/push-copy.ts` (links repointed), `src/lib/dev-fab-model.ts` (the trait dev tools follow the
+trait bands to `/you`), 11 check scripts repointed (nav, tab-rename, explore, explore-refetch, category-deep-dive, dev-fab, dev-test-user,
+full-profile, full-profile-signal, wave21, wave22).
+- Lessons: (1) a route removed from the pool still needs a hidden TabList trigger or a stale deep link throws instead of redirecting.
+  (2) `rg "'/explore'"` under src now finds only the app-tabs trigger; a check scans for it. (3) explore-refetch-check used to pin
+  Explore's own `fetchTraitTracks` refetch; You refetches via `home_bootstrap` on focus (requestIdRef + loadedOnceRef), so it was
+  repointed and the redirect is pinned to fetch nothing. (4) `home-teaser.ts` / `preview-mode.ts` built no /explore links, so untouched.
+  (5) Phone look: a push or link to `/explore` lands on You at categories; More has no Explore row.
 
 ### P4 — Explore → You, part 1 (2026-10-26, branch `ia/p4-explore-to-you-1`, stacked on `ia/p3-tab-bar`, draft PR, no merge, no OTA)
 Files: `src/app/(tabs)/you.tsx` (ShapeCard behind a skeleton until `tracksReady && tracksOwned`; a traits block with TraitBandsFold,

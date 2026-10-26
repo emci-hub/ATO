@@ -202,15 +202,19 @@ assert.doesNotMatch(checkSwift, /CategoryTeaser|FullProfileFold/);
 ok('Home teaser is gated; the crisis card is gone and the widget stays untouched');
 
 const exploreTab = read('src/app/(tabs)/explore.tsx');
-// Categories is back inline on Explore, standalone route retired
-// (2026-09-14, T-E1) — reverses the 2026-09-12 judgment-pass.md §4A split.
-assert.match(exploreTab, /CategoriesFold/);
+// Categories lived inline on Explore (2026-09-14, T-E1); IA P5 (2026-10-26) moved it to You and left
+// explore.tsx as a redirect only.
+assert.match(exploreTab, /<Redirect href="\/you\?section=categories" \/>/, 'explore.tsx is only the redirect');
+assert.doesNotMatch(exploreTab, /CategoriesFold|FullProfileFold/, 'no category UI on the Explore route');
+const youTabW21 = read('src/app/(tabs)/you.tsx');
+assert.match(youTabW21, /CategoriesFold/);
+assert.doesNotMatch(youTabW21, /'\/categories'/);
 assert.doesNotMatch(exploreTab, /'\/categories'/);
 assert.ok(
   !existsSync('src/app/(tabs)/categories.tsx'),
-  'the /categories route must stay deleted — Categories lives inline on Explore',
+  'the /categories route must stay deleted — Categories lives on You',
 );
-assert.match(exploreTab, /FullProfileFold/);
+assert.match(youTabW21, /FullProfileFold/);
 // PARKED (ISOLATION_PLAN §7 Card F, 2026-09-15): Circle is a whole-screen park, so
 // its category-share wiring and compare row are gone. `lib/circle*` and
 // CategoryCompareRow are untouched and rebuilt from when Circle comes back.
