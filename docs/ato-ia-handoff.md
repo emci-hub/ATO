@@ -6,12 +6,21 @@ State of the IA runner (`docs/ato-ia-runner.md`). The runner does ONLY the first
 - [x] P1 — Settings screen
 - [x] P2 — "This is you so far" on You
 - [x] P3 — New tab bar + one-time layout reset
-- [ ] P4 — Explore → You, part 1
+- [x] P4 — Explore → You, part 1
 - [ ] P5 — Explore → You, part 2 + remove Explore
 - [ ] P6 — Roll = "Your reveals"
 - [ ] P7 — Cleanup
 
 ## Log
+
+### P4 — Explore → You, part 1 (2026-10-26, branch `ia/p4-explore-to-you-1`, stacked on `ia/p3-tab-bar`, draft PR, no merge, no OTA)
+Files: `src/app/(tabs)/you.tsx` (ShapeCard behind a skeleton until `tracksReady && tracksOwned`; a traits block with TraitBandsFold,
+ProfileFillFold, ChangeCard; `?section=shape|traits` scrolls via `onLayout` y positions), `src/app/(tabs)/explore.tsx` (only those components
+removed, plus their now-unused imports), checks category-deep-dive, explore, full-profile, polish, trait-bands, wave19, wave20, profile-history.
+- Lessons: (1) You reuses P2's `home_bootstrap` tracks (same `TraitTrack[]`), so no second fetch; Explore keeps its own `fetchTraitTracks`
+  for categories until P5. (2) `full-profile-check` had one cross-screen ORDER pin (bands before FullProfileFold); the two now live on different
+  screens, so it became presence on You + absence on Explore rather than an order. (3) The ShapeCard still routes to `/intake-sweep`.
+  (4) Phone look: shape and traits on You before/after the profile is done; `/you?section=traits` scrolls to the block.
 
 ### P3 — New tab bar + one-time layout reset (2026-10-26, branch `ia/p3-tab-bar`, stacked on `ia/p2-you-so-far`, draft PR, no merge, no OTA)
 Files: `src/lib/nav/nav-order.ts` (pool id `play`, `PUSHED_TAB_IDS`, `NAV_LAYOUT_VERSION = 3` stored inside the layout JSON, default

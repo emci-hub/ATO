@@ -89,10 +89,14 @@ const fold = read('src/components/trait-bands-fold.tsx');
 // IntakeSettings' Explore call site is parked (Isolation Plan Card 5,
 // 2026-09-15) — TraitBandsFold now sits right after the parked "Today's
 // Read" RebuiltNotice, ahead of ProfileFillFold.
-const bandsIdx = explore.indexOf('<TraitBandsFold');
-const fillIdx = explore.indexOf('<ProfileFillFold');
+// IA P4: the traits block (bands, fill, change) moved from Explore to You.
+const you = read('src/app/(tabs)/you.tsx');
+const bandsIdx = you.indexOf('<TraitBandsFold');
+const fillIdx = you.indexOf('<ProfileFillFold');
 assert.ok(bandsIdx >= 0 && fillIdx > bandsIdx);
-assert.match(explore, /<TraitBandsFold me=\{me\} tracks=\{tracks\} \/>/);
+assert.match(you, /<TraitBandsFold me=\{me\} tracks=\{tracks\} \/>/);
+assert.doesNotMatch(explore, /<TraitBandsFold/, 'trait bands left Explore');
+assert.doesNotMatch(explore, /<ProfileFillFold/, 'profile fill left Explore');
 assert.match(fold, /filledTraitBands\(me, tracks\)/);
 assert.match(fold, /SettingsFold title=\{TRAIT_BANDS_LABEL\}/);
 assert.doesNotMatch(fold, /defaultOpen/);
