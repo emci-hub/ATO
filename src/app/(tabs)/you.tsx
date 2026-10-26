@@ -1,12 +1,17 @@
-import { useFocusEffect, useRouter } from 'expo-router';
+import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AtoTokenCard } from '@/components/ato-token-card';
+import { ChangeCard } from '@/components/change-card';
 import { IdentityCard } from '@/components/identity-card';
+import { Appear, SkeletonCard } from '@/components/motion';
 import { NAV_PIXEL_HEADER_INSET } from '@/components/nav-pixel';
 import { ProfileCharacter } from '@/components/profile-character';
+import { ProfileFillFold } from '@/components/profile-fill-fold';
+import { ShapeCard } from '@/components/shape-card';
+import { TraitBandsFold } from '@/components/trait-bands-fold';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { YourWeekCard } from '@/components/your-week-card';
@@ -16,7 +21,7 @@ import { fetchHomeBootstrap } from '@/lib/home-bootstrap';
 import { useMeContext } from '@/lib/me-context';
 import { SETTINGS_TITLE } from '@/lib/polish-copy';
 import { NO_PINCH_ZOOM } from '@/lib/theme/chrome';
-import type { TraitTrack } from '@/lib/trait-stability';
+import { settledAxisLabel, type TraitTrack } from '@/lib/trait-stability';
 
 /**
  * You — who you are, your tokens, and your week. Every settings control (look,
@@ -29,6 +34,10 @@ import type { TraitTrack } from '@/lib/trait-stability';
  * reads the same one-RPC `home_bootstrap` fetch Home uses, with the same guards.
  * A failed or empty load renders nothing.
  *
+ * "Your shape" and "Your traits" (shape card, trait bands, profile fill, what moved
+ * lately) moved here from Explore (IA phase P4), reusing those same tracks. A
+ * `?section=shape|traits` link scrolls to them.
+ *
  * The saved-facts list ("Teach Sage") has been hidden since 2026-10-14; the
  * data stays until docs/sage-cleanup.md drops it.
  */
@@ -37,10 +46,16 @@ export default function YouScreen() {
   const { session } = useSession();
   const userId = session?.user.id;
   const { me, refresh } = useMeContext();
+  const params = useLocalSearchParams<{ section?: string }>();
+  const scrollRef = useRef<ScrollView>(null);
+  const sectionY = useRef<Record<string, number>>({});
   const [tracks, setTracks] = useState<TraitTrack[]>([]);
   // Whose `tracks` these are. Tabs stay mounted, so for one render after an
   // account switch `tracks` still belongs to the previous account.
   const [tracksUserId, setTracksUserId] = useState<string | null>(null);
+  // True once the first fetch for this account settled (success or failure), so
+  // the shape card shows a skeleton instead of flashing blank.
+  const [tracksReady, setTracksReady] = useState(false);
 
   const timeZone = me?.timezone || 'UTC';
   /**
@@ -63,6 +78,8 @@ export default function YouScreen() {
     } catch (err) {
       // Nothing to show on a failed load; keep whatever was already loaded.
       console.log('[you] bootstrap error:', err);
+    } finally {
+      if (requestId === requestIdRef.current) setTracksReady(true);
     }
   }, [userId, me, timeZone]);
 
@@ -73,7 +90,25 @@ export default function YouScreen() {
     requestIdRef.current += 1;
     setTracks([]);
     setTracksUserId(null);
+    setTracksReady(false);
   }, [userId]);
+
+  // `?section=shape|traits` scrolls to that block once the tracks have landed
+  // (the blocks lay out after the skeleton is replaced).
+  const wantedSection = params.section === 'shape' || params.section === 'traits' ? params.section : null;
+  const scrollToSection = useCallback(() => {
+    if (!wantedSection || !tracksReady) return;
+    const y = sectionY.current[wantedSection];
+    if (typeof y === 'number') scrollRef.current?.scrollTo({ y: Math.max(0, y - Spacing.three), animated: true });
+  }, [wantedSection, tracksReady]);
+  useEffect(() => {
+    scrollToSection();
+  }, [scrollToSection]);
+  const markSection = (key: 'shape' | 'traits') => (event: { nativeEvent: { layout: { y: number } } }) => {
+    sectionY.current[key] = event.nativeEvent.layout.y;
+    scrollToSection();
+  };
+  const tracksOwned = !!userId && tracksUserId === userId;
 
   // Refetch on FOCUS: tabs stay mounted, so answering questions elsewhere would
   // otherwise leave this card stale until the app restarted.
@@ -88,6 +123,7 @@ export default function YouScreen() {
       <SafeAreaView style={styles.safeArea}>
         <ScrollView
           {...NO_PINCH_ZOOM}
+          ref={scrollRef}
           keyboardShouldPersistTaps="handled"
           contentContainerStyle={styles.scrollContent}>
           <View style={styles.header}>
@@ -95,12 +131,41 @@ export default function YouScreen() {
           </View>
 
           {/* "This is you so far": shown whenever tracks exist, also after the profile is done. */}
-          {userId && tracksUserId === userId && tracks.length > 0 ? (
-            <ProfileCharacter tracks={tracks} />
-          ) : null}
+          {tracksOwned && tracks.length > 0 ? <ProfileCharacter tracks={tracks} /> : null}
 
           {/* Who you are in two or three words, and the image to send a friend. */}
           {me ? <IdentityCard me={me} onUpdated={refresh} /> : null}
+
+          {/* "Your shape": the profile as one figure, tap a point for the trait. A
+              skeleton until the tracks land, so a finished profile never flashes blank. */}
+          {me ? (
+            <View onLayout={markSection('shape')}>
+              {tracksReady && tracksOwned ? (
+                <Appear>
+                  <ShapeCard
+                    me={me}
+                    tracks={tracks}
+                    settledLabel={settledAxisLabel(tracks)}
+                    onPressSettled={() => {
+                      // Questions ignores an ?axis= (the per-axis feed was removed).
+                      router.push('/intake-sweep');
+                    }}
+                  />
+                </Appear>
+              ) : (
+                <SkeletonCard lines={4} />
+              )}
+            </View>
+          ) : null}
+
+          {/* "Your traits": the bands, what is still to fill, and what moved lately. No model call. */}
+          {me ? (
+            <View style={styles.traitsBlock} onLayout={markSection('traits')}>
+              <TraitBandsFold me={me} tracks={tracks} />
+              <ProfileFillFold tracks={tracks} />
+              <ChangeCard userId={me.id} />
+            </View>
+          ) : null}
 
           {/* Tokens: the balance and the last few earns / spends. */}
           {me ? <AtoTokenCard me={me} /> : null}
@@ -142,6 +207,9 @@ const styles = StyleSheet.create({
   },
   header: {
     paddingRight: NAV_PIXEL_HEADER_INSET,
+  },
+  traitsBlock: {
+    gap: Spacing.three,
   },
   settingsRow: {
     minHeight: 44,

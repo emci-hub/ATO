@@ -502,7 +502,12 @@ assert.doesNotMatch(exploreUi, /PROFILE_LOCKED_COPY/);
 assert.doesNotMatch(exploreUi, /PROFILE_LOCKED_CTA/);
 // 2026-10-01: the link stays but no longer carries an ?axis= — Questions ignores
 // it since the per-axis feed was removed, so the param was a promise it broke.
-assert.ok(exploreUi.includes("router.push('/intake-sweep')"), 'the intake-sweep link stays');
+// IA P4: the ShapeCard (and its intake-sweep link) moved from Explore to You.
+const youUi = read('src/app/(tabs)/you.tsx');
+assert.ok(youUi.includes("router.push('/intake-sweep')"), 'the intake-sweep link stays (now on You)');
+assert.ok(!youUi.includes('params: { axis }'), 'no dead ?axis= param on You');
+assert.doesNotMatch(exploreUi, /<ShapeCard/, 'Explore no longer renders the ShapeCard');
+assert.ok(!exploreUi.includes("router.push('/intake-sweep')"), 'the intake-sweep link left Explore');
 assert.ok(!exploreUi.includes('params: { axis }'), 'no dead ?axis= param');
 assert.ok(!existsSync(resolve(__dirname, '..', 'src/components/explore-panel.tsx')), 'explore-panel.tsx stays deleted (2026-10-04)');
 ok('locked-copy UI is parked on Explore; the orphaned explore-panel.tsx is gone; the intake-sweep link stays');
@@ -548,7 +553,14 @@ assert.doesNotMatch(exploreScreen, /RebuiltNotice/);
 // INVERTED 2026-10-05 (polish pass, emci approved): the "More is coming to
 // this screen." line read as unfinished and is gone; "your shape" leads.
 assert.doesNotMatch(exploreScreen, /More is coming to this screen./);
-assert.match(exploreScreen, /<ShapeCard\s+me=\{me\}\s+tracks=\{tracks\}/);
+// IA P4: "your shape" now leads the You tab (shape card before the traits block).
+const youScreen = read('src/app/(tabs)/you.tsx');
+assert.match(youScreen, /<ShapeCard\s+me=\{me\}\s+tracks=\{tracks\}/);
+assert.ok(
+  youScreen.indexOf('<ShapeCard') < youScreen.indexOf('<TraitBandsFold'),
+  'the shape card comes before the traits block on You',
+);
+assert.doesNotMatch(exploreScreen, /<ShapeCard/, 'Explore no longer renders the ShapeCard');
 // Categories is back inline on Explore and the standalone route is retired
 // (2026-09-14, Home/Explore/Insight restructure T-E1). This REVERSES the
 // 2026-09-12 judgment-pass.md §4A split, which moved CategoriesFold to its

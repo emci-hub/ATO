@@ -180,7 +180,9 @@ ok('confirm-upgrade still does not touch tracks or the number');
 
 const sage = read('src/app/(tabs)/insights.tsx');
 const exploreScreen = read('src/app/(tabs)/explore.tsx');
-assert.match(exploreScreen, /settledAxisLabel/);
+// IA P4: the settled-axis label moved with the ShapeCard from Explore to You.
+assert.match(read('src/app/(tabs)/you.tsx'), /settledAxisLabel/);
+assert.doesNotMatch(exploreScreen, /settledAxisLabel/, 'settled label left Explore');
 // Talk's backend was deleted 2026-09-14 and the Sage tab is an inert
 // placeholder; these assertions should be re-earned when Talk is rebuilt.
 // SageTitleCard's Explore call site is parked (Isolation Plan Card 5,
@@ -189,7 +191,7 @@ assert.match(exploreScreen, /settledAxisLabel/);
 assert.doesNotMatch(exploreScreen, /SageTitleCard/);
 assert.doesNotMatch(sage, /answeredAxisLabel|SageTitleCard/);
 assert.doesNotMatch(sage, /divergingAxes\(/);
-ok('Explore uses settled completeness; title card lives on Full Profile now');
+ok('You uses settled completeness; title card lives on Full Profile now');
 
 const fold = read('src/components/full-profile-fold.tsx');
 assert.match(fold, /settledAxisLabel/);

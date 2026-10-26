@@ -123,9 +123,11 @@ const stripAt = home.indexOf('<WeekStrip');
 assert.ok(stripAt > headerAt && stripAt < home.indexOf('<IdentityTitleChip'), 'This week sits right under the title, above every card');
 assert.match(home, /face=\{faceRecipe\}/);
 assert.match(home, /<ProgressRing value=\{roundAnswered \?\? 0\}/);
-assert.match(read('src/app/(tabs)/explore.tsx'), /<ShapeCard/);
+// IA P4: the ShapeCard moved from Explore to You.
+assert.match(read('src/app/(tabs)/you.tsx'), /<ShapeCard/);
+assert.doesNotMatch(read('src/app/(tabs)/explore.tsx'), /<ShapeCard/, 'Explore no longer renders the ShapeCard');
 assert.match(read('src/app/(tabs)/you.tsx'), /<YourWeekCard me=\{me\} \/>/);
 assert.match(read('src/components/share-card.tsx'), /animate=\{false\}/, 'the captured share image is a still');
-ok('Home, Explore, You and the share card carry the new pieces');
+ok('Home, You (shape card) and the share card carry the new pieces');
 
 console.log(`\npolish-check: ${passed} passed`);

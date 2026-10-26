@@ -316,7 +316,8 @@ ok('the card: 8 real Divecore heroes by type, Departure Mono, 16 bars, strength/
   assert.doesNotMatch(fold, /ProfileCharacter|profile-character/, 'the character is no longer on Questions');
   const youScreen = read('src/app/(tabs)/you.tsx');
   assert.match(youScreen, /import \{ ProfileCharacter \} from '@\/components\/profile-character';/, 'You imports the character');
-  assert.match(youScreen, /tracksUserId === userId && tracks\.length > 0 \? \(\s*<ProfileCharacter tracks=\{tracks\} \/>/, 'You shows it whenever tracks exist, for the current account only');
+  assert.match(youScreen, /tracksOwned && tracks\.length > 0 \? <ProfileCharacter tracks=\{tracks\} \/>/, 'You shows it whenever tracks exist, for the current account only');
+  assert.match(youScreen, /const tracksOwned = !!userId && tracksUserId === userId;/, 'tracksOwned means the tracks belong to the signed-in account');
   assert.ok(youScreen.indexOf('<ProfileCharacter') < youScreen.indexOf('<IdentityCard'), 'the character sits above the identity card');
   assert.match(youScreen, /fetchHomeBootstrap\(timeZone\)/, 'You loads tracks with the same one-RPC fetch as Home');
   assert.match(youScreen, /requestIdRef/, 'You keeps the newest-request guard');
