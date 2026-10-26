@@ -6,7 +6,7 @@
  *    never resizes a region; its hit box is the figure, not the whole sprite cell.
  *  - `VisitorCard`: the float-layer card a tap opens (the away card's shape: fixed boxes, outside
  *    tap / Android back / the button close it, Reduce Motion = a gentle fade).
- *  - `StickerBook`: the 14 stickers at the top of Info → Style (have = the sticker, not yet = a
+ *  - `StickerBook`: the 19 stickers at the top of Info → Style (have = the sticker, not yet = a
  *    dark outline).
  */
 import { useEffect, useMemo, useState } from 'react';
@@ -49,6 +49,11 @@ export const VISITOR_STICKER_ART: Readonly<Record<string, ImageSourcePropType | 
   sak: getArtSource(ART.icon.stickers.streetwear.sak),
   velkhar: getArtSource(ART.icon.stickers.streetwear.velkhar),
   'void-raven': getArtSource(ART.icon.stickers.streetwear.voidRaven),
+  'ironclad-kabuto': getArtSource(ART.icon.stickers.streetwear.ironcladKabuto),
+  'zipline-shade': getArtSource(ART.icon.stickers.streetwear.ziplineShade),
+  'kabuki-gear': getArtSource(ART.icon.stickers.streetwear.kabukiGear),
+  'hush-bot': getArtSource(ART.icon.stickers.streetwear.hushBot),
+  gearbreaker: getArtSource(ART.icon.stickers.streetwear.gearbreaker),
 };
 
 function Sticker({ heroId, size, have = true }: { heroId: string; size: number; have?: boolean }) {

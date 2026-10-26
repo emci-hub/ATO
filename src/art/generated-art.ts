@@ -109,6 +109,10 @@ export const ART_SOURCES: Record<string, ImageSourcePropType> = {
   'icon.stickers.streetwear.cyber-shinobi': require('@/assets/art/icons/in-use/stickers/streetwear/cyber-shinobi.png'),
   'icon.stickers.streetwear.elowen': require('@/assets/art/icons/in-use/stickers/streetwear/elowen.png'),
   'icon.stickers.streetwear.frost-lich': require('@/assets/art/icons/in-use/stickers/streetwear/frost-lich.png'),
+  'icon.stickers.streetwear.gearbreaker': require('@/assets/art/icons/in-use/stickers/streetwear/gearbreaker.png'),
+  'icon.stickers.streetwear.hush-bot': require('@/assets/art/icons/in-use/stickers/streetwear/hush-bot.png'),
+  'icon.stickers.streetwear.ironclad-kabuto': require('@/assets/art/icons/in-use/stickers/streetwear/ironclad-kabuto.png'),
+  'icon.stickers.streetwear.kabuki-gear': require('@/assets/art/icons/in-use/stickers/streetwear/kabuki-gear.png'),
   'icon.stickers.streetwear.kael': require('@/assets/art/icons/in-use/stickers/streetwear/kael.png'),
   'icon.stickers.streetwear.kitsune': require('@/assets/art/icons/in-use/stickers/streetwear/kitsune.png'),
   'icon.stickers.streetwear.maldrath': require('@/assets/art/icons/in-use/stickers/streetwear/maldrath.png'),
@@ -118,6 +122,7 @@ export const ART_SOURCES: Record<string, ImageSourcePropType> = {
   'icon.stickers.streetwear.sak': require('@/assets/art/icons/in-use/stickers/streetwear/sak.png'),
   'icon.stickers.streetwear.velkhar': require('@/assets/art/icons/in-use/stickers/streetwear/velkhar.png'),
   'icon.stickers.streetwear.void-raven': require('@/assets/art/icons/in-use/stickers/streetwear/void-raven.png'),
+  'icon.stickers.streetwear.zipline-shade': require('@/assets/art/icons/in-use/stickers/streetwear/zipline-shade.png'),
   'icon.streetwear.arrow-left': require('@/assets/art/icons/in-use/streetwear/arrow-left.png'),
   'icon.streetwear.arrow-up': require('@/assets/art/icons/in-use/streetwear/arrow-up.png'),
   'icon.streetwear.backpack': require('@/assets/art/icons/in-use/streetwear/backpack.png'),
@@ -399,6 +404,10 @@ export type ArtId =
   | 'icon.stickers.streetwear.cyber-shinobi'
   | 'icon.stickers.streetwear.elowen'
   | 'icon.stickers.streetwear.frost-lich'
+  | 'icon.stickers.streetwear.gearbreaker'
+  | 'icon.stickers.streetwear.hush-bot'
+  | 'icon.stickers.streetwear.ironclad-kabuto'
+  | 'icon.stickers.streetwear.kabuki-gear'
   | 'icon.stickers.streetwear.kael'
   | 'icon.stickers.streetwear.kitsune'
   | 'icon.stickers.streetwear.maldrath'
@@ -408,6 +417,7 @@ export type ArtId =
   | 'icon.stickers.streetwear.sak'
   | 'icon.stickers.streetwear.velkhar'
   | 'icon.stickers.streetwear.void-raven'
+  | 'icon.stickers.streetwear.zipline-shade'
   | 'icon.streetwear.arrow-left'
   | 'icon.streetwear.arrow-up'
   | 'icon.streetwear.backpack'
@@ -1612,6 +1622,10 @@ export const ART = {
         cyberShinobi: 'icon.stickers.streetwear.cyber-shinobi',
         elowen: 'icon.stickers.streetwear.elowen',
         frostLich: 'icon.stickers.streetwear.frost-lich',
+        gearbreaker: 'icon.stickers.streetwear.gearbreaker',
+        hushBot: 'icon.stickers.streetwear.hush-bot',
+        ironcladKabuto: 'icon.stickers.streetwear.ironclad-kabuto',
+        kabukiGear: 'icon.stickers.streetwear.kabuki-gear',
         kael: 'icon.stickers.streetwear.kael',
         kitsune: 'icon.stickers.streetwear.kitsune',
         maldrath: 'icon.stickers.streetwear.maldrath',
@@ -1621,6 +1635,7 @@ export const ART = {
         sak: 'icon.stickers.streetwear.sak',
         velkhar: 'icon.stickers.streetwear.velkhar',
         voidRaven: 'icon.stickers.streetwear.void-raven',
+        ziplineShade: 'icon.stickers.streetwear.zipline-shade',
       },
     },
     streetwear: {

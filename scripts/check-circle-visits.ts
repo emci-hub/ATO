@@ -132,7 +132,7 @@ assert.deepEqual(
   'garbage is dropped, never a crash',
 );
 for (const h of VISITOR_STICKER_HEROES) assert.ok(allHeroes().some((x) => x.id === h), `${h}: a real hero`);
-ok('gifts: a sticker (14 sticker heroes) or a stamp; one count per gift id; capped; tolerant parse');
+ok('gifts: a sticker (19 sticker heroes) or a stamp; one count per gift id; capped; tolerant parse');
 
 /* 3 · economy + save ------------------------------------------------------- */
 

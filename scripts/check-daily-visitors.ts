@@ -2,8 +2,8 @@
  * Daily visitors (Divecore roadmap step 4, plan approved by emci 2026-10-15).
  * Run: npm run check:daily-visitors
  *
- *   1. Roster: 12 rotate + 2 stand-ins, all real heroes, no repeats; every one is ROOM-READY
- *      (its packed cast art has both an idle and a walk clip — the kit the room plays).
+ *   1. Roster: 12 rotate + 7 stand-ins (velkhar, void-raven, the five mecha), all real heroes, no repeats;
+ *      every one is ROOM-READY (its packed cast or streetwear art has both an idle and a walk clip — the kit the room plays).
  *   2. Rotation: from the local date alone; 12 days = all 12 once; consecutive weeks differ;
  *      never your pet's own hero (a stand-in comes, and never the pet's hero either).
  *   3. Rewards: 1st greeting = sticker, 2nd = a line, 3rd = the rare look (once), then visits;
@@ -78,14 +78,23 @@ const read = (rel: string) => fs.readFileSync(path.join(root, rel), 'utf8');
 /* 1 · roster + room-ready ------------------------------------------------- */
 
 assert.equal(VISITOR_ROTATION.length, 12, '12 visitors rotate');
-assert.equal(VISITOR_STAND_INS.length, 2, '2 stand-ins');
-assert.equal(new Set(VISITOR_STICKER_HEROES).size, 14, 'no hero twice across rotation + stand-ins');
+assert.equal(VISITOR_STAND_INS.length, 7, '7 stand-ins (velkhar, void-raven + the five mecha)');
+assert.equal(new Set(VISITOR_STICKER_HEROES).size, 19, 'no hero twice across rotation + stand-ins');
+for (const id of ['ironclad-kabuto', 'zipline-shade', 'kabuki-gear', 'hush-bot', 'gearbreaker']) {
+  assert.ok(VISITOR_STAND_INS.includes(id), `${id}: a stand-in (option A: the 12-day rotation never moves)`);
+  assert.ok(!VISITOR_ROTATION.includes(id), `${id}: not in the rotation`);
+}
 const heroIds = new Set(allHeroes().map((h) => h.id));
 
 const sheetsText = playSheetsSearchText(root);
 function sheetFrames(heroId: string, clip: string): number {
-  const key = `"sheets/cast/heroes/${heroId}/${clip}": {`;
-  const at = sheetsText.indexOf(key);
+  // The packed cast skin, else the packed streetwear skin (the five mecha have no cast art).
+  let key = `"sheets/cast/heroes/${heroId}/${clip}": {`;
+  let at = sheetsText.indexOf(key);
+  if (at < 0) {
+    key = `"sheets/streetwear/heroes/${heroId}/${clip}": {`;
+    at = sheetsText.indexOf(key);
+  }
   if (at < 0) return 0;
   const next = sheetsText.indexOf('\n  "sheets/', at + key.length);
   const body = sheetsText.slice(at, next < 0 ? undefined : next);
@@ -210,7 +219,7 @@ for (const id of VISITOR_STICKER_HEROES) {
   assert.equal(bought.result.ok, false, `${cid}: the wardrobe refuses to sell it`);
 }
 assert.equal(new Set(COSMETICS.map((c) => c.id)).size, COSMETICS.length, 'cosmetic ids stay unique');
-assert.equal(new Set(VISITOR_STICKER_HEROES.map((id) => VISITOR_TINT_COLOR[id])).size, 14, 'every tint colour differs');
+assert.equal(new Set(VISITOR_STICKER_HEROES.map((id) => VISITOR_TINT_COLOR[id])).size, 19, 'every tint colour differs');
 
 /* 5 · save ---------------------------------------------------------------- */
 
@@ -267,7 +276,7 @@ for (const id of VISITOR_STICKER_HEROES) {
     assert.ok(!/[?]$/.test(line.text), `${line.id}: no reflective question`);
   }
 }
-assert.equal(ids.size, 14 * 6);
+assert.equal(ids.size, 19 * 6);
 assert.ok(VISITOR_UI.noticeTitle.split(/\s+/).length <= 3, 'notice title ≤ 3 words');
 const uiStrings = [
   VISITOR_UI.noticeTitle,
@@ -280,7 +289,7 @@ const uiStrings = [
   VISITOR_UI.keep,
   VISITOR_UI.bye,
   VISITOR_UI.bookTitle,
-  VISITOR_UI.bookNote(3, 14),
+  VISITOR_UI.bookNote(3, 19),
   VISITOR_UI.lookSource,
 ];
 for (const s of uiStrings) {
@@ -428,5 +437,5 @@ assert.ok(/!visitorOpen\) return;/.test(screenSrc), 'the “dropped by” notice
 assert.ok(/open: visitorOpen/.test(screenSrc), 'pet-screen hands the window to the room');
 
 console.log(
-  `check:daily-visitors ok — 12 rotate + 2 stand-ins (all room-ready), 60-day run: 12 stickers, 12 looks, economy unchanged, ${ids.size} lines`,
+  `check:daily-visitors ok — 12 rotate + 7 stand-ins (all room-ready), 60-day run: 12 stickers, 12 looks, economy unchanged, ${ids.size} lines`,
 );

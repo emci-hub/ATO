@@ -147,13 +147,54 @@ export const VISITOR_LINES: Readonly<Record<string, VisitorLines>> = {
     'Stepping in again. The rota likes me.',
     'Came for the quiet. Found it.',
   ]),
+  'ironclad-kabuto': lines('ironclad-kabuto', [
+    'Parked the armour by the door. Took the stairs like a person.',
+    'A sticker, steel-edged. Laminated, because I overthink glue.',
+    'Replied “noted” to everything today. This is the longer reply.',
+    'Steel blue, like a cloudy Monday. Looks better on a pet.',
+    'Left a very formal voice note. Nobody has played it yet.',
+    'Bowed at the door. The doorbell camera did not bow back.',
+  ]),
+  'zipline-shade': lines('zipline-shade', [
+    'Came in through the group chat first, then the actual door.',
+    'A sticker, slid under the door. Nobody saw. Very smooth.',
+    'Muted the chat, kept the notifications on. Complicated person.',
+    'Lime, like a highlighter on someone else’s notes.',
+    'Slid in so quietly the lamp noticed first.',
+    'Rode the cable down. The stairs were right there.',
+  ]),
+  'kabuki-gear': lines('kabuki-gear', [
+    'Warmed up with a dramatic entrance. The door stuck.',
+    'A sticker, fan-folded. Rehearsed handing it over twice.',
+    'Practised my hello in the mirror. It still came out loud.',
+    'Ember orange on white. A bit much, which is the point.',
+    'Took a bow for no reason. Staying for the snacks.',
+    'Waved so hard the lamp swayed. Sorry about that.',
+  ]),
+  'hush-bot': lines('hush-bot', [
+    'Beeped once at the door, quietly, in case that is rude.',
+    'A sticker, small like me. Peeled it with both hands.',
+    'Read the room, then read it again. All clear.',
+    'Mint green, soft as a library voice.',
+    'Whispered hi. Whispered it again so it would count.',
+    'Rolled in with a grapple and a snack. Mostly the snack.',
+  ]),
+  gearbreaker: lines('gearbreaker', [
+    'Pushed the door that said pull. It opened anyway.',
+    'A sticker. It survived my pocket, which is a first.',
+    'Fixed the squeaky hinge on the way in. No charge.',
+    'Amber, like a toaster that pops on the first go.',
+    'Dropped the heavy bag by the door. It makes a point.',
+    'Sat down gently. The chair did not agree to this.',
+  ]),
 };
 
 /** Card + notice copy (fixed, short; the card's boxes are sized for these). */
 export const VISITOR_UI = {
   /** Notice lane: title ≤ 3 words, body one line even on an SE (the "!" over the visitor says "tap me"). */
   noticeTitle: 'Visitor',
-  noticeBody: (name: string) => `${name} dropped by.`,
+  /** "<Name> dropped by." — a long name (Ironclad Kabuto) says "visited" so the line stays one line on an SE (≤ 26 chars). */
+  noticeBody: (name: string) => (`${name} dropped by.`.length <= 26 ? `${name} dropped by.` : `${name} visited.`),
   cardTitle: (name: string) => `${name} dropped by`,
   sticker: (name: string) => `New sticker · ${name}`,
   look: (name: string) => `Rare look · ${name} tint`,

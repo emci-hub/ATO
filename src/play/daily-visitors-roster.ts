@@ -4,7 +4,7 @@
  *
  * Only heroes whose packed cast art has BOTH an idle and a walk clip can visit ("room-ready";
  * `check:daily-visitors` re-checks every id against the real kits). aurex (no idle, no walk) and
- * morwen (no walk) stay out. 12 rotate; 2 stand in on a day the visitor would be your own pet's hero.
+ * morwen (no walk) stay out. 12 rotate; 7 stand in on a day the visitor would be your own pet's hero.
  */
 
 /** The 12 that rotate, in visiting order. Ids are forever: saves point at them. */
@@ -23,8 +23,19 @@ export const VISITOR_ROTATION: readonly string[] = [
   'sak',
 ];
 
-/** Stand-ins: visit only when the day's visitor is the same hero as your pet. */
-export const VISITOR_STAND_INS: readonly string[] = ['velkhar', 'void-raven'];
+/**
+ * Stand-ins: visit only when the day's visitor is the same hero as your pet. The five mecha heroes
+ * (2026-10-26, emci: option A) join here, not the rotation, so nobody's 12-day order moves.
+ */
+export const VISITOR_STAND_INS: readonly string[] = [
+  'velkhar',
+  'void-raven',
+  'ironclad-kabuto',
+  'zipline-shade',
+  'kabuki-gear',
+  'hush-bot',
+  'gearbreaker',
+];
 
 /** Every hero that can drop by, so every hero that has a sticker and a rare look. */
 export const VISITOR_STICKER_HEROES: readonly string[] = [...VISITOR_ROTATION, ...VISITOR_STAND_INS];
@@ -45,6 +56,11 @@ export const VISITOR_TINT_COLOR: Readonly<Record<string, string>> = {
   sak: '#C99B6B',
   velkhar: '#9D7BFF',
   'void-raven': '#5E4FC9',
+  'ironclad-kabuto': '#7FA3C7',
+  'zipline-shade': '#B6E04A',
+  'kabuki-gear': '#FF7A59',
+  'hush-bot': '#8FE3C2',
+  gearbreaker: '#E9A93B',
 };
 
 /** The rare look's cosmetic id for a visitor hero (`cos_tint_visit_<hero>`), forever. */

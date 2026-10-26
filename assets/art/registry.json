@@ -4547,6 +4547,114 @@
       "part": "frost-lich"
     },
     {
+      "id": "icon.stickers.streetwear.gearbreaker",
+      "path": "assets/art/icons/in-use/stickers/streetwear/gearbreaker.png",
+      "category": "icons",
+      "type": "icon",
+      "theme": "streetwear",
+      "placement": "hud",
+      "camera": "flat-ui",
+      "size": {
+        "w": 128,
+        "h": 128
+      },
+      "status": "resource",
+      "source": "pixellab",
+      "diskBytes": 26602,
+      "decodedBytes": 65536,
+      "format": "png32",
+      "notes": "md5:6f3675a85c65601e65c708d3b278e076",
+      "inUse": true,
+      "set": "stickers",
+      "variant": "streetwear",
+      "tags": [],
+      "usedBy": [
+        "src/play/daily-visitor-ui.tsx"
+      ],
+      "part": "gearbreaker"
+    },
+    {
+      "id": "icon.stickers.streetwear.hush-bot",
+      "path": "assets/art/icons/in-use/stickers/streetwear/hush-bot.png",
+      "category": "icons",
+      "type": "icon",
+      "theme": "streetwear",
+      "placement": "hud",
+      "camera": "flat-ui",
+      "size": {
+        "w": 128,
+        "h": 128
+      },
+      "status": "resource",
+      "source": "pixellab",
+      "diskBytes": 17095,
+      "decodedBytes": 65536,
+      "format": "png32",
+      "notes": "md5:3f6bccc908e72e305d0f390323780340",
+      "inUse": true,
+      "set": "stickers",
+      "variant": "streetwear",
+      "tags": [],
+      "usedBy": [
+        "src/play/daily-visitor-ui.tsx"
+      ],
+      "part": "hush-bot"
+    },
+    {
+      "id": "icon.stickers.streetwear.ironclad-kabuto",
+      "path": "assets/art/icons/in-use/stickers/streetwear/ironclad-kabuto.png",
+      "category": "icons",
+      "type": "icon",
+      "theme": "streetwear",
+      "placement": "hud",
+      "camera": "flat-ui",
+      "size": {
+        "w": 128,
+        "h": 128
+      },
+      "status": "resource",
+      "source": "pixellab",
+      "diskBytes": 22302,
+      "decodedBytes": 65536,
+      "format": "png32",
+      "notes": "md5:90b49471ea67e65e35ad2fb1ba66bae7",
+      "inUse": true,
+      "set": "stickers",
+      "variant": "streetwear",
+      "tags": [],
+      "usedBy": [
+        "src/play/daily-visitor-ui.tsx"
+      ],
+      "part": "ironclad-kabuto"
+    },
+    {
+      "id": "icon.stickers.streetwear.kabuki-gear",
+      "path": "assets/art/icons/in-use/stickers/streetwear/kabuki-gear.png",
+      "category": "icons",
+      "type": "icon",
+      "theme": "streetwear",
+      "placement": "hud",
+      "camera": "flat-ui",
+      "size": {
+        "w": 128,
+        "h": 128
+      },
+      "status": "resource",
+      "source": "pixellab",
+      "diskBytes": 21211,
+      "decodedBytes": 65536,
+      "format": "png32",
+      "notes": "md5:88c7b9d735fd63729c304465eeb9186d",
+      "inUse": true,
+      "set": "stickers",
+      "variant": "streetwear",
+      "tags": [],
+      "usedBy": [
+        "src/play/daily-visitor-ui.tsx"
+      ],
+      "part": "kabuki-gear"
+    },
+    {
       "id": "icon.stickers.streetwear.kael",
       "path": "assets/art/icons/in-use/stickers/streetwear/kael.png",
       "category": "icons",
@@ -4788,6 +4896,33 @@
         "src/play/daily-visitor-ui.tsx"
       ],
       "part": "void-raven"
+    },
+    {
+      "id": "icon.stickers.streetwear.zipline-shade",
+      "path": "assets/art/icons/in-use/stickers/streetwear/zipline-shade.png",
+      "category": "icons",
+      "type": "icon",
+      "theme": "streetwear",
+      "placement": "hud",
+      "camera": "flat-ui",
+      "size": {
+        "w": 128,
+        "h": 128
+      },
+      "status": "resource",
+      "source": "pixellab",
+      "diskBytes": 12238,
+      "decodedBytes": 65536,
+      "format": "png32",
+      "notes": "md5:a57967a96ab7c71449964e0a9797bd7e",
+      "inUse": true,
+      "set": "stickers",
+      "variant": "streetwear",
+      "tags": [],
+      "usedBy": [
+        "src/play/daily-visitor-ui.tsx"
+      ],
+      "part": "zipline-shade"
     },
     {
       "id": "icon.streetwear.arrow-left",

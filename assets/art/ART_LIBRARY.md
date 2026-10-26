@@ -1,6 +1,6 @@
 # ATO art library
 
-Generated. 585 live entries.
+Generated. 590 live entries.
 Open `assets/art/_contact/library.html` (desktop / file://) or `library-portable.html` on a phone.
 Every tile is a preview (animated main clip, still, or individual sprites) — not the raw sheet.
 Reuse before create. New art goes in `assets/art/<category>/in-use|unused/<set>/<variant>/`.
@@ -11,7 +11,7 @@ Viewer lists one card per set (not each clip/file).
 - **heroes** (208: 66 in use / 142 unused) — Heroes
 - **enemies-bosses** (32: 24 in use / 8 unused) — Enemies / bosses
 - **ui** (26: 11 in use / 15 unused) — UI
-- **icons** (148: 67 in use / 81 unused) — Icons
+- **icons** (153: 72 in use / 81 unused) — Icons
 - **rooms** (71: 49 in use / 22 unused) — Rooms
 - **props** (50: 11 in use / 39 unused) — Props
 - **tiles** (21: 0 in use / 21 unused) — Tiles
@@ -793,6 +793,10 @@ Viewer lists one card per set (not each clip/file).
 | `icon.stickers.streetwear.cyber-shinobi` | 128×128 | resource | — | src/play/daily-visitor-ui.tsx |
 | `icon.stickers.streetwear.elowen` | 128×128 | resource | — | src/play/daily-visitor-ui.tsx |
 | `icon.stickers.streetwear.frost-lich` | 128×128 | resource | — | src/play/daily-visitor-ui.tsx |
+| `icon.stickers.streetwear.gearbreaker` | 128×128 | resource | — | src/play/daily-visitor-ui.tsx |
+| `icon.stickers.streetwear.hush-bot` | 128×128 | resource | — | src/play/daily-visitor-ui.tsx |
+| `icon.stickers.streetwear.ironclad-kabuto` | 128×128 | resource | — | src/play/daily-visitor-ui.tsx |
+| `icon.stickers.streetwear.kabuki-gear` | 128×128 | resource | — | src/play/daily-visitor-ui.tsx |
 | `icon.stickers.streetwear.kael` | 128×128 | resource | — | src/play/daily-visitor-ui.tsx |
 | `icon.stickers.streetwear.kitsune` | 128×128 | resource | — | src/play/daily-visitor-ui.tsx |
 | `icon.stickers.streetwear.maldrath` | 128×128 | resource | — | src/play/daily-visitor-ui.tsx |
@@ -802,6 +806,7 @@ Viewer lists one card per set (not each clip/file).
 | `icon.stickers.streetwear.sak` | 128×128 | resource | — | src/play/daily-visitor-ui.tsx |
 | `icon.stickers.streetwear.velkhar` | 128×128 | resource | — | src/play/daily-visitor-ui.tsx |
 | `icon.stickers.streetwear.void-raven` | 128×128 | resource | — | src/play/daily-visitor-ui.tsx |
+| `icon.stickers.streetwear.zipline-shade` | 128×128 | resource | — | src/play/daily-visitor-ui.tsx |
 
 ## icons · streetwear · streetwear · in-use
 

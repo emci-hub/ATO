@@ -2,7 +2,7 @@
  * npm run art:bake-stickers — the daily visitors' stickers (roadmap step 4, emci 2026-10-15).
  *
  * One die-cut sticker per visitor hero, cut from that hero's own front-facing frame
- * (`rotations` → south) in its packed cast atlas: the opaque figure 1:1 (no rescale),
+ * (`rotations` → south) in its packed cast atlas (the five mecha: their streetwear packed sheet): the opaque figure 1:1 (no rescale),
  * a 3 px cream border and a 1 px ink edge, centred on a 128×128 canvas (the 32 px ladder).
  * No PixelLab call and no new drawing: the hero art is the source of truth, so a
  * re-pack of a hero re-bakes its sticker. Output goes to the art library
@@ -27,19 +27,30 @@ const INK: readonly [number, number, number] = [20, 16, 28];
 
 type Rect = { x: number; y: number; w: number; h: number };
 
-function frontFrame(hero: string): Rect {
-  const catalog = JSON.parse(fs.readFileSync(path.join(CAST, hero, 'catalog.json'), 'utf8'));
-  const sheets = JSON.parse(fs.readFileSync(path.join(CAST, hero, 'sheets.json'), 'utf8'));
-  const rot = catalog.actions?.rotations;
-  const frames = rot ? sheets[rot.sheetKey]?.frames : undefined;
-  const rect: Rect | undefined = frames?.['south/frame_000'] ?? frames?.south;
-  if (!rect) throw new Error(`${hero}: no rotations/south frame in its cast atlas`);
-  return rect;
+/** The packed streetwear heroes (the five mecha have no cast atlas): `sheets.json` points at an art-library sheet. */
+const STREETWEAR = path.join(REPO, 'assets/play/sheets/streetwear/heroes');
+const ART_ROOT = path.join(REPO, 'assets');
+
+/** The hero's front (south) frame and the atlas it is cut from: the cast atlas, else the streetwear packed sheet. */
+function frontFrame(hero: string): { atlas: PNG; rect: Rect } {
+  if (fs.existsSync(path.join(CAST, hero, 'catalog.json'))) {
+    const catalog = JSON.parse(fs.readFileSync(path.join(CAST, hero, 'catalog.json'), 'utf8'));
+    const sheets = JSON.parse(fs.readFileSync(path.join(CAST, hero, 'sheets.json'), 'utf8'));
+    const rot = catalog.actions?.rotations;
+    const frames = rot ? sheets[rot.sheetKey]?.frames : undefined;
+    const rect: Rect | undefined = frames?.['south/frame_000'] ?? frames?.south;
+    if (!rect) throw new Error(`${hero}: no rotations/south frame in its cast atlas`);
+    return { atlas: PNG.sync.read(fs.readFileSync(path.join(CAST, hero, 'atlas.png'))), rect };
+  }
+  const sheets = JSON.parse(fs.readFileSync(path.join(STREETWEAR, hero, 'sheets.json'), 'utf8'));
+  const entry = sheets[`sheets/streetwear/heroes/${hero}/rotations`];
+  const rect: Rect | undefined = entry?.frames?.south;
+  if (!rect) throw new Error(`${hero}: no rotations/south frame in its streetwear sheet`);
+  return { atlas: PNG.sync.read(fs.readFileSync(path.join(ART_ROOT, entry.sheet))), rect };
 }
 
 function bake(hero: string): { w: number; h: number } {
-  const atlas = PNG.sync.read(fs.readFileSync(path.join(CAST, hero, 'atlas.png')));
-  const f = frontFrame(hero);
+  const { atlas, rect: f } = frontFrame(hero);
   const alphaAt = (x: number, y: number) => atlas.data[((f.y + y) * atlas.width + f.x + x) * 4 + 3];
   let x0 = Infinity;
   let y0 = Infinity;

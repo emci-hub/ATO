@@ -129,7 +129,7 @@ export function nextCircleGift(inbox: readonly CircleGift[], book: CircleBook): 
   return inbox.find((g) => !book.opened.includes(g.id)) ?? null;
 }
 
-/** Whether a hero has a sticker to give (the 14 room-ready visitors); otherwise the gift is a stamp. */
+/** Whether a hero has a sticker to give (the 19 room-ready visitors); otherwise the gift is a stamp. */
 export function circleGiftIsSticker(heroId: string): boolean {
   return VISITOR_STICKER_HEROES.includes(heroId);
 }
