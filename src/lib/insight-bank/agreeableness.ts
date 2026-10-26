@@ -196,7 +196,7 @@ export const AGREEABLENESS_IDEAS: readonly InsightIdea[] = [
   }),
   idea('ftw_agreeableness_h_07', ['agreeableness:high'], {
     focus: [
-      'When you bump into someone or make a small mistake, you tend to say sorry first.',
+      'You tend to apologize first, even for small mistakes.',
       'You usually apologize quickly, even in moments where it wasn’t your fault.',
       'When there’s a little tension, you tend to say sorry to make it go away.',
     ],
@@ -212,7 +212,7 @@ export const AGREEABLENESS_IDEAS: readonly InsightIdea[] = [
   }),
   idea('ftw_agreeableness_h_08', ['agreeableness:high'], {
     focus: [
-      'When you need a favor, you tend to wait because you don’t want to bother anyone.',
+      'When you need a favor, you tend to wait before asking.',
       'You usually find it easier to help others than to ask for help.',
       'When someone offers to help you, you tend to say you’re fine.',
     ],
@@ -278,7 +278,7 @@ export const AGREEABLENESS_IDEAS: readonly InsightIdea[] = [
     focus: [
       'When a server or customer service worker makes a mistake, you tend to stay patient and kind.',
       'You usually stay friendly with people who are having a rough day, even when it costs you.',
-      'You tend to let a rude stranger go without saying anything.',
+      'You tend to let it go when a stranger is rude.',
     ],
     why: 'Kindness makes hard moments easier for others, but you can end up taking on rudeness that you’d be fine pushing back on.',
     try: [
@@ -286,14 +286,14 @@ export const AGREEABLENESS_IDEAS: readonly InsightIdea[] = [
       'Keep your patience, and add a small thank-you to the person who handled it well, so kindness goes both ways.',
     ],
     watch: [
-      'Notice how you feel an hour after a rude moment you let go.',
+      'Notice how you feel an hour after you let a rude comment go.',
       'Notice when being kind and being quiet turn out to be different things.',
     ],
   }),
   idea('ftw_agreeableness_l_07', ['agreeableness:low'], {
     focus: [
       'When a conversation turns into a debate, you tend to enjoy pushing back on an idea.',
-      'You usually argue a point hard because you like testing whether it holds up.',
+      'You argue a point hard to test whether it holds up.',
       'When friends disagree with you, you tend to treat it as a good discussion.',
     ],
     why: 'Debating sharpens ideas, but friends may feel attacked when you meant it as a game.',
@@ -344,7 +344,7 @@ export const AGREEABLENESS_IDEAS: readonly InsightIdea[] = [
       'You usually don’t go along with a plan you don’t believe in.',
       'When a group is excited about something you doubt, you tend to speak up instead of staying quiet.',
     ],
-    why: 'Your honesty can save the group from mistakes, but excited people may hear it as you not wanting them to enjoy it.',
+    why: 'Your honesty can save the group from mistakes, but excited people may hear it as disapproval.',
     try: [
       'Name one thing you like about a plan before you raise your concern, so people hear you’re on their side.',
       'Offer a different option along with your doubt, so the group has something to work with.',
@@ -356,13 +356,13 @@ export const AGREEABLENESS_IDEAS: readonly InsightIdea[] = [
   }),
   idea('ftw_agreeableness_l_11', ['agreeableness:low'], {
     focus: [
-      'When you have to split something fairly, you tend to look out for your share.',
+      'When you have to split something, you tend to look out for your share.',
       'You usually make sure you’re not giving up more than you’re getting.',
       'When money or time is shared, you tend to keep track so it stays even.',
     ],
     why: 'Keeping things fair protects you from being taken advantage of, but counting too closely can make friends feel watched.',
     try: [
-      'Let one small thing go unevenly this week and see how it feels, so you test whether the count matters.',
+      'Let one small thing stay uneven this week and see how it feels, so you test whether the count matters.',
       'Offer to cover something small for a friend, so they know the count isn’t the point.',
     ],
     watch: [
@@ -376,7 +376,7 @@ export const AGREEABLENESS_IDEAS: readonly InsightIdea[] = [
       'You usually push back on unwanted advice instead of nodding along.',
       'At family gatherings, you tend to hold your ground when someone pushes an opinion on you.',
     ],
-    why: 'Holding your ground keeps your choices yours, but the people who offered the advice may have only wanted to help.',
+    why: 'Holding your ground keeps your choices yours, but people who offer advice may only want to help.',
     try: [
       'Say “thanks, I’ll think about it” to the next piece of advice you don’t want, so the talk stays kind.',
       'Ask the person why they gave the advice, so you know what they were worried about.',

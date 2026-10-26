@@ -304,3 +304,12 @@ Trait, set and every option value are unchanged; only words moved. The full
 before/after table, the questions that did not make sense, and the research behind
 the option balance are in `docs/proposals/question-rewrite.md`. To approve: flip
 `QUESTION_VOICE_COPY_REVIEWED` to `true` in `src/lib/questions/bank.ts`.
+
+## Agent review (no API)
+
+ATO calls no outside AI service, at runtime or at build time. Copy review is done by an agent (or a person) reading the copy, not by a script calling a model.
+
+1. `npm run copy:review -- --out docs/copy-review-queue.md` lists the changed player-facing lines since the base branch, plus the review brief built from `docs/voice-guide.md`. It calls no model and needs no key.
+2. The reviewer reads `docs/voice-guide.md` and each line, and edits the source by hand. Keep every `{slot}` and keep each line one line.
+3. Log each change (file, old, new, reason) in `docs/copy-review-log.md`.
+4. Run `npm run check:player-copy`, `npm run check:story-library` and `npm run check:ota-gate`.

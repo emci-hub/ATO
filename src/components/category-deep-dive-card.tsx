@@ -54,7 +54,7 @@ import { titleCase } from '@/lib/legend-figures/story';
 import type { TraitTrack } from '@/lib/trait-stability';
 
 export const DEEP_DIVE_KICKER = 'Deep dive';
-export const DEEP_DIVE_LEDE = 'How far you lean in each part of you. Tap one and ATO writes a deep dive about it.';
+export const DEEP_DIVE_LEDE = 'See where you lean in each category. Tap one to read a deep dive.';
 export const DEEP_DIVE_LEGEND =
   'One number for each part of you: how strongly you lean overall, counting your surest answers most (strongest first). Tap a row to see each trait. The small letters next to a name are the traits behind it.';
 export const DEEP_DIVE_ROW_LOCKED = 'Answer more questions to open this one.';
@@ -65,17 +65,17 @@ export const DEEP_DIVE_ANOTHER_LABEL = 'Show me another angle · free';
 export const DEEP_DIVE_NEW_LABEL = 'New deep dive from the library';
 export const DEEP_DIVE_EMPTY =
   'You’ve read every deep dive for leanings like yours. Open this one again for a fresh page from the story library.';
-export const DEEP_DIVE_DAILY = 'That’s today’s free deep dives. A brand-new one is still open, or come back tomorrow.';
-export const DEEP_DIVE_USED = 'That’s the most deep dives for today. Come back tomorrow.';
-export const DEEP_DIVE_FAILED = 'ATO couldn’t write this one just now. Try again tomorrow.';
+export const DEEP_DIVE_DAILY = 'You’ve used today’s free deep dives. You can still read the one that’s open, or come back tomorrow.';
+export const DEEP_DIVE_USED = 'You’ve opened all your deep dives for today. Come back tomorrow.';
+export const DEEP_DIVE_FAILED = 'ATO couldn’t load this deep dive right now. Try again tomorrow.';
 export const DEEP_DIVE_UNAVAILABLE = 'Deep dives aren’t switched on yet. Your leanings show either way.';
-export const DEEP_DIVE_SLOW = 'Taking a little longer than usual. It will appear here when it’s ready.';
+export const DEEP_DIVE_SLOW = 'This is taking a little longer than usual. It will appear here when it’s ready.';
 export const DEEP_DIVE_AI_OFF = 'Turn on AI in the You tab to get the written deep dive. Your leanings show either way.';
-export const DEEP_DIVE_STALE = 'Written before your answers moved. A fresh one is ready to write.';
+export const DEEP_DIVE_STALE = 'Written before your traits shifted. A fresh one is ready to write.';
 export const DEEP_DIVE_REWRITE = 'ATO writes these more clearly now. A fresh one is ready to write.';
 export const DEEP_DIVE_OPENS_TOMORROW = 'Already written with today’s deep dive. It opens here tomorrow, free.';
 export const DEEP_DIVE_READY_TOMORROW = 'deep dive ready tomorrow';
-export const DEEP_DIVE_PCT_NOTE = '50% is the middle; 100% is all the way to that side.';
+export const DEEP_DIVE_PCT_NOTE = '50% is the middle; 100% is the strongest leaning.';
 
 export function CategoryDeepDiveCard({
   userId,

@@ -74,7 +74,6 @@
     "check:release-mode": "tsx ./scripts/release-mode-check.ts",
     "eas-build-post-install": "tsx ./scripts/release-mode-check.ts",
     "sync:voice": "node ./scripts/sync-voice-content.mjs",
-    "check:ai": "tsx ./scripts/ai-provider-check.ts",
     "check:stage6": "tsx ./scripts/stage6-helper-check.ts",
     "check:kenney": "tsx ./scripts/kenney-check.ts",
     "check:wave-tables": "tsx ./scripts/wave-tables-check.ts",

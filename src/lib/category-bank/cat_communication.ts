@@ -12,12 +12,12 @@ export const CAT_COMMUNICATION: BarCard = {
       ],
       strength: [
         'When you and a friend disagree, you keep the talk on the problem, not on them.',
-        'You say what you need, and you ask what the other person needs before you close it.',
+        'You say what you need, and you ask what the other person needs before ending the conversation.',
         'You make a hard talk feel fair to the person sitting across from you.',
       ],
       watchOut: [
         'Sometimes you offer a fix before the other person has finished.',
-        'Sometimes you push to talk before they are ready.',
+        'Sometimes you push to talk before the other person is ready.',
         'Sometimes you work so hard at being fair that the talk leaves you worn out.',
       ],
       tryThis: [
@@ -40,7 +40,7 @@ export const CAT_COMMUNICATION: BarCard = {
       watchOut: [
         'Sometimes you let something go that was worth saying out loud.',
         'Sometimes your own view gets lost.',
-        'Sometimes you bring the whole pile up at once.',
+        'Sometimes you bring up every frustration all at once.',
       ],
       tryThis: [
         'Say one small thing that bothered you this week, so it doesn’t sit and grow.',
@@ -50,12 +50,12 @@ export const CAT_COMMUNICATION: BarCard = {
     },
     low: {
       summary: [
-        'In a disagreement you stay quiet, and you keep your own view to yourself.',
-        'When the room gets tense, you stay out of the argument and keep your opinion in.',
+        'In a disagreement, you keep your view to yourself.',
+        'When the room gets tense, you stay out of the argument.',
         'You stay out of the argument, but you don’t change your mind just to end it.',
       ],
       strength: [
-        'You stay calm, and you don’t make a disagreement bigger than it is.',
+        'You stay calm instead of making a disagreement bigger than it is.',
         'You think before you speak when the moment is tense.',
         'You know what you believe, even on the days you don’t say it out loud.',
       ],
@@ -67,7 +67,7 @@ export const CAT_COMMUNICATION: BarCard = {
       tryThis: [
         'Text the person one sentence about what you think, so your view gets heard.',
         'Ask one question in your next disagreement, so you are part of the talk.',
-        'Write down what you would want to say, so it’s easier to share later.',
+        'Write down what you want to say so it is easier to share later.',
       ],
     },
   },

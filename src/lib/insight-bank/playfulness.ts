@@ -229,7 +229,7 @@ export const PLAYFULNESS_IDEAS: readonly InsightIdea[] = [
   idea('ftw_playfulness_h_09', ['playfulness:high'], {
     focus: [
       'When you’re around kids or pets, you tend to join in the play instead of watching.',
-      'You usually get down on the floor and play with them.',
+      'Around kids or pets, you usually get down on the floor and play.',
       'When there is a game going on, you tend to jump in and get really into it.',
     ],
     why: 'Joining in is a gift to the people you play with, but a game you love can run longer than others want.',
@@ -315,7 +315,7 @@ export const PLAYFULNESS_IDEAS: readonly InsightIdea[] = [
     why: 'Taking things seriously shows you care about the outcome, but others may be using a joke to cope and not to dodge.',
     try: [
       'Ask a coworker what the joke helps them with, so you understand what it’s for.',
-      'Smile at one joke today even if it isn’t your style, so the person feels received.',
+      'Smile at one joke today even if it isn’t your style, so the person feels heard.',
     ],
     watch: [
       'Notice what a joke does for the people who tell it.',

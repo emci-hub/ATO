@@ -1,4 +1,3 @@
-export { STORY_AI_POLISH, STORY_POLISH_PROMPT_STATIC } from './polish';
 export { STORY_APPROVED_NAMES } from './names';
 export { STORY_LEAN_PHRASES, STORY_MAP_CATEGORY_LEAN_TODO, categoryCatalogName, leanPhraseFor } from './lean-phrases';
 export { STORY_REFERENCES, referenceById, referenceFor } from './references';

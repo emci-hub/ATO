@@ -11,7 +11,7 @@
  * a live read of `isProfileSettled(tracks)`, so a profile that stops being
  * settled relocks the badge regardless of what this stores.
  *
- * Lazy dynamic import of AsyncStorage (same shape as `lib/ai/override.ts`) so
+ * Lazy dynamic import of AsyncStorage (a device-only store) so
  * Node check scripts can import this module without a React Native runtime.
  */
 
