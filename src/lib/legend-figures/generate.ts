@@ -1,17 +1,10 @@
 /**
- * Legend figures — one reveal, no client model call.
+ * Legend figures — one reveal, assembled from the story library.
  *
- * The phone sends only the bucket key to the `ai-library` Edge Function, which
- * claims the reveal on the server first (no claim = no call, hand-written
- * fallback), serves an unseen library card or writes a new one. The old
- * one-person path (`generateText` → `ai-generate`) was removed in roadmap A5.
- * While `STORY_LIBRARY_RUNTIME` is on, the phone assembles approved Story
- * Library copy and does not call the server. The flag ships off.
+ * The phone does not call a model and does not ask the server to write a card.
+ * If the library cannot pair a side, the museum's own words are used.
  * Never throws to the screen.
  */
-import { LEGEND_LIBRARY, legendBucketKey } from '@/lib/ai-library/legend';
-import { writeLibraryCard, type LibraryServed } from '@/lib/ai-library/client';
-import { STORY_LIBRARY_RUNTIME } from '@/lib/story-library/flags';
 import { renderLibraryLegend } from '@/lib/story-library/render';
 import type { CardJokeStyle } from '@/lib/voice/card-joke';
 import { rankStoryAxes } from '@/lib/story-thread';
@@ -52,15 +45,8 @@ export function planLegendReveal(input: {
 }
 
 /**
- * Library first (wave93, emci 2026-10-09). The phone sends only the bucket key:
- *   free reveal  the server claims the free reveal (its own small cap, never
- *                charged), then gives an unseen library card or writes a new one;
- *                else the hand-written card
- *   paid reveal  the server claims 5 tokens, then the same; a failed write is
- *                refunded on the server
- * Any other answer (including 'missing') gives the hand-written card.
- * Story Library on = approved copy on the phone, no server call and no charge.
- * The flag ships off, so this build still uses the server library.
+ * Story library only. No server write, no token charge. The museum words are
+ * the last resort when there is no pair to render.
  */
 export async function revealLegendStory(input: {
   legend: LegendFigure;
@@ -70,33 +56,16 @@ export async function revealLegendStory(input: {
   differ: LegendDiffer | null;
   jokeStyle: CardJokeStyle | null;
   consentGranted: boolean;
-  /** The day's free reveal (or the bonus): never charged. */
+  /** Kept so a reveal tap can still pass the day's free flag. The library does not charge. */
   free: boolean;
 }): Promise<LegendStory> {
   const fallback = () => fallbackLegendStory(input);
-  if (STORY_LIBRARY_RUNTIME) {
-    if (input.pairs.length === 0) return fallback();
-    const { getShownIds, rememberShown } = await import('@/lib/story-library/shown');
-    const { persistShownDevice } = await import('@/lib/story-library/device-store');
-    const { hydrateStoryLibraryDevice } = await import('@/lib/story-library/device-store');
-    await hydrateStoryLibraryDevice();
-    const story = renderLibraryLegend({ ...input, shown: getShownIds() });
-    rememberShown(story.lineIds ?? []);
-    void persistShownDevice();
-    return story;
-  }
-  if (!input.consentGranted || input.pairs.length === 0) return fallback();
-  const bucket = legendBucketKey(input);
-  const take = (served: LibraryServed<LegendStory>): LegendStory => ({
-    ...served.card,
-    // "Where you match" is the reader's own pairing, always (same sides as the bucket).
-    whereYouMatch: input.pairs.map((p) => ({ axis: p.axis, lean: p.lean, them: p.tag.them })),
-    libraryId: served.id,
-    others: served.others,
-  });
-  // One server call: the reveal is claimed (free cap or 5 tokens), then an
-  // unseen library card is given, or a new one is written.
-  const res = await writeLibraryCard('legend', bucket, input.free ? 'free_legend' : 'paid', LEGEND_LIBRARY.readCard);
-  if (res.ok && res.served) return take(res.served);
-  return fallback();
+  if (input.pairs.length === 0) return fallback();
+  const { getShownIds, rememberShown } = await import('@/lib/story-library/shown');
+  const { persistShownDevice, hydrateStoryLibraryDevice } = await import('@/lib/story-library/device-store');
+  await hydrateStoryLibraryDevice();
+  const story = renderLibraryLegend({ ...input, shown: getShownIds() });
+  rememberShown(story.lineIds ?? []);
+  void persistShownDevice();
+  return story;
 }

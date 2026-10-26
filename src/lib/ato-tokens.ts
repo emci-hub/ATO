@@ -28,17 +28,20 @@ export const ATO_TOKEN_EARN = {
 } as const;
 
 /**
- * Every AI view costs the same (wave92): a Legends AI card or a deep dive (2 cards). The Story is
- * template-only since 2026-10-14 and costs nothing; 'story' stays in the kind type for the server
- * ledger only. User-facing copy must name exactly the AI uses in AI_USE_DISCLOSURE (check:ai-tokens).
+ * The price stays 5 so old ledger rows still match. The day's free Legends reveal
+ * and the free deep dive come from the story library and do not spend tokens.
+ * An extra legend reveal and a new deep dive are further pages from that library:
+ * the phone claims `claim_legend_figure_story` / `claim_category_deep_dive` (wave92),
+ * which charge this price, and then renders the page locally. No model writes them.
+ * The Story stays template-only. User-facing copy must match AI_USE_DISCLOSURE (check:ai-tokens).
  */
 export const AI_TOKEN_PRICE = 5;
 export type AiTokenKind = 'story' | 'legend' | 'deep_dive';
 export const AI_PRICE_LABEL = `${AI_TOKEN_PRICE} tokens`;
 /**
- * Free library deep dives a day (`app_config.library_free_daily_cap`, default 10, wave93). Only deep
- * dives are served free (`library_serve`); a Legends AI card is charged even when it comes from the
- * library (`claim_library_write` mode 'paid' charges first). check:ai-tokens pins this to the SQL.
+ * Old free-library cap (`app_config.library_free_daily_cap`, default 10, wave93).
+ * Deep dives are no longer served from that writer. The constant stays so the
+ * SQL default and the check still name the same number.
  */
 export const LIBRARY_FREE_DAILY_CAP = 10;
 /** What a screen says when the balance is below one AI view. */
@@ -54,7 +57,8 @@ export type AtoTokenEarnReason = 'full_profile_complete' | 'ongoing_round_comple
 export type AtoTokenSpendReason = keyof typeof ATO_TOKEN_PRICE;
 
 export const ATO_TOKEN_LABEL = 'ATO tokens';
-export const ATO_TOKEN_LEDE = 'Earned by checking in and answering questions. Spent on AI views.';
+export const ATO_TOKEN_LEDE =
+  'Earned by checking in and answering questions. The free legend reveal and the free deep dive are included. An extra library page costs tokens.';
 /**
  * How the currency works, said before a limit is hit rather than after. Built
  * from the constants above so a price change cannot leave this stale. The
@@ -66,7 +70,8 @@ export const ATO_TOKEN_LEDE = 'Earned by checking in and answering questions. Sp
 export const ATO_TOKEN_HOW_LINES: readonly string[] = [
   `Check in on Home once a day: +${ATO_TOKEN_EARN.daily_checkin}. Every 7th check-in: +${ATO_TOKEN_EARN.checkin_week_bonus}. A missed day never resets your count. New check-in at midnight.`,
   `Answer a set of 16 questions: +${ATO_TOKEN_EARN.ongoing_round_complete} (up to ${ROUND_PAYOUTS_PER_DAY} sets a day). Finishing the first 48: +${ATO_TOKEN_EARN.full_profile_complete} once.`,
-  `Spend: ${AI_TOKEN_PRICE} for each AI view: a new Legends AI card, or a new deep dive on Explore (2 cards). A deep dive already in the shared library is free (up to ${LIBRARY_FREE_DAILY_CAP} a day). If the AI fails, your tokens come back (once a day for each).`,
+  `The day's free Legends reveal and the free category deep dive come from the stored story library. They do not cost ATO tokens.`,
+  `An extra Legends reveal, and a new deep dive, are further pages from that same library. Each costs ${AI_TOKEN_PRICE} ATO tokens.`,
 ];
 export const ATO_TOKEN_NEED_MORE = 'Not enough ATO tokens yet. Check in on Home or answer a set of 16 to earn more.';
 export const ATO_TOKEN_SPENT = 'Rerolled.';

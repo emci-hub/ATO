@@ -20,15 +20,15 @@ import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { useAccountDataEpoch } from '@/lib/account-data-epoch';
 import { AI_TAP_TIMEOUT_MS } from '@/lib/ai/timeouts';
+import { AI_TOKEN_PRICE, AI_TOKENS_NEEDED, atoTokenBalanceOf } from '@/lib/ato-tokens';
+import { refundAiTokens } from '@/lib/ato-tokens-server';
 import { PRE_LAUNCH_DEV } from '@/lib/dev-mode';
 import { FULL_PROFILE_LOCKED_COPY, fullProfileLockedLine, fullProfileProgress } from '@/lib/full-profile-gate';
 import { fetchHomeBootstrap } from '@/lib/home-bootstrap';
 import { planLegendReveal, revealLegendStory } from '@/lib/legend-figures/generate';
-import { STORY_LIBRARY_RUNTIME } from '@/lib/story-library/flags';
 import { hydrateStoryLibraryDevice } from '@/lib/story-library/device-store';
-import { legendBucketKey } from '@/lib/ai-library/legend';
-import { wantLibraryCards } from '@/lib/ai-library/client';
 import {
+  claimLegendStory,
   fetchAngleCounts,
   fetchCircleFriends,
   fetchServerMuseum,
@@ -63,8 +63,6 @@ import {
 } from '@/lib/legend-figures/story';
 import { HALL_LABEL, LEGEND_HALLS, type LegendHall } from '@/lib/legend-figures/types';
 import { localYmd } from '@/lib/local-date';
-import { AI_TOKEN_PRICE, AI_TOKENS_NEEDED, atoTokenBalanceOf } from '@/lib/ato-tokens';
-import { refundAiTokens } from '@/lib/ato-tokens-server';
 import { cardJokeStyle } from '@/lib/voice/card-joke';
 import { aiConsentFor } from '@/lib/me';
 import { useMeContext } from '@/lib/me-context';
@@ -78,14 +76,13 @@ export const LEGENDS_LEDE =
 export const LEGENDS_TOMORROW_COPY = 'That’s today’s legend. Come back tomorrow to reveal the next one.';
 export const LEGENDS_BONUS_COPY = 'Your answers changed who you’d meet. One more reveal is open today.';
 export const LEGENDS_ONE_TODAY_COPY = 'One free reveal a day. Pick a frame.';
-/** Tokens (wave92, emci 2026-10-09): the free reveal gets the AI card when the
- * balance covers it; more reveals cost one AI view each. */
-export const legendsAiLine = (tokens: number) =>
-  `With ${AI_TOKEN_PRICE} tokens it comes with your AI card (you have ${tokens}); without them you get the museum’s own words.`;
-export const LEGENDS_PAID_FAILED =
-  'The legend card did not load, so this reveal was not saved. Try again later. If tokens were charged for this try, they come back (a failed charge is refunded once a day).';
+/** The free reveal, and any paid extra, both come from the story library. */
+export const LEGENDS_LIBRARY_COPY = 'This card comes from the story library.';
 export const legendsPaidLine = (tokens: number) =>
-  `Want another? Reveal one more for ${AI_TOKEN_PRICE} tokens (you have ${tokens}).`;
+  `Want another from the story library? It costs ${AI_TOKEN_PRICE} tokens (you have ${tokens}).`;
+export const LEGENDS_PAID_FAILED =
+  'The legend card did not load, so this reveal was not saved. If tokens were charged for this try, they come back once today.';
+export const LEGENDS_PAID_QUOTA = 'That’s the most extra legend reveals for today. Come back tomorrow.';
 export const HALL_CHAPTERS_COPY = 'You’ve met every legend here. The frames now hide new chapters about them.';
 export const HALL_EMPTY_COPY = 'Nothing left to reveal in this hall today. Try another hall.';
 export const HALL_ALL_TOLD_COPY = 'You’ve heard every story in this hall.';
@@ -134,16 +131,14 @@ function ensureHall(
  * other unlock: `legendsUnlocked(tracks)` (the finished intake), plus at least
  * two clear trait leans.
  *
- * Pick a hall → three "???" frames (no clue) → reveal one a day (plus one bonus
- * when a new trait side settles). Nothing here spends on its own: the frames
- * are picked on the phone with no AI (`pick.ts`), and the one model call runs
- * only on a reveal tap (`revealLegendStory` → the `ai-library` function, claimed on the server first).
+ * Pick a hall → three "???" frames (no clue) → one free reveal a day (plus one bonus
+ * when a new trait side settles). Past that, another reveal costs tokens
+ * (`claim_legend_figure_story`) and the card is still assembled from the story library.
  * Opening a met legend is free — the story was saved.
  */
 export default function LegendsScreen() {
   const theme = useTheme();
   const { me, refresh: refreshMe } = useMeContext();
-  const [tokenNote, setTokenNote] = useState<string | null>(null);
   const [tracks, setTracks] = useState<readonly TraitTrack[]>([]);
   const [ready, setReady] = useState(false);
   const [today, setToday] = useState<string | null>(null);
@@ -156,6 +151,7 @@ export default function LegendsScreen() {
   const [revealNotes, setRevealNotes] = useState<Record<string, string[]>>({});
   const [friends, setFriends] = useState<Record<string, string[]>>({});
   const [shareOpen, setShareOpen] = useState(false);
+  const [tokenNote, setTokenNote] = useState<string | null>(null);
   const requestRef = useRef(0);
   /** A story is being written: one at a time (a double tap must not pay twice)
    * and no reload may overwrite the state until it is saved. */
@@ -246,8 +242,7 @@ export default function LegendsScreen() {
   const bonusUnlocked = revealedToday >= 1 && day != null && hasNewSettledLean(day.fingerprint, settledFingerprint(tracks));
   const left = revealsLeft(revealedToday, bonusUnlocked);
   const tokens = me ? atoTokenBalanceOf(me) : 0;
-  /** Past the free reveal(s), one more costs one AI view. */
-  const canPay = consentGranted && tokens >= AI_TOKEN_PRICE;
+  const canPay = tokens >= AI_TOKEN_PRICE;
   const canReveal = left > 0 || canPay;
 
   const chooseHall = useCallback(
@@ -277,16 +272,30 @@ export default function LegendsScreen() {
       const startDay = start.day?.ymd === today ? start.day : null;
       const revealedBefore = startDay?.revealed.length ?? 0;
       const bonus = revealedBefore >= 1 && startDay != null && hasNewSettledLean(startDay.fingerprint, settledFingerprint(tracks));
-      const free = STORY_LIBRARY_RUNTIME || revealsLeft(revealedBefore, bonus) > 0;
-      if (!free && !(consentGranted && (me ? atoTokenBalanceOf(me) : 0) >= AI_TOKEN_PRICE)) return;
-      setTokenNote(null);
+      const free = revealsLeft(revealedBefore, bonus) > 0;
+      const balance = me ? atoTokenBalanceOf(me) : 0;
+      if (!free && balance < AI_TOKEN_PRICE) return;
       const { legendId, angleId } = parseFrameKey(key);
       const legend = legendById(legendId);
       if (!legend) return;
       meetingRef.current = true;
       setBusyKey(key);
+      setTokenNote(null);
       const epochAtStart = epochRef.current;
+      let charged = false;
       try {
+        if (!free) {
+          const claim = await claimLegendStory();
+          if (epochRef.current !== epochAtStart) {
+            await refundAiTokens('legend');
+            return;
+          }
+          if (claim !== 'ok') {
+            setTokenNote(claim === 'quota' ? LEGENDS_PAID_QUOTA : claim === 'tokens' ? AI_TOKENS_NEEDED : LEGENDS_PAID_FAILED);
+            return;
+          }
+          charged = true;
+        }
         const chapter = start.museum.filter((row) => row.legendId === legend.id).length;
         const told = toldAngles(start.museum).get(legend.id);
         const counts = await withTimeout(fetchAngleCounts(legend.id), COUNTS_TIMEOUT_MS, 'legend-counts').catch(() => null);
@@ -295,24 +304,29 @@ export default function LegendsScreen() {
         // The joke style is picked here, never by the model: seeded per card so neighbours differ.
         const jokeStyle = cardJokeStyle(`${start.userId}|${legend.id}|${chapter}`);
         const input = { legend, angle, momentId: plan.momentId, pairs, differ, jokeStyle };
-        if (STORY_LIBRARY_RUNTIME) await hydrateStoryLibraryDevice();
+        await hydrateStoryLibraryDevice();
         let story;
         try {
           story = await withTimeout(revealLegendStory({ ...input, consentGranted, free }), AI_TAP_TIMEOUT_MS, 'legend-story');
         } catch {
+          if (charged) await refundAiTokens('legend');
           story = fallbackLegendStory(input);
-          // The outer wait ran out: a paid reveal must not keep the charge.
-          if (!free) await refundAiTokens('legend');
+          if (charged) {
+            setTokenNote(LEGENDS_PAID_FAILED);
+            return;
+          }
         }
-        // A wipe while the story was being written wins: never write it back.
-        if (epochRef.current !== epochAtStart) return;
-        // A paid reveal is an AI view: no AI card (no tokens, or it failed and was refunded) = no reveal.
-        if (!free && story.source !== 'ai') {
+        if (charged && story.source !== 'library') {
+          await refundAiTokens('legend');
           setTokenNote(LEGENDS_PAID_FAILED);
-          void refreshMe();
           return;
         }
-        void refreshMe();
+        if (charged) void refreshMe();
+        // A wipe while the story was being written wins: never write it back.
+        if (epochRef.current !== epochAtStart) {
+          if (charged) await refundAiTokens('legend');
+          return;
+        }
         const entry: MuseumEntry = { legendId: legend.id, chapter, story, metOn: today };
         const latest = localRef.current ?? start;
         const latestDay =
@@ -351,7 +365,7 @@ export default function LegendsScreen() {
         setBusyKey(null);
       }
     },
-    [hall, today, busyKey, tracks, consentGranted, persist, loadFriends, me, refreshMe],
+    [hall, today, busyKey, tracks, consentGranted, me, persist, loadFriends, refreshMe],
   );
 
   const openLegend = useCallback(
@@ -380,38 +394,6 @@ export default function LegendsScreen() {
     : legendFrames;
   const framesLeft = frames.filter((key) => key != null).length;
 
-  // Look-ahead (wave94): the day's frames are fixed, so tell the server which
-  // library cards this reader will need. It writes them within the hour, and the
-  // reveal is then instant and from the library. Group keys only, never text.
-  const frameKeysSig = frames.filter((key): key is string => key != null).join(',');
-  useEffect(() => {
-    if (STORY_LIBRARY_RUNTIME || !consentGranted || !local || !frameKeysSig) return;
-    let live = true;
-    void (async () => {
-      const buckets: string[] = [];
-      for (const key of frameKeysSig.split(',')) {
-        const { legendId, angleId } = parseFrameKey(key);
-        const legend = legendById(legendId);
-        if (!legend) continue;
-        const counts = await withTimeout(fetchAngleCounts(legend.id), COUNTS_TIMEOUT_MS, 'legend-counts').catch(() => null);
-        const plan = planLegendReveal({
-          legend,
-          frameAngleId: angleId,
-          userId: local.userId,
-          counts,
-          told: toldAngles(local.museum).get(legend.id),
-          tracks,
-        });
-        if (plan.pairs.length > 0) buckets.push(legendBucketKey({ legend, ...plan }));
-      }
-      if (live && buckets.length > 0) void wantLibraryCards('legend', buckets);
-    })();
-    return () => {
-      live = false;
-    };
-    // Once per set of frames: the reveal itself re-plans with fresh counts.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [frameKeysSig, consentGranted]);
   const hallMet = hall ? legendsInHall(hall).filter((legend) => metIds.has(legend.id)) : [];
 
   const card =
@@ -421,7 +403,7 @@ export default function LegendsScreen() {
           legend={openLegendDef}
           story={openEntry.story}
           friends={friends[openLegendDef.id] ?? []}
-          aiOff={openEntry.story.source === 'fallback' && !consentGranted}
+          aiOff={false}
           onShare={() => setShareOpen(true)}
           notes={revealNotes[openLegendDef.id] ?? []}
           matchedOn={matchedOnLine(openLegendDef, tracks)}
@@ -531,18 +513,18 @@ export default function LegendsScreen() {
                           {hallDay?.chapters != null ? HALL_ALL_TOLD_COPY : HALL_EMPTY_COPY}
                         </ThemedText>
                       )}
-                      {tokenNote ? (
-                        <ThemedText type="small" themeColor="textSecondary">
-                          {tokenNote}
-                        </ThemedText>
-                      ) : null}
                       {framesLeft > 0 ? (
                         <ThemedText type="small" themeColor="textSecondary">
                           {left > 0
-                            ? `${revealedToday >= 1 ? LEGENDS_BONUS_COPY : LEGENDS_ONE_TODAY_COPY}${consentGranted ? ` ${legendsAiLine(tokens)}` : ''}`
+                            ? `${revealedToday >= 1 ? LEGENDS_BONUS_COPY : LEGENDS_ONE_TODAY_COPY} ${LEGENDS_LIBRARY_COPY}`
                             : canPay
                               ? legendsPaidLine(tokens)
                               : `${LEGENDS_TOMORROW_COPY} ${AI_TOKENS_NEEDED}`}
+                        </ThemedText>
+                      ) : null}
+                      {tokenNote ? (
+                        <ThemedText type="small" themeColor="textSecondary">
+                          {tokenNote}
                         </ThemedText>
                       ) : null}
                     </>

@@ -586,23 +586,24 @@ const gen = read('src/lib/legend-figures/generate.ts');
 // The old one-person path (claimLegendStory → generateText) was removed in roadmap A5. The claim now happens
 // on the server, before the model call, and the phone has no model call at all. While STORY_LIBRARY_RUNTIME
 // is on, the phone assembles approved copy and does not call the server. The flag ships off.
-assert.doesNotMatch(gen.replace(/\/\*[\s\S]*?\*\//g, ''), /generateText|claimLegendStory|writeLegendStory/, 'no model call or client-side claim on the phone');
-assert.match(gen, /fallbackLegendStory\(input\)/, 'a missing library uses the museum words');
-assert.match(gen, /if \(STORY_LIBRARY_RUNTIME\)/, 'the story library flag short-circuits the server');
+assert.doesNotMatch(gen.replace(/\/\*[\s\S]*?\*\//g, ''), /generateText|claimLegendStory|writeLegendStory|writeLibraryCard/, 'no model call or client-side claim on the phone');
+assert.match(gen, /fallbackLegendStory\(input\)/, 'a missing pair uses the museum words');
+assert.match(gen, /renderLibraryLegend\(/, 'the story library is the only card source');
 const libraryServer = read('supabase/functions/ai-library/index.ts');
-assert.ok(libraryServer.indexOf("rpc('claim_library_write'") < libraryServer.indexOf('await complete('), 'the server claim comes before the call');
-assert.match(gen, /writeLibraryCard\('legend', bucket, input\.free \? 'free_legend' : 'paid'/, 'the phone only asks the server for a card');
+assert.match(libraryServer, /reason: 'library' \}, 410\)/);
+assert.doesNotMatch(libraryServer, /await complete\(|claim_library_write/);
+assert.doesNotMatch(gen, /writeLibraryCard\(/, 'the phone does not ask the server for a card');
 assert.match(screen, /meetingRef\.current\) return;/, 'a second tap while a story is being written does nothing');
-// wave92: past the free reveal(s), one more is an AI view paid in tokens; no AI card → no reveal.
 assert.match(
   screen,
-  /const free = STORY_LIBRARY_RUNTIME \|\| revealsLeft\(revealedBefore, bonus\) > 0;\s*if \(!free && !\(consentGranted && \(me \? atoTokenBalanceOf\(me\) : 0\) >= AI_TOKEN_PRICE\)\) return;/,
-  'no reveal past the day’s allowance unless it is paid for, and the story library is free',
+  /const free = revealsLeft\(revealedBefore, bonus\) > 0;\s*const balance = me \? atoTokenBalanceOf\(me\) : 0;\s*if \(!free && balance < AI_TOKEN_PRICE\) return;/,
+  'past the free allowance, a reveal needs the token price',
 );
-assert.match(screen, /if \(!free && story\.source !== 'ai'\) \{/, 'a paid reveal without an AI card is never saved');
-assert.match(screen, /if \(!free\) await refundAiTokens\('legend'\)/, 'a paid reveal that times out is refunded');
-assert.doesNotMatch(gen, /refundAiTokens\(/, 'the legend writer never charged on the phone, so it does not refund');
-assert.match(libraryServer, /refund_ai_tokens/, 'charged but no AI card → refunded (on the server)');
+assert.match(screen, /claimLegendStory\(/, 'a paid reveal is claimed on the server before the card is shown');
+assert.match(screen, /refundAiTokens\('legend'\)/, 'a failed paid reveal is refunded');
+assert.match(screen, /story\.source !== 'library'/, 'a paid reveal is saved only when the library card loaded');
+assert.doesNotMatch(gen, /refundAiTokens\(/, 'the library render does not charge; the screen does');
+assert.doesNotMatch(libraryServer, /refund_ai_tokens/, 'the writer does not charge');
 assert.match(screen, /if \(!meetingRef\.current\) persist\(next\);/, 'a reload never overwrites a reveal being saved');
 assert.match(screen, /LegendShareSheet/, 'share uses the on-screen Modal capture (share-card.tsx pattern)');
 const cardSrc = read('src/components/legend-figure-card.tsx');

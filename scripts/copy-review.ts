@@ -34,6 +34,7 @@ const BATCH = 12;
 /** Player-facing sources. Question scores, daily lines, and legend biography stay out. */
 const ALLOW = [
   'src/lib/story-library/lines.ts',
+  'src/lib/story-library/legend-lines.ts',
   'src/lib/insight-bank',
   'src/lib/category-bank',
   'src/lib/story-v3',
@@ -57,16 +58,18 @@ const SKIP_FILE = [
 ];
 
 function loadEnvFile(): void {
-  const file = path.join(ROOT, '.env.local');
-  if (!existsSync(file)) return;
-  for (const line of readFileSync(file, 'utf8').split(/\r?\n/)) {
-    const trimmed = line.trim();
-    if (!trimmed || trimmed.startsWith('#')) continue;
-    const eq = trimmed.indexOf('=');
-    if (eq === -1) continue;
-    const key = trimmed.slice(0, eq).trim();
-    if (process.env[key] !== undefined) continue;
-    process.env[key] = trimmed.slice(eq + 1).trim().replace(/^["']|["']$/g, '');
+  for (const name of ['.env.local', '.env']) {
+    const file = path.join(ROOT, name);
+    if (!existsSync(file)) continue;
+    for (const line of readFileSync(file, 'utf8').split(/\r?\n/)) {
+      const trimmed = line.trim();
+      if (!trimmed || trimmed.startsWith('#')) continue;
+      const eq = trimmed.indexOf('=');
+      if (eq === -1) continue;
+      const key = trimmed.slice(0, eq).trim();
+      if (process.env[key] !== undefined) continue;
+      process.env[key] = trimmed.slice(eq + 1).trim().replace(/^["']|["']$/g, '');
+    }
   }
 }
 
@@ -326,7 +329,7 @@ async function main(): Promise<void> {
   const deepseek = Boolean(process.env.DEEPSEEK_API_KEY);
   if (!gemini && !deepseek) {
     console.warn(
-      'copy:review: skipped. Neither GEMINI_API_KEY nor DEEPSEEK_API_KEY is set. No lines were rewritten. Builds are not blocked.',
+      'copy:review: skipped. Neither GEMINI_API_KEY nor DEEPSEEK_API_KEY is set. Those are the same names as the Supabase Edge Function secrets. A gitignored .env.local or .env is read when present. No lines were rewritten. Builds are not blocked.',
     );
     return;
   }

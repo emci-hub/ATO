@@ -58,13 +58,11 @@ ATO is for reflection and fun. It is not therapy, counselling or medical advice.
 
 ## AI in ATO
 
-ATO uses AI in two places only: Legends cards and category deep dives. Everything else in the app, including Insights and the Story, is written ahead of time and picked on your phone; no model is called for it.
+Legends cards and category deep dives come from a stored story library on your phone. No model writes a new card when you open one. Insights, questions and category cards are stored copy too. Some lines in the story library were drafted earlier with Google's Gemini model. Your phone does not send a prompt for these cards.
 
-Legends cards and category deep dives come from a shared library. Some were written ahead of time with Google's Gemini model. While on-request writing is switched on, a new card may also be written by Gemini on our server when you ask for one, and is then added to the library and shown to other people with similar leanings. Your phone never talks to Google and holds no provider key. The phone sends our server only the kind of card and a trait group (a short key worked out from your leanings), never text you typed. The server builds the prompt from that group alone: for a deep dive, each trait in the category marked as leaning one way, the other way, or in the middle; for a Legends card, one to three trait sides you share with that legend (or a single side where you are its opposite), and at most one more side where you differ. The prompt contains no name, handle, email, user ID, device ID, exact scores or answers, and everyone in the same group gets the same prompt. Google receives the request from our server, not from your phone, so it does not get your IP address or device details. ATO itself keeps, linked to your account, which AI features you used and when, and which library cards you were shown; it does not keep the prompt or the reply text.
+What Google does with a request depends on Google's Gemini API terms: on Google's paid plan, Google does not use prompts or replies to improve its products; on its free plan, Google may use them to improve its products and people at Google may review them. On both, Google keeps them for a limited time to detect abuse. Because a request that was sent never contained anything that identifies you, it cannot be tied back to you either way.
 
-What Google does with a request depends on Google's Gemini API terms: on Google's paid plan, Google does not use prompts or replies to improve its products; on its free plan, Google may use them to improve its products and people at Google may review them. On both, Google keeps them for a limited time to detect abuse. Because the request never contains anything that identifies you, it cannot be tied back to you either way.
-
-You choose whether ATO's AI is on (the consent card, and later on the You tab). With it off, our server writes nothing new for you.
+The story library does not ask you to turn a model on. The You tab no longer sends Legends cards or category deep dives to a model.
 
 ## Who else processes your data
 
@@ -103,7 +101,7 @@ ATO is for people 18 and older. Marking yourself as "going" to an 18+ night also
 
 - **Circle:** accept or decline requests, remove a friend, block, report, and switch visits and compare on or off per friend.
 - **Notifications:** ATO asks once, after your first insight, and you can change it in your phone's settings or on the You tab at any time.
-- **ATO's AI:** you can turn ATO's AI on or off on the You tab.
+- **Story library:** Legends cards and category deep dives are stored copy. The You tab no longer sends them to a model.
 - **See or correct your data:** email us (below) to ask what we hold about you or to correct it. We answer within 30 days.
 - **Delete your account:** always available in-app, at the bottom of the You tab. It deletes your account and the data stored under it: profile, answers, Checks, saved profiles, Circle links, requests and switches, Divecore save, AI usage log and token history. It revokes your Sign in with Apple token. This is permanent and cannot be undone. Two things are kept, each for 2 years:
   - a short deletion record (an ID, whether an Apple identity existed, and the result of the Apple revoke; no profile content), so we can prove the deletion happened;

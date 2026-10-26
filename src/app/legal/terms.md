@@ -16,7 +16,7 @@ You're responsible for what happens under your account. Keep your sign-in method
 
 ## 3. ATO is not a professional service
 
-ATO's insights, trait profile and AI-generated cards are for reflection and entertainment. They are not therapy, and not medical, psychological, legal or financial advice, and ATO is not a therapist, counselor or emergency service. Some cards (Legends cards and category deep dives) are written by an AI model and may be inaccurate or not apply to you. ATO does not scan, flag or log what you type in order to detect a crisis. If you're in crisis or need emergency help, contact local emergency services or a crisis line directly; the You tab lists support lines.
+ATO's insights, trait profile and story library cards are for reflection and entertainment. They are not therapy, and not medical, psychological, legal or financial advice, and ATO is not a therapist, counselor or emergency service. Some cards (Legends cards and category deep dives) come from a stored story library. Older lines in that library were drafted with Google's Gemini model and may be inaccurate or not apply to you. ATO does not scan, flag or log what you type in order to detect a crisis. If you're in crisis or need emergency help, contact local emergency services or a crisis line directly; the You tab lists support lines.
 
 ## 4. Acceptable use
 
@@ -45,11 +45,11 @@ Sign-up is open to anyone 18 or older. If you join through a friend's invite lin
 
 ## 8. Third-party services
 
-ATO relies on services including Supabase (database and sign-in), Google's Gemini API (the AI-written cards), Resend (sign-in emails), Sentry (crash reports), ImprovMX (support email forwarding) and Apple to function. Availability of ATO depends in part on these providers; we're not responsible for outages or issues caused by a third-party service being unavailable.
+ATO relies on services including Supabase (database and sign-in), Google's Gemini API (earlier drafts in the story library), Resend (sign-in emails), Sentry (crash reports), ImprovMX (support email forwarding) and Apple to function. Availability of ATO depends in part on these providers; we're not responsible for outages or issues caused by a third-party service being unavailable.
 
 ## 9. No warranty
 
-ATO is provided "as is." We don't guarantee it will be uninterrupted, error-free, or suitable for any particular purpose. AI-written cards may occasionally be inaccurate, repetitive, or not applicable to your situation.
+ATO is provided "as is." We don't guarantee it will be uninterrupted, error-free, or suitable for any particular purpose. Story library cards may occasionally be inaccurate, repetitive, or not applicable to your situation.
 
 ## 10. Limitation of liability
 

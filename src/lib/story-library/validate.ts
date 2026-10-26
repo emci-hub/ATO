@@ -120,7 +120,7 @@ function budgetIssues(lines: readonly StoryLine[]): string[] {
   }
   const groups = new Map<string, StoryLine[]>();
   for (const line of lines) {
-    const key = `${line.slot}|${line.trait}|${line.tier}`;
+    const key = `${line.slot}|${line.trait}|${line.tier}${line.legendId ? `|${line.legendId}` : ''}`;
     const group = groups.get(key) ?? [];
     group.push(line);
     groups.set(key, group);

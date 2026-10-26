@@ -2,12 +2,10 @@
  * Explore — the category deep dive (emci, 2026-10-08; moved from Home 2026-10-09).
  *
  * Pick a category → your leanings in it ("Adventurous 78%", worked out on the
- * phone, no AI) → "Write my deep dive" asks the `ai-library` Edge Function
- * (`writeNewDive`: the server checks consent, claims the daily card and the
- * tokens, then serves or writes it). One new card a day; a saved card opens
- * free. While `STORY_LIBRARY_RUNTIME` is on, the tap assembles approved Story
- * Library copy on the phone instead (no model, no token). The flag ships off.
- * Nothing here calls a model on mount (`check:no-auto-ai` lists this file).
+ * phone, no AI) → "Open my deep dive" assembles approved Story Library copy
+ * on the phone. A new page is the same library, charged by
+ * `claim_category_deep_dive`. Nothing here calls a model on mount
+ * (`check:no-auto-ai` lists this file).
  *
  * Separate from the daily insight above it, which stays stored copy.
  */
@@ -17,14 +15,13 @@ import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
 import { AiBadge } from '@/components/ai-badge';
 import { LibraryCardFooter } from '@/components/library-card-footer';
 import { TeamBadge } from '@/components/team-badge';
-import { wantLibraryCards } from '@/lib/ai-library/client';
-import { diveBucketKey } from '@/lib/ai-library/deep-dive';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { useAccountDataEpoch } from '@/lib/account-data-epoch';
-import { AI_TAP_TIMEOUT_MS } from '@/lib/ai/timeouts';
+import { AI_PRICE_LABEL, AI_TOKEN_PRICE, AI_TOKENS_NEEDED } from '@/lib/ato-tokens';
+import { refundAiTokens } from '@/lib/ato-tokens-server';
 import { codeForAxis } from '@/lib/axis-codes';
 import { AXIS_SHORT_NAME } from '@/lib/axis-poles';
 import { readCategory, type CategoryDef } from '@/lib/categories';
@@ -36,14 +33,14 @@ import {
   leanLabel,
   type DiveLean,
 } from '@/lib/category-deep-dive/dive';
-import { diveLibraryKey, openLibraryDive, writeNewDive, type LibraryDiveOutcome } from '@/lib/category-deep-dive/library';
-import { STORY_LIBRARY_RUNTIME } from '@/lib/story-library/flags';
+import { diveLibraryKey } from '@/lib/category-deep-dive/library';
 import { hydrateStoryLibraryDevice, persistShownDevice } from '@/lib/story-library/device-store';
 import { renderLibraryDive } from '@/lib/story-library/render';
 import { getShownIds, lineIdsOf, rememberShown } from '@/lib/story-library/shown';
+import { diveBucketKey } from '@/lib/ai-library/deep-dive';
 import { LIBRARY_VERSION } from '@/lib/ai-library/types';
-import { AI_PRICE_LABEL, AI_TOKEN_PRICE, AI_TOKENS_NEEDED } from '@/lib/ato-tokens';
 import {
+  claimCategoryDeepDive,
   diveDay,
   fetchServerDives,
   loadDiveState,
@@ -55,7 +52,6 @@ import {
 } from '@/lib/category-deep-dive/store';
 import { titleCase } from '@/lib/legend-figures/story';
 import type { TraitTrack } from '@/lib/trait-stability';
-import { withTimeout } from '@/lib/timeout';
 
 export const DEEP_DIVE_KICKER = 'Deep dive';
 export const DEEP_DIVE_LEDE = 'How far you lean in each part of you. Tap one and ATO writes a deep dive about it.';
@@ -66,9 +62,9 @@ export const DEEP_DIVE_WRITE_LABEL = 'Write my deep dive';
 /** Shared library (wave93): a card from people with leanings like yours, free. */
 export const DEEP_DIVE_OPEN_LABEL = 'Open my deep dive · free';
 export const DEEP_DIVE_ANOTHER_LABEL = 'Show me another angle · free';
-export const DEEP_DIVE_NEW_LABEL = 'Write me a brand-new one';
+export const DEEP_DIVE_NEW_LABEL = 'New deep dive from the library';
 export const DEEP_DIVE_EMPTY =
-  `You’ve read every deep dive for leanings like yours. A new one is being written for you, free: check back in about an hour. Or write one now for ${AI_PRICE_LABEL}.`;
+  'You’ve read every deep dive for leanings like yours. Open this one again for a fresh page from the story library.';
 export const DEEP_DIVE_DAILY = 'That’s today’s free deep dives. A brand-new one is still open, or come back tomorrow.';
 export const DEEP_DIVE_USED = 'That’s the most deep dives for today. Come back tomorrow.';
 export const DEEP_DIVE_FAILED = 'ATO couldn’t write this one just now. Try again tomorrow.';
@@ -84,16 +80,16 @@ export const DEEP_DIVE_PCT_NOTE = '50% is the middle; 100% is all the way to tha
 export function CategoryDeepDiveCard({
   userId,
   tracks,
-  consentGranted,
   tokens,
   onSpent,
 }: {
   userId: string;
   tracks: readonly TraitTrack[];
+  /** Kept so Explore can still pass the old consent flag. A library page does not read it. */
   consentGranted: boolean;
-  /** ATO token balance: each deep dive (2 cards) costs one AI view (wave92). */
+  /** Balance for the paid extra page. The free open does not charge. */
   tokens: number;
-  /** Refresh the balance after a charge or refund. */
+  /** Refresh the balance after a paid page is claimed. */
   onSpent: () => void;
 }) {
   const theme = useTheme();
@@ -151,110 +147,66 @@ export function CategoryDeepDiveCard({
   const def: CategoryDef | null = defs.find((row) => row.id === selected && readyIds.has(row.id)) ?? null;
   const leans: DiveLean[] = useMemo(() => (def ? categoryLeans(def, tracks) : []), [def, tracks]);
   const key = def ? diveLibraryKey(def.id, leans) : '';
-  /** The library had nothing new for this bucket today: offer a brand-new card. */
-  const [needNew, setNeedNew] = useState<string | null>(null);
   const entry: DiveEntry | null = def && state ? state.dives[def.id] ?? null : null;
   const fresh = entry != null && entry.dive.leansKey === key;
   /** A bundled card written today for tomorrow: shown once its day comes. */
   const opensLater = entry?.dive.opensOn != null && entry.dive.opensOn > diveDay();
-  // Tokens decide how often now (wave92); the server keeps a safety ceiling of 5 a day.
-  const affordable = tokens >= AI_TOKEN_PRICE;
 
-  /**
-   * Library first (wave93): 'library' serves an unseen card from people with
-   * leanings like yours, free; 'new' asks the server to write a brand-new one
-   * (5 tokens). The phone never sends any text, only the bucket.
-   */
+  /** Assemble a story-library page. 'library' is free. 'new' claims the token price first, then another page. */
   const open = useCallback(
     async (mode: 'library' | 'new') => {
-      if (STORY_LIBRARY_RUNTIME) {
-        if (!def || writingRef.current || leans.length === 0) return;
-        writingRef.current = true;
-        setBusy(true);
-        setNote(null);
-        try {
-          await hydrateStoryLibraryDevice();
-          const dive = renderLibraryDive({
-            categoryId: def.id,
-            leans,
-            seed: `${userId}|${def.id}|${key}`,
-            shown: getShownIds(),
-          });
-          rememberShown(dive.lineIds);
-          void persistShownDevice();
-          const today = diveDay();
-          const made: DiveEntry = { dive: { ...dive, leansKey: key }, madeOn: today };
-          const base = stateRef.current ?? { userId, dives: {} };
-          const next: DiveLocalState = { ...base, dives: { ...base.dives, [def.id]: made } };
-          stateRef.current = next;
-          setState(next);
-          void saveDiveState(next);
-          void saveServerDive(made);
-        } finally {
-          writingRef.current = false;
-          setBusy(false);
-        }
-        return;
-      }
       if (!def || writingRef.current || leans.length === 0) return;
       writingRef.current = true;
       setBusy(true);
       setNote(null);
       const epochAtStart = epochRef.current;
+      let charged = false;
       try {
-        const pending: Promise<LibraryDiveOutcome> = (
-          mode === 'library' ? openLibraryDive(def.id, leans) : writeNewDive(def.id, leans)
-        ).catch(() => ({ ok: false, reason: 'failed' }) as const);
-        let outcome = await withTimeout(pending, AI_TAP_TIMEOUT_MS, 'deep-dive').catch(() => null);
-        if (outcome == null) {
-          setNote(DEEP_DIVE_SLOW);
-          outcome = await pending;
+        if (mode === 'new') {
+          if (tokens < AI_TOKEN_PRICE) {
+            setNote(AI_TOKENS_NEEDED);
+            return;
+          }
+          const claim = await claimCategoryDeepDive();
+          if (epochRef.current !== epochAtStart) {
+            if (claim === 'ok') await refundAiTokens('deep_dive');
+            return;
+          }
+          if (claim !== 'ok') {
+            setNote(claim === 'tokens' ? AI_TOKENS_NEEDED : claim === 'used' ? DEEP_DIVE_USED : DEEP_DIVE_FAILED);
+            return;
+          }
+          charged = true;
         }
-        // A wipe while it was being written wins: never write it back.
+        await hydrateStoryLibraryDevice();
+        if (charged && epochRef.current !== epochAtStart) await refundAiTokens('deep_dive');
         if (epochRef.current !== epochAtStart) return;
-        if (mode === 'new') onSpent();
-        if (!outcome.ok) {
-          if (outcome.reason === 'empty' || outcome.reason === 'daily') setNeedNew(def.id);
-          // Look-ahead (wave94): the hourly fill writes this group next, free.
-          if (outcome.reason === 'empty') void wantLibraryCards('deep_dive', [diveBucketKey(def.id, leans)]);
-          setNote(
-            outcome.reason === 'empty'
-              ? DEEP_DIVE_EMPTY
-              : outcome.reason === 'daily'
-                ? DEEP_DIVE_DAILY
-                : outcome.reason === 'tokens'
-                  ? AI_TOKENS_NEEDED
-                  : outcome.reason === 'quota'
-                    ? DEEP_DIVE_USED
-                    : outcome.reason === 'consent'
-                      ? DEEP_DIVE_AI_OFF
-                      : outcome.reason === 'missing'
-                        ? DEEP_DIVE_UNAVAILABLE
-                        : DEEP_DIVE_FAILED,
-          );
-          return;
-        }
-        setNeedNew(null);
+        const dive = renderLibraryDive({
+          categoryId: def.id,
+          leans,
+          seed: `${userId}|${def.id}|${key}|${mode}|${charged ? String(Date.now()) : 'free'}`,
+          shown: getShownIds(),
+        });
+        rememberShown(dive.lineIds);
+        void persistShownDevice();
         const today = diveDay();
-        const served = outcome.served;
-        const made: DiveEntry = {
-          dive: { ...served.card, categoryId: def.id, leansKey: key },
-          madeOn: today,
-          libraryId: served.id,
-          others: served.others,
-        };
+        const made: DiveEntry = { dive: { ...dive, leansKey: key }, madeOn: today };
         const base = stateRef.current ?? { userId, dives: {} };
         const next: DiveLocalState = { ...base, dives: { ...base.dives, [def.id]: made } };
         stateRef.current = next;
         setState(next);
         void saveDiveState(next);
         void saveServerDive(made);
+        if (charged) onSpent();
+      } catch {
+        if (charged) await refundAiTokens('deep_dive');
+        setNote(DEEP_DIVE_FAILED);
       } finally {
         writingRef.current = false;
         setBusy(false);
       }
     },
-    [def, leans, key, userId, onSpent],
+    [def, leans, key, userId, tokens, onSpent],
   );
 
   const detail = def ? (
@@ -304,50 +256,39 @@ export function CategoryDeepDiveCard({
         </ThemedText>
       ) : null}
 
-      {!consentGranted && !STORY_LIBRARY_RUNTIME ? (
-        fresh ? null : (
-          <ThemedText type="small" themeColor="textSecondary">
-            {DEEP_DIVE_AI_OFF}
+      <Pressable
+        onPress={() => void open('library')}
+        disabled={busy || state == null}
+        accessibilityRole="button"
+        accessibilityLabel={`${fresh ? DEEP_DIVE_ANOTHER_LABEL : DEEP_DIVE_OPEN_LABEL}: ${categoryDisplayName(def)}`}
+        style={({ pressed }) => [
+          fresh ? styles.secondary : styles.button,
+          fresh ? { borderColor: theme.border } : { backgroundColor: theme.accentFill },
+          (pressed || busy) && styles.pressed,
+        ]}>
+        {busy ? (
+          <ActivityIndicator color={fresh ? theme.text : theme.onAccent} />
+        ) : (
+          <ThemedText type="smallBold" style={[styles.buttonText, { color: fresh ? theme.text : theme.onAccent }]}>
+            {fresh ? DEEP_DIVE_ANOTHER_LABEL : DEEP_DIVE_OPEN_LABEL}
           </ThemedText>
-        )
-      ) : needNew !== def.id || STORY_LIBRARY_RUNTIME ? (
-        <Pressable
-          onPress={() => void open('library')}
-          disabled={busy || state == null}
-          accessibilityRole="button"
-          accessibilityLabel={`${fresh ? DEEP_DIVE_ANOTHER_LABEL : DEEP_DIVE_OPEN_LABEL}: ${categoryDisplayName(def)}`}
-          style={({ pressed }) => [
-            fresh ? styles.secondary : styles.button,
-            fresh ? { borderColor: theme.border } : { backgroundColor: theme.accentFill },
-            (pressed || busy) && styles.pressed,
-          ]}>
-          {busy ? (
-            <ActivityIndicator color={fresh ? theme.text : theme.onAccent} />
-          ) : (
-            <ThemedText type="smallBold" style={[styles.buttonText, { color: fresh ? theme.text : theme.onAccent }]}>
-              {fresh ? DEEP_DIVE_ANOTHER_LABEL : DEEP_DIVE_OPEN_LABEL}
-            </ThemedText>
-          )}
-        </Pressable>
-      ) : !affordable ? (
-        <ThemedText type="small" themeColor="textSecondary">
-          {AI_TOKENS_NEEDED}
-        </ThemedText>
-      ) : (
+        )}
+      </Pressable>
+      {tokens >= AI_TOKEN_PRICE ? (
         <Pressable
           onPress={() => void open('new')}
           disabled={busy || state == null}
           accessibilityRole="button"
           accessibilityLabel={`${DEEP_DIVE_NEW_LABEL}, ${AI_PRICE_LABEL}: ${categoryDisplayName(def)}`}
-          style={({ pressed }) => [styles.button, { backgroundColor: theme.accentFill }, (pressed || busy) && styles.pressed]}>
-          {busy ? (
-            <ActivityIndicator color={theme.onAccent} />
-          ) : (
-            <ThemedText type="smallBold" style={[styles.buttonText, { color: theme.onAccent }]}>
-              {DEEP_DIVE_NEW_LABEL} · {AI_PRICE_LABEL}
-            </ThemedText>
-          )}
+          style={({ pressed }) => [styles.secondary, { borderColor: theme.border }, (pressed || busy) && styles.pressed]}>
+          <ThemedText type="smallBold" style={styles.buttonText}>
+            {DEEP_DIVE_NEW_LABEL} · {AI_PRICE_LABEL}
+          </ThemedText>
         </Pressable>
+      ) : (
+        <ThemedText type="small" themeColor="textSecondary">
+          {AI_TOKENS_NEEDED}
+        </ThemedText>
       )}
       {note ? (
         <ThemedText type="small" themeColor="textSecondary">
