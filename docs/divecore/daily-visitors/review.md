@@ -41,8 +41,8 @@ Void Raven + the five mecha), skipping your pet's hero. Their stickers are baked
 that would push the notice past 26 characters (today only Ironclad Kabuto) says "<Name> visited." instead of
 "dropped by." so it stays one line on an SE.
 
-Flag note: `VISITORS_COPY_REVIEWED` is `true` in code (since the first roster was read), so these 30 lines already
-count as reviewed although emci has not read them yet. Setting the flag back to `false` is emci's call.
+Flag note: `VISITORS_COPY_REVIEWED` is `true` in code. emci read these 30 lines on 2026-10-26 and approved them
+with no changes.
 
 | Hero | 01 arrive | 02 sticker | 03 line | 04 look | 05 visit | 06 visit |
 |---|---|---|---|---|---|---|
