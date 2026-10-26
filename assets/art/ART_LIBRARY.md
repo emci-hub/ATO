@@ -1,6 +1,6 @@
 # ATO art library
 
-Generated. 577 live entries.
+Generated. 579 live entries.
 Open `assets/art/_contact/library.html` (desktop / file://) or `library-portable.html` on a phone.
 Every tile is a preview (animated main clip, still, or individual sprites) — not the raw sheet.
 Reuse before create. New art goes in `assets/art/<category>/in-use|unused/<set>/<variant>/`.
@@ -8,7 +8,7 @@ Viewer lists one card per set (not each clip/file).
 
 ## Categories
 
-- **heroes** (200: 58 in use / 142 unused) — Heroes
+- **heroes** (202: 60 in use / 142 unused) — Heroes
 - **enemies-bosses** (32: 24 in use / 8 unused) — Enemies / bosses
 - **ui** (26: 11 in use / 15 unused) — UI
 - **icons** (148: 67 in use / 81 unused) — Icons
@@ -519,6 +519,13 @@ Viewer lists one card per set (not each clip/file).
 |---|---|---|---|---|
 | `hero.void-raven.streetwear.combat` | 1112×1175 | approved | — | assets/art/legacy-play-sheets.json, assets/play/sheets/streetwear/heroes/void-raven/sheets.json, src/play/generated-play-sheets.ts |
 | `hero.void-raven.streetwear.core` | 871×797 | approved | — | assets/art/legacy-play-sheets.json, assets/play/sheets/streetwear/heroes/void-raven/sheets.json, src/play/generated-play-sheets.ts |
+
+## heroes · zipline-shade · streetwear · in-use
+
+| id | size | status | score | usedBy |
+|---|---|---|---|---|
+| `hero.zipline-shade.streetwear.combat` | 1255×989 | approved | — | assets/art/legacy-play-sheets.json, assets/play/sheets/streetwear/heroes/zipline-shade/sheets.json, src/play/generated-play-sheets.ts |
+| `hero.zipline-shade.streetwear.core` | 629×713 | approved | — | assets/art/legacy-play-sheets.json, assets/play/sheets/streetwear/heroes/zipline-shade/sheets.json, src/play/generated-play-sheets.ts |
 
 ## enemies-bosses · abyssal-demon-guardian · dungeon-legends · unused
 

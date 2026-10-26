@@ -84,15 +84,15 @@ const close = (a: number, b: number, eps = 1e-9) => Math.abs(a - b) < eps;
 
 const inPools = EGG_TYPES.flatMap((e) => EGG_POOLS[e]);
 assert.equal(new Set(inPools).size, inPools.length, 'each hero is in exactly one egg');
-assert.deepEqual([...inPools].sort(), allHeroes().map((h) => h.id).sort(), 'all 17 heroes are in a pool');
-assert.deepEqual(EGG_TYPES.map((e) => EGG_POOLS[e].length), [6, 5, 6], 'Knight 6 / Wizard 5 / Village 6');
+assert.deepEqual([...inPools].sort(), allHeroes().map((h) => h.id).sort(), 'all 18 heroes are in a pool');
+assert.deepEqual(EGG_TYPES.map((e) => EGG_POOLS[e].length), [6, 6, 6], 'Knight 6 / Wizard 6 / Village 6');
 for (const egg of EGG_TYPES) {
   const odds = heroOdds(egg);
   assert.ok(close(odds.reduce((s, o) => s + o.pct, 0), 100), `${egg}: hero odds sum to 100`);
   assert.ok(odds.every((o) => close(o.pct, 100 / EGG_POOLS[egg].length)), `${egg}: an even split`);
 }
 assert.ok(EGG_POOLS.village.includes('kitsune'));
-ok('pools: all 17 heroes, each in one egg (6/5/6), even hero odds within each egg');
+ok('pools: all 18 heroes, each in one egg (6/6/6), even hero odds within each egg');
 
 /* ----------------------------------------------------------- grade odds --- */
 

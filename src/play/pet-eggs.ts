@@ -45,7 +45,7 @@ export const EGG_LINE: Record<EggType, string> = {
 /** Themed hero pools — every hero with art, each in exactly one egg. */
 export const EGG_POOLS: Record<EggType, readonly string[]> = {
   knight: ['aurex', 'oni', 'raven', 'void-raven', 'archangel', 'ironclad-kabuto'],
-  wizard: ['morwen', 'corvus', 'maldrath', 'velkhar', 'frost-lich'],
+  wizard: ['morwen', 'corvus', 'maldrath', 'velkhar', 'frost-lich', 'zipline-shade'],
   village: ['neon-viper', 'elowen', 'kael', 'sak', 'cyber-shinobi', 'kitsune'],
 };
 
@@ -471,6 +471,7 @@ export const HERO_SHINY_COLOR: Record<string, string> = {
   'cyber-shinobi': '#FFB347',
   kitsune: '#6FE0FF',
   'ironclad-kabuto': '#FF9F1C',
+  'zipline-shade': '#B8FF3C',
 };
 export const HERO_DYE_COLOR: Record<string, string> = {
   aurex: '#FF4D6D',
@@ -490,6 +491,7 @@ export const HERO_DYE_COLOR: Record<string, string> = {
   'cyber-shinobi': '#7C9CFF',
   kitsune: '#B98CFF',
   'ironclad-kabuto': '#E85D75',
+  'zipline-shade': '#9B6BFF',
 };
 
 /** A shiny's colour: its hero's own for Classic, else the Prism style's. */

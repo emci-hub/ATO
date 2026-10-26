@@ -1,0 +1,56 @@
+{
+  "tool": "pixellab",
+  "model": "skeleton-v3 (Walk) + v3 custom (Attack, Dash, Skill, Hurt)",
+  "prompt": "own-style shuriken-launcher / scarf-cable set, see params.clips",
+  "negative": null,
+  "seed": null,
+  "size": "128 import, clips 168/172 px, padded to 192 (lowest pixel on row 150)",
+  "view": "low top-down",
+  "direction": null,
+  "palette": null,
+  "referenceImageIds": [],
+  "params": {
+    "pixellabCharacter": "8633d7f7-d2a1-45d7-8be9-c5de30c8df83",
+    "importSource": "docs/art/mecha-m1/zipline-shade.png (first sketch, kept exactly), create_character v3 reference import, 4 directions, 2 gens",
+    "clips": {
+      "Walk": "animate_character skeleton-v3 template walking-6-frames, east + west + north + south (3 gens each)",
+      "Attack": "animate_character v3 custom 'always facing right/left, twin forearm shuriken launchers fire a burst, scarf cables whip back', 8 frames + reference. East kept as rolled (lime crescent bursts, emci: keep the crescents); east frame 2 had detached boots, replaced by a copy of frame 1 (longer wind-up). West = one roll (launcher energy rings)",
+      "Dash": "v3 custom 'zips forward along an invisible cable, low gliding lunge, scarf streaming back', east + west (4 each)",
+      "Skill": "v3 custom 'crouches, throws scarf cables out like a web, void ring + splash at the feet'. East re-rolled once with 'strict side profile' (first roll turned to camera, white splash); west first roll kept (violet void ring + lime splash)",
+      "Hurt": "v3 custom 'struck, recoils, scarf cables whip forward', 6 frames + reference. East re-rolled once with 'strict side profile' (first roll turned to camera); west first roll kept",
+      "Idle": "art engine breathing-idle (0 gens), rig art-src/rigs/zipline-shade.json (scarf cables = cape part), 4 frames 400/250/400/250, 7 gates pass"
+    },
+    "effects": "Attack east lime crescents, Attack west launcher rings, Skill void ring + lime splash (all drawn by PixelLab inside the clip)",
+    "discarded": "Skill east + Hurt east first rolls (7 gens)"
+  },
+  "cost": 51,
+  "createdAt": "2026-10-26T00:00:00.000Z",
+  "operator": "agent",
+  "picked": true,
+  "critique": {
+    "score": null,
+    "notes": "M3 hero 2; frames padded to 192, feet row 150; raw PixelLab output kept in m3-test/ (outside raw/)"
+  },
+  "dirMap": {
+    "animations\\Attack": "attack",
+    "animations\\Attack\\east": "e",
+    "animations\\Attack\\west": "w",
+    "animations\\Dash": "dash",
+    "animations\\Dash\\east": "e",
+    "animations\\Dash\\west": "w",
+    "animations\\Hurt": "hurt",
+    "animations\\Hurt\\east": "e",
+    "animations\\Hurt\\west": "w",
+    "animations\\Idle": "idle",
+    "animations\\Idle\\east": "e",
+    "animations\\Idle\\west": "w",
+    "animations\\Skill": "skill",
+    "animations\\Skill\\east": "e",
+    "animations\\Skill\\west": "w",
+    "animations\\Walk": "walk",
+    "animations\\Walk\\east": "e",
+    "animations\\Walk\\west": "w",
+    "animations\\Walk\\north": "n",
+    "animations\\Walk\\south": "s"
+  }
+}

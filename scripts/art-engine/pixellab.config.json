@@ -1,6 +1,6 @@
 {
   "_readme": "The ONE place the art engine keeps PixelLab facts: tool names, costs, limits. The pre-flight in docs/art/PIXELLAB_ANIMATION.md section 0 re-checks these with search_help and updates ONLY this file (then bump lastVerified). Engine code never hardcodes a tool name, price or limit.",
-  "lastVerified": "2026-10-22",
+  "lastVerified": "2026-10-25",
   "verifiedBy": "search_help on the pixellab MCP server (see PIXELLAB_ANIMATION.md change log)",
   "balance": { "note": "run get_balance before any paid step; Tier 2 cycle resets 2026-11-11", "askEmciAboveGenerations": 20 },
   "tools": {
@@ -8,7 +8,13 @@
       "name": "create_character",
       "mode": "v3",
       "costGenerations": 0.25,
-      "note": "all direction_images supplied = nothing generated; south must face the camera; reference <= 256x256"
+      "note": "all direction_images supplied = nothing generated; south must face the camera; reference <= 256x256. A sketch with NO direction_images (4 directions) costs 2 generations (M3 hero 2); get_upload_url + curl returns an upload:<id> ref (valid 3 days), not an https URL"
+    },
+    "customAnimation": {
+      "name": "animate_character",
+      "mode": "v3",
+      "costPerDirection": 4,
+      "note": "custom action_description, one direction per job; 8 frames at a 128 import = a 168-172 px canvas = 4 gens (6 frames = 3); put 'always facing left/right' and 'strict side profile' in the prompt; frame 0 is the reference, drop it"
     },
     "templateAnimation": {
       "name": "animate_character",

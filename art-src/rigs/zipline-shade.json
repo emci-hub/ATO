@@ -1,0 +1,31 @@
+{
+  "version": 1,
+  "hero": "zipline-shade",
+  "slug": "hero.zipline-shade.streetwear",
+  "canvas": [192, 192],
+  "rawDir": "art-src/pixellab/hero.zipline-shade.streetwear/migrated/raw",
+  "footRow": 150,
+  "heightBand": [108, 120],
+  "lines": { "hip": 112, "shoulder": 62 },
+  "directions": {
+    "east": {
+      "parts": {
+        "cape": [[70, 50], [86, 50], [86, 56], [82, 60], [82, 80], [70, 80]]
+      }
+    },
+    "west": {
+      "parts": {
+        "cape": [[100, 50], [124, 50], [124, 95], [106, 95], [106, 60], [100, 56]]
+      }
+    }
+  },
+  "recipes": {
+    "breathing-idle": {
+      "offsets": [0, 1, 2, 1],
+      "capeOffsets": [0, 1, 1, 1],
+      "headExtra": [0, 0, 1, 0],
+      "ms": [400, 250, 400, 250]
+    }
+  },
+  "notes": "Zipline Shade (M3 hero 2): thin drone-ninja, light hover breath; the scarf cables are the cape part (they trail a frame late); legs and boots locked below the hip line. Masks read off the 192 rotations (lowest pixel row 150, body rows 37-150)."
+}

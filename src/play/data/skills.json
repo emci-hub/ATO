@@ -151,5 +151,14 @@
     "damage": 4,
     "slow_ms": 2000,
     "slow_pct": 0.34
+  },
+  {
+    "id": "skill_zipline_shade",
+    "name": "Shade Veil",
+    "description": "A void ring slows and splashes nearby foes.",
+    "radius": 25,
+    "damage": 4,
+    "slow_ms": 2000,
+    "slow_pct": 0.34
   }
 ]

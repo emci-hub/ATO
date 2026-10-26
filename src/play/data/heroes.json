@@ -321,5 +321,24 @@
       "skill": "Skill",
       "hurt": "Hurt"
     }
+  },
+  {
+    "id": "zipline-shade",
+    "name": "Zipline Shade",
+    "acquire": "Free (airport)",
+    "role": "hero",
+    "folder": "assets/play/skins/cast/heroes/zipline-shade",
+    "unlock": "free_farm",
+    "skillId": "skill_zipline_shade",
+    "kit": { "behavior": "splash", "element": "void" },
+    "face": "ew",
+    "clips": {
+      "idle": "Idle",
+      "walk": "Walk",
+      "dash": "Dash",
+      "attack": "Attack",
+      "skill": "Skill",
+      "hurt": "Hurt"
+    }
   }
 ]

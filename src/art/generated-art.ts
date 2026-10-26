@@ -73,6 +73,8 @@ export const ART_SOURCES: Record<string, ImageSourcePropType> = {
   'hero.void-raven.cast.atlas': require('@/assets/art/heroes/in-use/void-raven/cast/atlas.png'),
   'hero.void-raven.streetwear.combat': require('@/assets/art/heroes/in-use/void-raven/streetwear/hero_void-raven_streetwear.combat.png'),
   'hero.void-raven.streetwear.core': require('@/assets/art/heroes/in-use/void-raven/streetwear/hero_void-raven_streetwear.core.png'),
+  'hero.zipline-shade.streetwear.combat': require('@/assets/art/heroes/in-use/zipline-shade/streetwear/hero_zipline-shade_streetwear.combat.png'),
+  'hero.zipline-shade.streetwear.core': require('@/assets/art/heroes/in-use/zipline-shade/streetwear/hero_zipline-shade_streetwear.core.png'),
   'icon.items.streetwear.bark-aegis': require('@/assets/art/icons/in-use/items/streetwear/bark-aegis.png'),
   'icon.items.streetwear.bud-staff': require('@/assets/art/icons/in-use/items/streetwear/bud-staff.png'),
   'icon.items.streetwear.copper-keeper': require('@/assets/art/icons/in-use/items/streetwear/copper-keeper.png'),
@@ -325,6 +327,8 @@ export type ArtId =
   | 'hero.void-raven.cast.atlas'
   | 'hero.void-raven.streetwear.combat'
   | 'hero.void-raven.streetwear.core'
+  | 'hero.zipline-shade.streetwear.combat'
+  | 'hero.zipline-shade.streetwear.core'
   | 'icon.currency.streetwear.cur-caps'
   | 'icon.currency.streetwear.cur-prism'
   | 'icon.currency.streetwear.cur-shine'
@@ -1494,6 +1498,12 @@ export const ART = {
         core: 'hero.void-raven.streetwear.core',
       },
     },
+    ziplineShade: {
+      streetwear: {
+        combat: 'hero.zipline-shade.streetwear.combat',
+        core: 'hero.zipline-shade.streetwear.core',
+      },
+    },
   },
   icon: {
     currency: {
@@ -2338,6 +2348,15 @@ export const SHEET = {
       skill: 'sheets/streetwear/heroes/void-raven/Skill',
       hurt: 'sheets/streetwear/heroes/void-raven/Hurt',
       faint: 'sheets/streetwear/heroes/void-raven/Faint',
+    },
+    'zipline-shade': {
+      rotations: 'sheets/streetwear/heroes/zipline-shade/rotations',
+      idle: 'sheets/streetwear/heroes/zipline-shade/Idle',
+      walk: 'sheets/streetwear/heroes/zipline-shade/Walk',
+      dash: 'sheets/streetwear/heroes/zipline-shade/Dash',
+      attack: 'sheets/streetwear/heroes/zipline-shade/Attack',
+      skill: 'sheets/streetwear/heroes/zipline-shade/Skill',
+      hurt: 'sheets/streetwear/heroes/zipline-shade/Hurt',
     },
   },
   enemy: {

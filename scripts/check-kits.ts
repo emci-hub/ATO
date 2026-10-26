@@ -76,6 +76,7 @@ const EXPECTED: Record<string, [Behavior, Element]> = {
   morwen: ['pull', 'tide'],
   'void-raven': ['pull', 'void'],
   'ironclad-kabuto': ['chain', 'tide'],
+  'zipline-shade': ['splash', 'void'],
 };
 
 const heroes = allHeroes();

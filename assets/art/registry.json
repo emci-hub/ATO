@@ -2767,6 +2767,64 @@
       "part": "core"
     },
     {
+      "id": "hero.zipline-shade.streetwear.combat",
+      "path": "assets/art/heroes/in-use/zipline-shade/streetwear/hero_zipline-shade_streetwear.combat.png",
+      "category": "heroes",
+      "type": "character",
+      "theme": "streetwear",
+      "placement": "floor",
+      "camera": "td-3q-low",
+      "size": {
+        "w": 1255,
+        "h": 989
+      },
+      "status": "approved",
+      "source": "pixellab",
+      "diskBytes": 154522,
+      "decodedBytes": 4964780,
+      "format": "png32",
+      "notes": "md5:a232119853430084981a876610b0088a",
+      "inUse": true,
+      "set": "zipline-shade",
+      "variant": "streetwear",
+      "tags": [],
+      "usedBy": [
+        "assets/art/legacy-play-sheets.json",
+        "assets/play/sheets/streetwear/heroes/zipline-shade/sheets.json",
+        "src/play/generated-play-sheets.ts"
+      ],
+      "part": "combat"
+    },
+    {
+      "id": "hero.zipline-shade.streetwear.core",
+      "path": "assets/art/heroes/in-use/zipline-shade/streetwear/hero_zipline-shade_streetwear.core.png",
+      "category": "heroes",
+      "type": "character",
+      "theme": "streetwear",
+      "placement": "floor",
+      "camera": "td-3q-low",
+      "size": {
+        "w": 629,
+        "h": 713
+      },
+      "status": "approved",
+      "source": "pixellab",
+      "diskBytes": 47644,
+      "decodedBytes": 1793908,
+      "format": "png8",
+      "notes": "md5:0058339461df07ff8058b06802a97d1b",
+      "inUse": true,
+      "set": "zipline-shade",
+      "variant": "streetwear",
+      "tags": [],
+      "usedBy": [
+        "assets/art/legacy-play-sheets.json",
+        "assets/play/sheets/streetwear/heroes/zipline-shade/sheets.json",
+        "src/play/generated-play-sheets.ts"
+      ],
+      "part": "core"
+    },
+    {
       "id": "icon.currency.streetwear.cur-caps",
       "path": "assets/art/icons/unused/currency/streetwear/cur-caps.png",
       "type": "icon",
