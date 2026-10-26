@@ -63,8 +63,8 @@ const appJson = JSON.parse(read('app.json')) as {
 };
 const manifests = appJson.expo.ios.privacyManifests;
 const privacyPlist = read('PrivacyInfo.xcprivacy');
-const labels = read('src/app/legal/app-privacy-labels.md');
-const policy = read('src/app/legal/privacy.md');
+const labels = read('src/content/legal/app-privacy-labels.md');
+const policy = read('src/content/legal/privacy.md');
 const widgetPlist = read('targets/widget/PrivacyInfo.xcprivacy');
 
 assert.equal(manifests.NSPrivacyTracking, false);
@@ -138,9 +138,9 @@ export function legalFinalProblems(text: string, kind: 'privacy' | 'terms' | 'su
 const htmlText = (f: string) =>
   read(f).replace(/<[^>]+>/g, ' ').replace(/&amp;/g, '&').replace(/\s+/g, ' ').replace(/ ([,.;:!?)])/g, '$1');
 for (const [f, kind, text] of [
-  ['src/app/legal/privacy.md', 'privacy', policy],
+  ['src/content/legal/privacy.md', 'privacy', policy],
   ['landing/privacy.html', 'privacy', htmlText('landing/privacy.html')],
-  ['src/app/legal/terms.md', 'terms', read('src/app/legal/terms.md')],
+  ['src/content/legal/terms.md', 'terms', read('src/content/legal/terms.md')],
   ['landing/terms.html', 'terms', htmlText('landing/terms.html')],
   ['landing/support.html', 'support', htmlText('landing/support.html')],
 ] as const) {
@@ -175,15 +175,15 @@ export function missingSentences(md: string, html: string): string[] {
     .filter((s) => s.length > 30 && !page.includes(s));
 }
 for (const [md, html] of [
-  ['src/app/legal/privacy.md', 'landing/privacy.html'],
-  ['src/app/legal/terms.md', 'landing/terms.html'],
+  ['src/content/legal/privacy.md', 'landing/privacy.html'],
+  ['src/content/legal/terms.md', 'landing/terms.html'],
 ] as const) {
   const miss = missingSentences(read(md), htmlText(html));
   assert.deepEqual(miss, [], `${html} is out of sync with ${md}: ${miss.slice(0, 3).join(' | ')}`);
 }
 assert.deepEqual(missingSentences('- We keep chat for 30 days, then delete it.', '<p>We keep chat for 30 days, then delete it.</p>'), [], 'pass: same sentence');
 assert.equal(missingSentences('- We keep chat for 30 days, then delete it.', '<p>We keep chat for 60 days, then delete it.</p>').length, 1, 'fail: a changed number');
-ok('landing privacy/terms carry every sentence of src/app/legal (pass/fail pairs)');
+ok('landing privacy/terms carry every sentence of src/content/legal (pass/fail pairs)');
 
 // wave111: the retention the policy promises is a real daily job.
 {
@@ -226,8 +226,8 @@ export function extraPageSentences(htmlRaw: string, mdRaw: string): string[] {
     .filter((s) => s.length > 30 && /\s/.test(s) && !mdText.includes(s));
 }
 for (const [html, md] of [
-  ['landing/privacy.html', 'src/app/legal/privacy.md'],
-  ['landing/terms.html', 'src/app/legal/terms.md'],
+  ['landing/privacy.html', 'src/content/legal/privacy.md'],
+  ['landing/terms.html', 'src/content/legal/terms.md'],
 ] as const) {
   const extra = extraPageSentences(read(html), read(md));
   assert.deepEqual(extra, [], `${html} says things ${md} does not: ${extra.slice(0, 3).join(' | ')}`);
@@ -274,7 +274,7 @@ for (const f of ['landing/privacy.html']) {
   const html = read(f).replace(/<[^>]+>/g, ' ').replace(/&amp;/g, '&');
   assert.deepEqual(policyRuleProblems(html), [], `${f}: ${policyRuleProblems(html).join('; ')}`);
 }
-for (const f of ['src/app/legal/terms.md', 'landing/terms.html']) {
+for (const f of ['src/content/legal/terms.md', 'landing/terms.html']) {
   const t = read(f);
   assert.doesNotMatch(t, /\bmute\b/i, `${f} mentions mute`);
   assert.doesNotMatch(t, /\bin Chat\b|chat history/i, `${f} describes Chat as live`);

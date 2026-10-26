@@ -171,7 +171,7 @@ ok('wired as check:circle-chat');
   assert.match(pack, /\| Export compliance \| `ITSAppUsesNonExemptEncryption = false` \| `ITSAppUsesNonExemptEncryption = false`/);
   assert.match(pack, /\| Messaging \/ chat between users \| No \| Yes \|/);
   assert.match(pack, /add \*\*Emails or Text Messages\*\*/);
-  const labels = read('src/app/legal/app-privacy-labels.md');
+  const labels = read('src/content/legal/app-privacy-labels.md');
   assert.match(labels, /reported (chat )?messages?/i, 'labels name reported chat messages');
   ok('chat screen, store pack and privacy labels describe chat, retention and reports');
 }

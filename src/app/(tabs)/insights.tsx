@@ -11,6 +11,7 @@ import { TodayFocusCard } from '@/components/insights/today-focus-card';
 import { Appear, SkeletonCard } from '@/components/motion';
 import { NAV_PIXEL_HEADER_INSET } from '@/components/nav-pixel';
 import { ThemedText } from '@/components/themed-text';
+import { TokenChip } from '@/components/token-chip';
 import { ThemedView } from '@/components/themed-view';
 import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
 import { useSession } from '@/hooks/use-session';
@@ -132,7 +133,12 @@ export default function InsightsScreen() {
           contentContainerStyle={styles.scrollContent}
           contentInsetAdjustmentBehavior="never">
           <View style={styles.header}>
-            <ThemedText type="subtitle">{INSIGHTS_TITLE}</ThemedText>
+            <View style={styles.titleRow}>
+              <ThemedText type="subtitle" style={styles.flexText}>
+                {INSIGHTS_TITLE}
+              </ThemedText>
+              <TokenChip />
+            </View>
             <ThemedText type="small" themeColor="textSecondary">
               {SAGE_NOT_A_PERSON}
             </ThemedText>
@@ -232,6 +238,12 @@ const styles = StyleSheet.create({
     gap: Spacing.half,
     paddingBottom: Spacing.two,
     paddingRight: NAV_PIXEL_HEADER_INSET,
+  },
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: Spacing.two,
   },
   lockedRow: {
     flexDirection: 'row',

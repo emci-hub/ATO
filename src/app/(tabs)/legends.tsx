@@ -16,6 +16,7 @@ import {
 import { NAV_PIXEL_HEADER_INSET } from '@/components/nav-pixel';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { TokenChip } from '@/components/token-chip';
 import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { useAccountDataEpoch } from '@/lib/account-data-epoch';
@@ -446,7 +447,12 @@ export default function LegendsScreen() {
           {...NO_PINCH_ZOOM}
           contentContainerStyle={styles.scroll}
           contentInsetAdjustmentBehavior="never">
-          <ThemedText type="subtitle">Legends</ThemedText>
+          <View style={styles.titleRow}>
+            <ThemedText type="subtitle" style={styles.flex}>
+              Legends
+            </ThemedText>
+            <TokenChip />
+          </View>
           <ThemedText type="small" themeColor="textSecondary">
             {LEGENDS_LEDE}
           </ThemedText>
@@ -672,6 +678,7 @@ const styles = StyleSheet.create({
     paddingTop: NAV_PIXEL_HEADER_INSET,
     paddingBottom: BottomTabInset + Spacing.four,
   },
+  titleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: Spacing.two },
   heading: { marginTop: Spacing.two },
   panel: { borderWidth: 1, borderRadius: 14, padding: Spacing.three, gap: Spacing.two },
   link: { paddingVertical: 4 },
