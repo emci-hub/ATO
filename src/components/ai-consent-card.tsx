@@ -20,10 +20,10 @@ export type ConsentContext = 'home';
  */
 // Legends cards and category deep dives come from the stored story library.
 // Insights, questions, and category cards were already stored copy. No model
-// writes a card when someone opens one. Copy review, outside the app, is the
-// only remaining model use, and it is not disclosed here as a product feature.
+// writes a card when someone opens one. ATO calls no outside AI service at all;
+// copy review is done by an agent reading the copy (docs/copy-review.md).
 export const AI_USE_DISCLOSURE =
-  'ATO writes your Legends cards and your category deep dives from a stored story library. No model writes them, and they never include your name or your answers.';
+  'ATO writes your Legends cards and your category deep dives from a stored story library. No model writes them, ATO uses no outside AI service, and the cards never include your name or your answers.';
 
 const LIBRARY_BODY =
   'ATO writes the personal part of your Legends cards and the category deep dives you ask for ' +

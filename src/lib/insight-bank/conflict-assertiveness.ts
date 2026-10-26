@@ -248,10 +248,10 @@ export const CONFLICT_ASSERTIVENESS_IDEAS: readonly InsightIdea[] = [
       'You usually share your preference first, so others know where you stand.',
       'When the group seems stuck, you tend to push for a choice.',
     ],
-    why: 'Naming what you want moves things along, but others might go quiet and not say what they prefer.',
+    why: 'When you name what you want early, others might hold back what they prefer.',
     try: [
-      'Ask the quietest person in the group what they’d choose before you push for a decision, so their view counts.',
-      'Say your preference second instead of first once this week, so you see what others bring up.',
+      'Ask the quietest person in the group what they would choose before you push for a decision.',
+      'Say your preference second instead of first once this week.',
     ],
     watch: [
       'Notice who hasn’t spoken before the group decides.',
@@ -356,30 +356,30 @@ export const CONFLICT_ASSERTIVENESS_IDEAS: readonly InsightIdea[] = [
   }),
   idea('ftw_conflict_assertiveness_l_11', ['conflict_assertiveness:low'], {
     focus: [
-      'When someone cancels on you again, you tend to say it’s okay and feel upset later.',
+      'When someone cancels plans, you tend to say it is fine even if it bothers you.',
       'You usually keep your feelings to yourself after a friend lets you down.',
       'When a partner does something that hurts, you tend to wait for it to pass.',
     ],
-    why: 'Keeping the peace protects the moment, but feelings you don’t share can sit with you and shape how you see the person.',
+    why: 'Keeping the peace protects the moment, but feelings you don’t share can sit with you and shape how you see the other person.',
     try: [
-      'Tell the person one sentence about how it felt, with no demand attached, so it’s out.',
-      'Write the feeling in your notes first, so you know what you want to say.',
+      'Tell the other person one sentence about how you felt, with no demand attached.',
+      'Write down how you feel first, so you know what you want to say.',
     ],
     watch: [
       'Notice what you feel later that you didn’t say at the time.',
-      'Notice how the person reacts when you’re honest in a gentle way.',
+      'Notice how someone reacts when you’re honest in a gentle way.',
     ],
   }),
   idea('ftw_conflict_assertiveness_l_12', ['conflict_assertiveness:low'], {
     focus: [
       'When a group makes a choice you disagree with, you tend to go along and say nothing.',
-      'You usually wait until the meeting is over to share your concerns, if at all.',
+      'You usually wait until a discussion is over to share your concerns, if at all.',
       'When others sound sure, you tend to doubt your own view and stay quiet.',
     ],
-    why: 'Your view might be the one the group is missing, and it only helps if someone hears it.',
+    why: 'Your view might be the one a group is missing, and it only helps if someone hears it.',
     try: [
-      'Share one question in the next meeting, so you speak up without needing to disagree.',
-      'Send a short message to the group after a meeting with your point, so it still gets heard.',
+      'Share one question in your next discussion, so you speak up without needing to disagree.',
+      'Send a short message after a discussion with your point, so it still gets heard.',
     ],
     watch: [
       'Notice how often your quiet concern turns out to matter later.',

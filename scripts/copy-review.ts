@@ -1,20 +1,18 @@
 /**
- * Review changed player-facing lines against docs/voice-guide.md.
+ * Extract changed player-facing lines for an AGENT copy review against
+ * docs/voice-guide.md. This script calls no model and needs no API key.
  *
- * Run: npm run copy:review
- * Self-check (no key, no writes): npm run copy:review -- --self-test
+ * Run: npm run copy:review            (prints the queue to stdout)
+ *      npm run copy:review -- --out docs/copy-review-queue.md
+ * Self-check (no writes): npm run copy:review -- --self-test
  *
  * Diff base is COPY_REVIEW_BASE, else origin/main, else this repo's default
- * branch (master). The model key is the server secret GEMINI_API_KEY, with
- * DEEPSEEK_API_KEY if Gemini is missing or fails. Neither key is hardcoded.
- * If both are unset, the script warns and exits 0 so a build is not blocked.
- *
- * A rewrite is written back only when it keeps the same slots and stays one
- * line. The log is docs/copy-review-log.md. Deterministic checks are separate
- * and still run after this.
+ * branch (master). The reviewing agent reads the queue, edits the lines by
+ * hand under the voice guide, and logs each change in docs/copy-review-log.md.
+ * See docs/copy-review.md, "Agent review (no API)".
  */
 import { execSync } from 'node:child_process';
-import { existsSync, readFileSync, writeFileSync, appendFileSync } from 'node:fs';
+import { readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 
 import {
@@ -29,7 +27,6 @@ import {
 const ROOT = path.resolve(__dirname, '..');
 const GUIDE = path.join(ROOT, 'docs/voice-guide.md');
 const LOG = path.join(ROOT, 'docs/copy-review-log.md');
-const BATCH = 12;
 
 /** Player-facing sources. Question scores, daily lines, and legend biography stay out. */
 const ALLOW = [
@@ -56,22 +53,6 @@ const SKIP_FILE = [
   /generated/,
   /\.test\.tsx?$/,
 ];
-
-function loadEnvFile(): void {
-  for (const name of ['.env.local', '.env']) {
-    const file = path.join(ROOT, name);
-    if (!existsSync(file)) continue;
-    for (const line of readFileSync(file, 'utf8').split(/\r?\n/)) {
-      const trimmed = line.trim();
-      if (!trimmed || trimmed.startsWith('#')) continue;
-      const eq = trimmed.indexOf('=');
-      if (eq === -1) continue;
-      const key = trimmed.slice(0, eq).trim();
-      if (process.env[key] !== undefined) continue;
-      process.env[key] = trimmed.slice(eq + 1).trim().replace(/^["']|["']$/g, '');
-    }
-  }
-}
 
 function git(args: string): string {
   return execSync(`git ${args}`, { cwd: ROOT, encoding: 'utf8', maxBuffer: 32 * 1024 * 1024 });
@@ -192,82 +173,6 @@ function collect(): { base: string; note: string; lines: CopyLine[] } {
   return { base: ref, note, lines: playerLinesFromDiff(diff) };
 }
 
-async function completeGemini(prompt: string): Promise<string> {
-  const key = process.env.GEMINI_API_KEY ?? '';
-  if (!key) throw new Error('gemini_key_missing');
-  const model = process.env.GEMINI_MODEL || 'gemini-3.7-flash';
-  const body = {
-    contents: [{ role: 'user', parts: [{ text: prompt }] }],
-    generationConfig: {
-      temperature: 0.2,
-      maxOutputTokens: 4096,
-      responseMimeType: 'application/json',
-    },
-  };
-  const res = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`,
-    {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-goog-api-key': key },
-      body: JSON.stringify(body),
-      signal: AbortSignal.timeout(45_000),
-    },
-  );
-  if (!res.ok) throw new Error(`Gemini ${res.status}`);
-  const data = (await res.json()) as { candidates?: { content?: { parts?: { text?: string }[] } }[] };
-  const text = data.candidates?.[0]?.content?.parts?.map((part) => part.text ?? '').join('') ?? '';
-  if (!text.trim()) throw new Error('Gemini empty');
-  return text;
-}
-
-async function completeDeepSeek(prompt: string): Promise<string> {
-  const key = process.env.DEEPSEEK_API_KEY ?? '';
-  if (!key) throw new Error('deepseek_key_missing');
-  const model = process.env.DEEPSEEK_MODEL || 'deepseek-v4-flash';
-  const res = await fetch('https://api.deepseek.com/chat/completions', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${key}` },
-    body: JSON.stringify({
-      model,
-      messages: [{ role: 'user', content: prompt }],
-      temperature: 0.2,
-      max_tokens: 4096,
-      response_format: { type: 'json_object' },
-    }),
-    signal: AbortSignal.timeout(45_000),
-  });
-  if (!res.ok) throw new Error(`DeepSeek ${res.status}`);
-  const data = (await res.json()) as { choices?: { message?: { content?: unknown } }[] };
-  const text = data.choices?.[0]?.message?.content;
-  if (typeof text !== 'string' || !text.trim()) throw new Error('DeepSeek empty');
-  return text;
-}
-
-async function complete(prompt: string): Promise<string | null> {
-  try {
-    return await completeGemini(prompt);
-  } catch (err) {
-    const why = err instanceof Error ? err.message.slice(0, 80) : 'gemini failed';
-    console.warn(`copy:review: Gemini skipped (${why}). Trying DeepSeek.`);
-    try {
-      return await completeDeepSeek(prompt);
-    } catch (next) {
-      const second = next instanceof Error ? next.message.slice(0, 80) : 'deepseek failed';
-      console.warn(`copy:review: DeepSeek skipped (${second}).`);
-      return null;
-    }
-  }
-}
-
-function appendLog(rows: { file: string; before: string; after: string; reason: string }[]): void {
-  if (rows.length === 0) return;
-  const stamp = new Date().toISOString();
-  const blocks = rows.map(
-    (row) => `- file: ${row.file}\n  - old: ${row.before}\n  - new: ${row.after}\n  - reason: ${row.reason}`,
-  );
-  appendFileSync(LOG, `\n## ${stamp}\n\n${blocks.join('\n\n')}\n`, 'utf8');
-}
-
 function selfTest(): void {
   const diff = [
     'diff --git a/src/lib/story-library/lines.ts b/src/lib/story-library/lines.ts',
@@ -313,72 +218,33 @@ function selfTest(): void {
   console.log('copy:review self-test: ok');
 }
 
-async function main(): Promise<void> {
+function main(): void {
   if (process.argv.includes('--self-test')) {
     selfTest();
     return;
   }
-  loadEnvFile();
   const { base, note, lines } = collect();
-  const limit = Number(process.env.COPY_REVIEW_LIMIT ?? '');
-  const batchLines = Number.isFinite(limit) && limit > 0 ? lines.slice(0, limit) : lines;
-  console.log(`copy:review base: ${base} (${note})`);
-  console.log(`player-facing lines: ${lines.length}`);
-  if (batchLines.length < lines.length) console.log(`this run reviews ${batchLines.length} (COPY_REVIEW_LIMIT)`);
-  const gemini = Boolean(process.env.GEMINI_API_KEY);
-  const deepseek = Boolean(process.env.DEEPSEEK_API_KEY);
-  if (!gemini && !deepseek) {
-    console.warn(
-      'copy:review: skipped. Neither GEMINI_API_KEY nor DEEPSEEK_API_KEY is set. Those are the same names as the Supabase Edge Function secrets. A gitignored .env.local or .env is read when present. No lines were rewritten. Builds are not blocked.',
-    );
-    return;
-  }
-  console.log(`model key: ${gemini ? 'GEMINI_API_KEY' : 'DEEPSEEK_API_KEY'}`);
   const guide = readFileSync(GUIDE, 'utf8');
-  const applied: { file: string; before: string; after: string; reason: string }[] = [];
-  const byId = new Map(batchLines.map((line) => [line.id, line]));
-  for (let index = 0; index < batchLines.length; index += BATCH) {
-    const batch = batchLines.slice(index, index + BATCH);
-    const reply = await complete(reviewBeforeQueue(guide, batch));
-    if (!reply) {
-      console.warn(`copy:review: batch ${index / BATCH + 1} had no model reply. Those lines were left as they are.`);
-      continue;
-    }
-    let fixes: CopyFix[] = [];
-    try {
-      fixes = parseCopyReviewResponse(reply);
-    } catch (err) {
-      console.warn(`copy:review: batch ${index / BATCH + 1} reply was not usable (${err instanceof Error ? err.message : 'parse'}).`);
-      continue;
-    }
-    for (const fix of fixes) {
-      const line = byId.get(fix.id);
-      if (!line) continue;
-      const problem = acceptFix(line.text, fix);
-      if (problem) {
-        console.warn(`copy:review: rejected ${fix.id} (${problem}).`);
-        continue;
-      }
-      const full = path.join(ROOT, line.file);
-      const source = readFileSync(full, 'utf8');
-      const next = replaceLine(source, line.text, fix.newText);
-      if (!next) {
-        console.warn(`copy:review: ${fix.id} was not a single exact line in ${line.file}. Left it.`);
-        continue;
-      }
-      writeFileSync(full, next);
-      applied.push({ file: line.file, before: line.text, after: fix.newText, reason: fix.reason });
-      console.log(`rewrote ${line.file}`);
-      console.log(`  old: ${line.text}`);
-      console.log(`  new: ${fix.newText}`);
-      console.log(`  reason: ${fix.reason}`);
-    }
+  const out = [
+    `# Copy review queue`,
+    '',
+    `Base: ${base} (${note}). Lines: ${lines.length}. Generated by scripts/copy-review.ts; no model was called.`,
+    '',
+    'Reviewer (an agent or a person): apply docs/voice-guide.md to each line below. Keep every {slot}, keep it one line,',
+    `edit the source by hand, and log old/new/reason in ${path.relative(ROOT, LOG)}.`,
+    '',
+    '## Review brief',
+    '',
+    reviewBeforeQueue(guide, lines),
+    '',
+  ].join('\n');
+  const at = process.argv.indexOf('--out');
+  if (at > -1 && process.argv[at + 1]) {
+    writeFileSync(path.join(ROOT, process.argv[at + 1]!), out, 'utf8');
+    console.log(`copy:review: wrote ${lines.length} line(s) to ${process.argv[at + 1]}`);
+  } else {
+    console.log(out);
   }
-  appendLog(applied);
-  console.log(`copy:review: ${applied.length} line(s) rewritten. Run npm run check:player-copy and npm run check:story-library next.`);
 }
 
-main().catch((err: unknown) => {
-  console.error(err instanceof Error ? err.message : err);
-  process.exit(1);
-});
+main();

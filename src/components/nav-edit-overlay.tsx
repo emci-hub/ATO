@@ -26,7 +26,7 @@ import { controlBorderColor } from '@/lib/theme/chrome';
  * The bar is one draggable list — Home and Insights can move within it but can
  * never leave. Below, the pool lists every tab: in-bar pool tabs show "On bar"
  * (tap to remove), out-of-bar pool tabs show "Add" (up to POOL_SLOTS). Locked
- * tabs sit under "Not unlocked yet". Done commits the layout atomically.
+ * tabs sit under "Not available yet". Done commits the layout atomically.
  */
 export function NavEditOverlay({
   lockedTabs = [],

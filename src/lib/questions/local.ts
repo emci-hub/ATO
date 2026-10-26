@@ -73,7 +73,7 @@ export function bankLeadDrafts(): QuestionDraft[] {
 }
 
 /**
- * Deterministic batch when Gemini is off. Which axes appear is unchanged; the
+ * Deterministic batch (the only path; no model is called). Which axes appear is unchanged; the
  * draft shown for each axis is now chosen by that axis's own answer count, so
  * a repeat batch on the same axis asks something new. Empty `tracks` reads as
  * "nothing answered" and yields the locked draft for every axis.

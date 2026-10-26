@@ -26,7 +26,7 @@ export function CategoryCompactCard({
         <ThemedText type="smallBold">{categoryDisplayName(def)}</ThemedText>
       </ConceptHint>
       <ThemedText type="small" themeColor="textSecondary">
-        {copy?.line ?? empty ?? 'Not showing yet.'}
+        {copy?.line ?? empty ?? 'Nothing to compare yet.'}
       </ThemedText>
       {!CONCEPT_COPY_REVIEWED && PRE_LAUNCH_DEV ? (
         <ThemedText type="code" themeColor="textSecondary">

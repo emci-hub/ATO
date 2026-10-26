@@ -671,7 +671,6 @@ export function PushStatus() {
  * ---------------------------------------------------------------------- */
 
 const LABS: readonly { label: string; href: Href; note: string }[] = [
-  { label: 'AI lab', href: '/ai-lab', note: 'switch the AI provider' },
   { label: 'Theme lab', href: '/theme-lab', note: 'appearance modes' },
   { label: 'Pixel lab', href: '/pixel-lab', note: 'sprites' },
   { label: 'Profile cards lab', href: '/profile-card-lab', note: 'Change answers + card binder, sample data' },

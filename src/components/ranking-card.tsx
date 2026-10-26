@@ -248,7 +248,7 @@ function RankRow({
           style={[styles.handle, { backgroundColor: theme.backgroundSelected }]}
           accessibilityRole="adjustable"
           accessibilityLabel={`Move: ${text}`}
-          accessibilityHint="Drag to change order, most you at the top"
+          accessibilityHint="Drag to reorder, with what fits you best at the top."
           testID={`ranking-handle-${id}`}>
           <ThemedText type="smallBold" themeColor="textSecondary">
             {'\u2630'}

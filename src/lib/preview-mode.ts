@@ -119,7 +119,6 @@ export const PREVIEW_ME_OVERLAY: Readonly<Record<string, unknown>> = {
 
 /** RPCs that only read. Anything not listed is refused while previewing. */
 export const PREVIEW_READ_RPCS: ReadonlySet<string> = new Set([
-  'ai_provider_counts',
   'assert_invite_usable',
   'auth_has_password',
   'daily_pick_split',

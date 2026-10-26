@@ -35,7 +35,7 @@ export function ProfileBinder({ cards }: { cards: readonly ProfileSnapshot[] }) 
     <View style={styles.body}>
       <ThemedText type="small" themeColor="textSecondary">
         {cards.length < 2
-          ? 'Your cards collect here: one when your profile really changes in a month, and one before changes or a fresh start.'
+          ? 'Your cards collect here: one when your profile updates in a month, and one before a fresh start.'
           : compare
             ? 'Comparing two cards. Tap one to put it back.'
             : 'Tap two cards to compare them.'}

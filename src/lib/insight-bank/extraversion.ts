@@ -200,7 +200,7 @@ export const EXTRAVERSION_IDEAS: readonly InsightIdea[] = [
       'You usually do your best work with other people around, even if you’re not talking.',
       'After a full day at home alone, you tend to feel restless and want to see someone.',
     ],
-    why: 'Having people around keeps you going, but some tasks need quiet time that you might avoid without noticing.',
+    why: 'Having people around keeps you going, even when a task needs quiet focus.',
     try: [
       'Plan a quiet hour for focused work, then time with people after it, so you have something to look forward to.',
       'Go work from a café or call a friend on a break, so alone time doesn’t drain you.',
@@ -214,11 +214,11 @@ export const EXTRAVERSION_IDEAS: readonly InsightIdea[] = [
     focus: [
       'When a group chat is active, you tend to reply quickly and often.',
       'You usually have lots to say in group chats, and silence there bothers you a little.',
-      'When friends text, you tend to answer within minutes and expect the same back.',
+      'When friends text, you tend to answer within minutes.',
     ],
     why: 'Fast replies keep you close to friends, but others may answer on their own schedule and not mean anything by it.',
     try: [
-      'Next time a friend takes a day to reply, wait before assuming anything, so you give them room.',
+      'Next time a friend takes a day to reply, give them time before following up.',
       'Mute one busy chat for an afternoon, so you can focus without missing anything important.',
     ],
     watch: [
@@ -232,10 +232,10 @@ export const EXTRAVERSION_IDEAS: readonly InsightIdea[] = [
       'You usually don’t want a good night out to end, even when it’s getting late.',
       'When friends start heading home, you tend to suggest one more stop.',
     ],
-    why: 'Keeping a good night going makes memories, but the next morning can feel harder if you stay out longer than you planned.',
+    why: 'Staying out longer than you planned can make the next morning feel harder.',
     try: [
       'Pick a time to leave before you go out, so the night ends on your terms.',
-      'Plan something you enjoy the next morning, so heading home earlier feels like a trade.',
+      'Plan something you enjoy the next morning, so heading home earlier feels worth it.',
     ],
     watch: [
       'Notice how you feel the morning after a late night.',
@@ -245,7 +245,7 @@ export const EXTRAVERSION_IDEAS: readonly InsightIdea[] = [
   idea('ftw_extraversion_h_10', ['extraversion:high'], {
     focus: [
       'When you meet people from different parts of your life, you tend to connect them to each other.',
-      'You usually introduce friends who haven’t met and like seeing them get along.',
+      'You enjoy introducing friends who haven’t met yet.',
       'When someone is new to a group, you tend to make sure they feel included.',
     ],
     why: 'Bringing people together makes your circle warmer, but you can end up planning for everyone and forget what you want.',
@@ -260,7 +260,7 @@ export const EXTRAVERSION_IDEAS: readonly InsightIdea[] = [
   }),
   idea('ftw_extraversion_h_11', ['extraversion:high'], {
     focus: [
-      'When you tell a story, you tend to add detail and pace so it lands well.',
+      'When you tell a story, you tend to add detail and pace.',
       'You usually hold the room when you talk, and others tend to listen.',
       'In a group, you tend to talk a lot more than the quieter people there.',
     ],
@@ -277,10 +277,10 @@ export const EXTRAVERSION_IDEAS: readonly InsightIdea[] = [
   idea('ftw_extraversion_h_12', ['extraversion:high'], {
     focus: [
       'When you’re stressed, you tend to call or visit someone instead of working it out alone.',
-      'You usually feel better after talking a hard day out loud with another person.',
+      'You usually feel better after talking through a hard day with another person.',
       'When something goes wrong, you tend to tell a friend right away.',
     ],
-    why: 'Talking things out helps you feel lighter, but friends are not always free, and some problems need quiet thinking too.',
+    why: 'Talking things out helps you feel lighter, but some problems need quiet thinking too.',
     try: [
       'Write down what’s bothering you before you call, so you know what you want to say.',
       'Ask a friend if it’s a good time before you vent, so they can give you their full attention.',
@@ -296,14 +296,14 @@ export const EXTRAVERSION_IDEAS: readonly InsightIdea[] = [
       'You usually find small talk with people you don’t know well tiring.',
       'At work, you tend to save your attention for the conversations that matter most.',
     ],
-    why: 'Saving your attention lets you do better at the big conversations, but coworkers might see short hellos as distance.',
+    why: 'Saving your attention helps with important conversations, but coworkers might mistake your quietness for distance.',
     try: [
       'Ask one coworker one friendly question this week, so they see you’re approachable.',
       'Pick one short chat a day to stay in a minute longer, so small talk adds up to a connection.',
     ],
     watch: [
       'Notice which small talk feels easy and which feels like effort.',
-      'Notice how coworkers respond when you stay for a minute longer.',
+      'Notice how people respond when you stay for a minute longer.',
     ],
   }),
   idea('ftw_extraversion_l_08', ['extraversion:low'], {
@@ -328,7 +328,7 @@ export const EXTRAVERSION_IDEAS: readonly InsightIdea[] = [
       'You usually need a quiet evening after a full weekend with people.',
       'When your calendar gets full of plans, you tend to feel worn out even if the plans were fun.',
     ],
-    why: 'Time alone is how you recharge, but friends may take a quick exit or a slow reply as a sign you didn’t enjoy yourself.',
+    why: 'You recharge with time to yourself, but friends may take a quick exit or a slow reply as a sign you didn’t enjoy yourself.',
     try: [
       'Tell a friend you had a good time before you head home, so they know you enjoyed it.',
       'Leave one evening a week with no plans, so you have time to recover.',
@@ -341,7 +341,7 @@ export const EXTRAVERSION_IDEAS: readonly InsightIdea[] = [
   idea('ftw_extraversion_l_10', ['extraversion:low'], {
     focus: [
       'When you have something to say, you tend to think it through before you speak.',
-      'You usually prefer to send a message once you’ve thought about it than answer on the spot.',
+      'You usually prefer to send a message once you’ve thought about it rather than answer on the spot.',
       'In a quick back-and-forth, you tend to have your best answer a few minutes too late.',
     ],
     why: 'Thinking first makes your words clear, but in fast talks people may not wait for what you would have said.',

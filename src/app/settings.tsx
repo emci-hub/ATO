@@ -47,7 +47,7 @@ export const SEND_FEEDBACK_LABEL = 'Send feedback';
  * - **AI consent** — Apple 5.1.2: the disclosure renders unconditionally beside
  *   the consent control, and consent stays revocable here.
  * - **Build/update info** (`RunningUpdateLine`) — which OTA a bug report runs,
- *   and the only entrance to `/ai-lab` (5 taps, dev-gated).
+ *   and a 5-tap shortcut to `/dev-lab` (dev-gated).
  */
 export default function SettingsScreen() {
   const theme = useTheme();

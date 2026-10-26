@@ -10,14 +10,14 @@ export const CAT_LOVE: MapCard = {
     // Watchful + Private
     hh: {
       summary: [
-        'You want to feel close to someone, but you also pull back when it gets very tight.',
+        'You want to feel close to someone, but you also pull back when things feel too close.',
         'When a relationship matters, you worry about it and you also need your own space.',
         'You wonder where you stand with someone, and you still keep part of your day private.',
       ],
       strength: [
         'You notice small changes in how someone acts toward you, a shorter text or a quieter night.',
         'You care a lot about your relationships, even on the days you don’t show it.',
-        'You think carefully before you let someone see the private parts of your week.',
+        'You think carefully before you let someone see the parts of your life you keep private.',
       ],
       watchOut: [
         'Sometimes you pull away right when you most want a sign that they are still there.',
@@ -27,20 +27,20 @@ export const CAT_LOVE: MapCard = {
       tryThis: [
         'Tell one person close to you one thing you need, so they don’t have to guess.',
         'Write down what you’re worried about before you pull back, so you can see it on the page.',
-        'Text someone you care about a short check-in, so the thread stays open.',
+        'Text a short check-in to someone you care about.',
       ],
     },
     // Watchful + Close
     hl: {
       summary: [
-        'You want a lot of closeness and contact, and a quiet stretch can worry you.',
-        'When you’re close to someone, you want to talk often, and a quiet day can feel unsure.',
-        'You give a lot in a relationship, and you want to know it is coming back.',
+        'A quiet stretch without contact can worry you.',
+        'When you are close to someone, you want to talk often.',
+        'You want the effort you put into a relationship to be matched.',
       ],
       strength: [
-        'You stay open and warm with the people you love, in person and in the thread.',
-        'You put real effort into staying close: the text, the plan, the check-in.',
-        'You notice how people are doing, and you reach out when they go quiet.',
+        'You stay open and warm with the people you love.',
+        'You put real effort into staying close to people.',
+        'You reach out when someone in your life goes quiet.',
       ],
       watchOut: [
         'Sometimes a slow reply feels like distance to you when it is only a busy afternoon.',
@@ -48,8 +48,8 @@ export const CAT_LOVE: MapCard = {
         'Sometimes you reach out only to calm a worry.',
       ],
       tryThis: [
-        'Put your phone away for twenty minutes after you send a message, so you aren’t waiting on it.',
-        'Tell your partner or a friend how often you like to talk, so you both know.',
+        'Put your phone away for twenty minutes after you send a message.',
+        'Tell your partner or a friend how often you like to talk.',
         'Plan something you enjoy alone tonight, so a quiet hour can feel good.',
       ],
     },
@@ -72,7 +72,7 @@ export const CAT_LOVE: MapCard = {
       ],
       tryThis: [
         'Tell someone close one thing you’re feeling this week, so they know you better.',
-        'Ask your partner or a close friend if they want more contact, so you can meet them.',
+        'Ask your partner or a close friend if they want more contact, so you can meet them halfway.',
         'Send a short message to someone you love, so they hear from you first.',
       ],
     },
@@ -81,12 +81,12 @@ export const CAT_LOVE: MapCard = {
       summary: [
         'You feel safe being close to people, and you don’t worry much about where you stand.',
         'When you’re in a relationship, you share openly and you trust the other person.',
-        'You enjoy being close, and you feel settled once you are in it.',
+        'You enjoy being close, and you feel settled once you are in a relationship.',
       ],
       strength: [
         'You make the people with you feel loved, and they can tell you trust them.',
         'You share what you feel, and you listen when they share back.',
-        'You can sit close on the couch without checking your phone for a sign all evening.',
+        'You can spend an evening together without worrying about where you stand.',
       ],
       watchOut: [
         'Sometimes you share more than someone new is ready to hear.',
