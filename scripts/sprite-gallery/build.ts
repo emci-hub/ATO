@@ -1,9 +1,10 @@
 /**
  * Sprite gallery builder — the "Streetwear Skin" artifact.
  *
- * Packs every character in assets/play/skins/streetwear/ into one sheet per
- * character, copies the stills (map, props, fx, ui, icons), and writes a
- * ready-to-publish page. Nothing here touches the app or its bundle.
+ * Packs every character (heroes, creeps, towers, bosses) into one sheet per
+ * character from art-src/pixellab/<kind>.<slug>.streetwear/migrated/raw, copies
+ * whichever stills of the old assets/play/skins/streetwear/ tree still exist
+ * (map, props, fx, ui, icons), and writes a ready-to-publish page. Nothing here touches the app or its bundle.
  *
  * Usage: npx tsx scripts/sprite-gallery/build.ts [outDir]
  *   outDir defaults to <os tmp>/ato-sprite-gallery
@@ -17,7 +18,18 @@ import path from 'node:path';
 import { PNG } from 'pngjs';
 
 const REPO = path.resolve(__dirname, '..', '..');
+// Old tree: only still groups (map, props, fx, ui, icons, shop, auras) may remain here; each is skipped when absent.
 const SRC = path.join(REPO, 'assets/play/skins/streetwear');
+const PIXELLAB = path.join(REPO, 'art-src/pixellab');
+/** Raw frames of one character: <kind>.<slug>.streetwear/migrated/raw (kind: hero|creep|tower|boss). */
+const rawDir = (kind: string, slug: string) => path.join(PIXELLAB, `${kind}.${slug}.streetwear`, 'migrated', 'raw');
+const slugsOf = (kind: string) =>
+  fs
+    .readdirSync(PIXELLAB)
+    .filter((d) => d.startsWith(`${kind}.`) && d.endsWith('.streetwear'))
+    .map((d) => d.slice(kind.length + 1, -'.streetwear'.length))
+    .filter((slug) => fs.existsSync(rawDir(kind, slug)))
+    .sort();
 const OUT = path.resolve(process.argv[2] ?? path.join(os.tmpdir(), 'ato-sprite-gallery'));
 
 const ROT = ['south', 'south-east', 'east', 'north-east', 'north', 'north-west', 'west', 'south-west'];
@@ -37,7 +49,7 @@ const pngs = (d: string) =>
     .map((f) => path.join(d, f));
 
 function sheetFor(dir: string, name: string): Sheet {
-  const rows = [{ key: 'rotations', files: ROT.map((r) => path.join(dir, 'rotations', `${r}.png`)) }];
+  const rows = [{ key: 'rotations', files: ROT.map((r) => path.join(dir, 'rotations', `${r}.png`)).filter((f) => fs.existsSync(f)) }];
   for (const c of CLIPS) {
     for (const f of FACES) {
       const d = path.join(dir, 'animations', c, f);
@@ -172,8 +184,8 @@ function buildAuras() {
 /** Finished shop cards (tier frame + element-coloured sword + tier gem) and the raw icons. */
 function buildShop() {
   const ui = path.join(SRC, 'ui');
-  if (!fs.existsSync(path.join(ui, 'rarity'))) return { cards: [] as Still[], icons: [] as Still[] };
-  const tiers: [string, string][] = [['common', 'ember'], ['rare', 'tide'], ['epic', 'root'], ['legendary', 'spark'], ['divine', 'void']];
+  const canCard = fs.existsSync(path.join(ui, 'rarity')) && fs.existsSync(path.join(ui, 'swords'));
+  const tiers: [string, string][] = canCard ? [['common', 'ember'], ['rare', 'tide'], ['epic', 'root'], ['legendary', 'spark'], ['divine', 'void']] : [];
   const cards = tiers.map(([tier, el]) => {
     const frame = read(path.join(ui, `rarity/frame-${tier}.png`));
     const card = new PNG({ width: frame.width, height: frame.height });
@@ -233,7 +245,7 @@ function main() {
     creeps: Record<string, Sheet>;
     towers: Record<string, Sheet>;
     bosses: Record<string, Sheet>;
-    anchor: Sheet;
+    anchor: Sheet | null;
     effects: Record<string, Record<string, Strip>>;
     auras: Record<string, Record<string, Strip>>;
     shop: { cards: Still[]; icons: Still[] };
@@ -245,7 +257,7 @@ function main() {
     creeps: {},
     towers: {},
     bosses: {},
-    anchor: sheetFor(path.join(SRC, '_anchor/street-ninja'), 'anchor'),
+    anchor: fs.existsSync(path.join(SRC, '_anchor/street-ninja')) ? sheetFor(path.join(SRC, '_anchor/street-ninja'), 'anchor') : null,
     effects: buildEffects(),
     auras: buildAuras(),
     shop: buildShop(),
@@ -253,20 +265,13 @@ function main() {
     splats: {},
     stills: {},
   };
-  for (const h of fs.readdirSync(path.join(SRC, 'heroes'))) {
-    data.heroes[h] = sheetFor(path.join(SRC, 'heroes', h), `hero-${h}`);
-  }
-  for (const c of fs.readdirSync(path.join(SRC, 'creeps'))) {
-    data.creeps[c] = sheetFor(path.join(SRC, 'creeps', c), `creep-${c}`);
-  }
-  for (const t of fs.readdirSync(path.join(SRC, 'towers'))) {
-    data.towers[t] = sheetFor(path.join(SRC, 'towers', t), `tower-${t}`);
-  }
-  for (const b of fs.readdirSync(path.join(SRC, 'boss'))) {
-    data.bosses[b] = sheetFor(path.join(SRC, 'boss', b), `boss-${b}`);
-  }
+  for (const h of slugsOf('hero')) data.heroes[h] = sheetFor(rawDir('hero', h), `hero-${h}`);
+  for (const c of slugsOf('creep')) data.creeps[c] = sheetFor(rawDir('creep', c), `creep-${c}`);
+  for (const t of slugsOf('tower')) data.towers[t] = sheetFor(rawDir('tower', t), `tower-${t}`);
+  for (const b of slugsOf('boss')) data.bosses[b] = sheetFor(rawDir('boss', b), `boss-${b}`);
 
   for (const s of ['hit-splat', 'hit-splat-ember', 'hit-splat-tide', 'hit-splat-spark', 'hit-splat-root', 'hit-splat-void']) {
+    if (!fs.existsSync(path.join(SRC, 'fx', s))) continue;
     const fr = pngs(path.join(SRC, 'fx', s)).map(read);
     const sheet = new PNG({ width: fr.length * 64, height: 64 });
     fr.forEach((p, i) => PNG.bitblt(p, sheet, 0, 0, 64, 64, i * 64, 0));
@@ -274,7 +279,9 @@ function main() {
     data.splats[s] = { sheet: `img/${s}.png`, n: fr.length };
   }
 
-  const copyGroup = (group: string, files: string[]) => {
+  const copyGroup = (group: string, dir: string, sort?: (a: string, b: string) => number) => {
+    const files = fs.existsSync(dir) ? pngs(dir) : [];
+    if (sort) files.sort(sort);
     data.stills[group] = files.map((f) => {
       const dest = `img/${group}-${path.basename(f)}`;
       fs.copyFileSync(f, path.join(OUT, dest));
@@ -283,12 +290,12 @@ function main() {
     });
   };
   const tileNo = (f: string) => Number(/(\d+)\.png$/.exec(f)?.[1] ?? 0);
-  copyGroup('map', pngs(path.join(SRC, 'map')));
-  copyGroup('road', pngs(path.join(SRC, 'map/road-path')).sort((a, b) => tileNo(a) - tileNo(b)));
-  copyGroup('props', pngs(path.join(SRC, 'props')));
-  copyGroup('fx', pngs(path.join(SRC, 'fx')));
-  copyGroup('ui', pngs(path.join(SRC, 'ui')));
-  copyGroup('icons', pngs(path.join(SRC, 'ui/icons')));
+  copyGroup('map', path.join(SRC, 'map'));
+  copyGroup('road', path.join(SRC, 'map/road-path'), (a, b) => tileNo(a) - tileNo(b));
+  copyGroup('props', path.join(SRC, 'props'));
+  copyGroup('fx', path.join(SRC, 'fx'));
+  copyGroup('ui', path.join(SRC, 'ui'));
+  copyGroup('icons', path.join(SRC, 'ui/icons'));
 
   const page = fs
     .readFileSync(path.join(__dirname, 'page.html'), 'utf8')

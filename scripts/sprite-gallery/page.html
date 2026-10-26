@@ -222,7 +222,7 @@ footer { margin-top: 48px; font-family: var(--mono); font-size: 12px; color: var
 
 <script>
 const DATA = __DATA__;
-const NAMES = { archangel: 'Archangel', aurex: 'Aurex', corvus: 'Corvus', kitsune: 'Kitsune', oni: 'Crimson Oni', 'cyber-shinobi': 'Cyber Shinobi', elowen: 'Elowen', kael: 'Kael-09', maldrath: 'Maldrath', morwen: 'Morwen', 'neon-viper': 'Neon Viper', raven: 'Raven', sak: 'Sak', 'frost-lich': 'Frost Lich', velkhar: 'Velkhar', 'void-raven': 'Void Raven', 'village-girl': 'Village Girl', wizard: 'Wizard', knight: 'Knight', anchor: 'Street Ninja', ghost: 'Ghost', lux: 'Lux', viper: 'Viper', 'boss-oni': 'Oni Warlord', 'boss-titan-x': 'Titan-X' };
+const NAMES = { archangel: 'Archangel', aurex: 'Aurex', corvus: 'Corvus', kitsune: 'Kitsune', oni: 'Crimson Oni', 'cyber-shinobi': 'Cyber Shinobi', elowen: 'Elowen', kael: 'Kael-09', maldrath: 'Maldrath', morwen: 'Morwen', 'neon-viper': 'Neon Viper', raven: 'Raven', sak: 'Sak', 'frost-lich': 'Frost Lich', velkhar: 'Velkhar', 'void-raven': 'Void Raven', 'ironclad-kabuto': 'Ironclad Kabuto', 'zipline-shade': 'Zipline Shade', 'kabuki-gear': 'Kabuki Gear', 'hush-bot': 'Hush Bot', gearbreaker: 'Gearbreaker', 'village-girl': 'Village Girl', wizard: 'Wizard', knight: 'Knight', anchor: 'Street Ninja', ghost: 'Ghost', lux: 'Lux', viper: 'Viper', 'boss-oni': 'Oni Warlord', 'boss-titan-x': 'Titan-X' };
 const ROLES = { ghost: 'Vine tower · drone bolts · energy-ring pulse', lux: 'Crystal tower · light beams · lightning burst', viper: 'Archer tower · rifle shot · kneeling burst', 'boss-oni': 'Boss scout + mini-boss', 'boss-titan-x': 'Spare boss art · no game role yet' };
 const MOVES = { corvus: 'Claw slash · crow swarm', archangel: 'Sword slash · overhead strike', oni: 'Katana slash · rising flame slash', aurex: 'Greatsword swing · flame spin', kitsune: 'Dual X-slash · blade flurry', 'cyber-shinobi': 'Draw slash · iaido strike', elowen: 'Sword thrust · leaf spin', kael: 'Energy slash · energy wave', maldrath: 'Ground slam · wide sweep', morwen: 'Staff swing · magic bolt', 'neon-viper': 'Roundhouse kick · neon dash punch', raven: 'Punch · axe chop', sak: 'Ice slash · ghost thrust', 'frost-lich': 'Ice swing · ice spikes', velkhar: 'Staff strike · purple flame', 'void-raven': 'Scythe sweep · spinning slash', 'ironclad-kabuto': 'Nodachi slash · tide surge', 'zipline-shade': 'Shuriken burst · void ring splash', 'kabuki-gear': 'Tessen fan slash · ember fan ring', 'hush-bot': 'Scroll cannon blast · root grapple', gearbreaker: 'Piston punch · ember pull slam' };
 const HERO_ORDER = ['corvus', 'archangel', 'oni', 'aurex', 'kitsune', 'cyber-shinobi', 'elowen', 'kael', 'maldrath', 'morwen', 'neon-viper', 'raven', 'sak', 'frost-lich', 'velkhar', 'void-raven', 'ironclad-kabuto', 'zipline-shade', 'kabuki-gear', 'hush-bot', 'gearbreaker'];
@@ -289,11 +289,12 @@ const TOWER_CLIPS = ['Idle', 'Attack', 'Skill'];
 ['ghost', 'lux', 'viper'].forEach((t) => { const x = actor(t, DATA.towers[t], TOWER_CLIPS, 'Attack'); document.getElementById('towerGrid').append(x.card); });
 const BOSS_CLIPS = ['Idle', 'Walk', 'Run', 'Death'];
 const oniBoss = actor('boss-oni', DATA.bosses.oni, BOSS_CLIPS, 'Walk'); document.getElementById('bossGrid').append(oniBoss.card);const titan = actor('boss-titan-x', DATA.bosses['titan-x'], [], 'Idle'); titan.actor.set({ turning: true }); document.getElementById('bossGrid').append(titan.card);
-const anc = actor('anchor', DATA.anchor, [], 'Idle'); anc.actor.set({ turning: true }); document.getElementById('anchorGrid').append(anc.card);
+if (DATA.anchor) { const anc = actor('anchor', DATA.anchor, [], 'Idle'); anc.actor.set({ turning: true }); document.getElementById('anchorGrid').append(anc.card); }
 
 const SPLAT = { 'hit-splat': 'Paint (base)', 'hit-splat-ember': 'Ember', 'hit-splat-tide': 'Tide', 'hit-splat-spark': 'Spark', 'hit-splat-root': 'Root', 'hit-splat-void': 'Void' };
 for (const [k, label] of Object.entries(SPLAT)) {
   const s = DATA.splats[k];
+  if (!s) continue;
   const sprite = el('div', { class: 'sprite', role: 'img', 'aria-label': `${label} hit splat` });
   sprite.dataset.src = s.sheet; sprite.style.backgroundSize = `${s.n * 100}% 100%`; io.observe(sprite);
   let f = 0; const draw = () => { sprite.style.backgroundPosition = `${(f % s.n) / (s.n - 1) * 100}% 0%`; };
