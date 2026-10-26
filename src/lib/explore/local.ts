@@ -26,7 +26,7 @@ function asYou(line: string, lead: 'You' | 'And you'): string {
 }
 
 /**
- * Deterministic Explore copy when Gemini is unavailable. Hedge inside the
+ * Deterministic Explore copy (the only path; no model is called). Hedge inside the
  * sentence. No completeness talk. No agency triple.
  */
 export function composeLocalExplore(me: ExploreMeSlice, focus: ExploreFocus): ExploreDraft {

@@ -13,7 +13,7 @@ import { useTheme } from '@/hooks/use-theme';
 
 export const IDENTITY_CHIP_KICKER = 'your ato';
 /** Spoken to screen readers only; nothing about progress or advice is shown on Home. */
-export const IDENTITY_CHIP_HINT = 'Opens your card on You.';
+export const IDENTITY_CHIP_HINT = 'Opens your card.';
 
 /**
  * The name you've earned, on Home (emci 2026-10-04: "I want the title to be in

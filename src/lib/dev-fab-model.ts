@@ -81,7 +81,7 @@ export const APP_DEV_SCREENS: Record<string, { label: string; sections: readonly
 export const APP_DEV_EVERYWHERE: readonly AppDevSection[] = ['inspector', 'quota', 'trace', 'fence'];
 
 /** Screens with their own dev surface — the app button stays out of the way. */
-export const APP_DEV_HIDDEN_PATHS: readonly string[] = ['/play', '/dev-lab', '/ai-lab'];
+export const APP_DEV_HIDDEN_PATHS: readonly string[] = ['/play', '/dev-lab'];
 
 export function appDevScreen(pathname: string): { label: string; sections: readonly AppDevSection[] } | null {
   return APP_DEV_SCREENS[pathname] ?? null;
