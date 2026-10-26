@@ -1,8 +1,7 @@
 /**
- * AI capacity plumbing. Caps live in app_config; claims are atomic in
- * claim_ai_call() on the server. A modified client that skips this call can
- * still hit Gemini only because the model key is already EXPO_PUBLIC — the
- * app path cannot exceed the cap, and usage rows cannot be reset by the client.
+ * Daily-cap plumbing. Caps live in app_config; claims are atomic in
+ * claim_ai_call() on the server (the name is historical). ATO calls no outside
+ * AI service; the caps now only meter stored-library surfaces.
  */
 
 export const QUOTA_EMPTY_MESSAGE = "That's all for today, back tomorrow";

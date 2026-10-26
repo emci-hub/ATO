@@ -207,7 +207,7 @@ export const GROWTH_MINDSET_IDEAS: readonly InsightIdea[] = [
     ],
     watch: [
       'Notice which feedback changes how you practice.',
-      'Notice how you feel after hearing too many views at once.',
+      'Notice how you feel after hearing too much advice at once.',
     ],
   }),
   idea('ftw_growth_mindset_h_08', ['growth_mindset:high'], {
@@ -216,29 +216,29 @@ export const GROWTH_MINDSET_IDEAS: readonly InsightIdea[] = [
       'You usually take someone’s talent as a sign of practice and not luck.',
       'When a friend does something impressive, you tend to ask how they got there.',
     ],
-    why: 'Seeing skill as something learned keeps you open, but it can push you to chase many skills at once.',
+    why: 'Believing any skill can be learned can push you to chase too many skills at once.',
     try: [
-      'Choose one skill you want most this month and put the others on a list, so you can focus.',
-      'Ask the friend for the first step they took, so you start small.',
+      'Pick the one skill you want to focus on this month and set the others aside.',
+      'Ask a friend for the first step they took to learn a skill.',
     ],
     watch: [
       'Notice how many skills you’re trying to build at the same time.',
-      'Notice which one you would miss most if you dropped it.',
+      'Notice which skill you would miss most if you dropped it.',
     ],
   }),
   idea('ftw_growth_mindset_h_09', ['growth_mindset:high'], {
     focus: [
-      'When you compare yourself with others, you tend to compare with where you were before.',
+      'Instead of comparing yourself to others, you tend to compare with where you were before.',
       'You usually measure your progress against your own past more than against other people.',
       'You tend to look at how far you’ve come when you feel behind.',
     ],
-    why: 'Looking at your own progress keeps you steady, but you can miss that you are doing better than you think.',
+    why: 'Looking at your own progress keeps you steady, but you can still miss how far you have come.',
     try: [
       'Write down three things you can do now that you couldn’t a year ago, so your progress is visible.',
-      'Tell a friend about one thing you improved at this month, so you enjoy it.',
+      'Tell a friend about one thing you improved at this month, so you can celebrate it.',
     ],
     watch: [
-      'Notice when you only look ahead and not back.',
+      'Notice when you only look ahead instead of looking back.',
       'Notice what you got better at that you didn’t plan on.',
     ],
   }),
@@ -251,7 +251,7 @@ export const GROWTH_MINDSET_IDEAS: readonly InsightIdea[] = [
     why: 'Looking ahead all the time keeps you growing, but it can mean you don’t stop to enjoy what you’ve learned.',
     try: [
       'Keep using a new skill for a full week before you start the next one, so it sticks.',
-      'Tell someone what you just learned, so you enjoy it and make it last.',
+      'Tell someone what you just learned, so you can celebrate it and help it stick.',
     ],
     watch: [
       'Notice how quickly you move on from a finished goal.',
@@ -261,7 +261,7 @@ export const GROWTH_MINDSET_IDEAS: readonly InsightIdea[] = [
   idea('ftw_growth_mindset_h_11', ['growth_mindset:high'], {
     focus: [
       'When you fail at something, you tend to break down what went wrong.',
-      'You usually look for the lesson after a setback, and often find one.',
+      'You usually look for the lesson after a setback.',
       'When a plan doesn’t work, you tend to treat it as information.',
     ],
     why: 'Learning from setbacks makes you stronger, but looking for a lesson right away can leave little time to feel disappointed.',
@@ -282,11 +282,11 @@ export const GROWTH_MINDSET_IDEAS: readonly InsightIdea[] = [
     ],
     why: 'Giving credit to practice reminds you that you can improve, but the person was likely trying to praise you.',
     try: [
-      'Say “thanks” first and mention your practice second, so the compliment lands.',
+      'When someone praises your work, say thanks first before explaining how much you practiced.',
       'Tell a friend what you practice, so they see how you got there.',
     ],
     watch: [
-      'Notice how people react when you mention the work behind it.',
+      'Notice how people react when you mention the work behind a skill.',
       'Notice which parts of your skill came easily to you.',
     ],
   }),
@@ -294,23 +294,23 @@ export const GROWTH_MINDSET_IDEAS: readonly InsightIdea[] = [
     focus: [
       'When a class or training is offered, you tend to skip it if you already do the job well.',
       'You usually feel you know enough about your work and don’t need much more.',
-      'When your boss suggests learning something new, you tend to ask whether it is really needed.',
+      'When someone suggests learning something new, you tend to ask whether it is really needed.',
     ],
     why: 'Knowing your job well makes you dependable, but a field can change in small ways that are easy to miss.',
     try: [
       'Read one short article about your field this week, so you stay current without a big commitment.',
-      'Ask a coworker what changed in your area lately, so you hear it from someone close.',
+      'Ask a coworker what has changed in your field lately to stay up to date.',
     ],
     watch: [
-      'Notice how much has changed since you last learned something at work.',
-      'Notice what training you would pick if you had to pick one.',
+      'Notice how much has changed in your field since you first started.',
+      'Notice which skill you would learn if you had to pick one.',
     ],
   }),
   idea('ftw_growth_mindset_l_08', ['growth_mindset:low'], {
     focus: [
       'When you try something and aren’t good at first, you tend to feel it’s not for you.',
       'You usually stop an activity when the first few tries feel awkward.',
-      'You tend to want what you already know when you start from zero.',
+      'You prefer sticking with what you know over starting from scratch.',
     ],
     why: 'Wanting to be good at things is natural, but almost everyone feels awkward at the start, and it usually passes for you too.',
     try: [
