@@ -161,13 +161,16 @@ ok('Story is tap-only and template-only: the shared gate locks it, Load picks a 
 // Insights as a template-only card. Home and Explore carry no Story.
 assert.match(read('src/app/(tabs)/insights.tsx'), /<InsightsStoryCard/);
 assert.doesNotMatch(read('src/app/(tabs)/index.tsx'), /SageStoryFold|InsightsStoryCard/);
-// Categories is back inline on Explore, standalone route retired
-// (2026-09-14, T-E1) — reverses the 2026-09-12 judgment-pass.md §4A split.
-assert.match(read('src/app/(tabs)/explore.tsx'), /CategoriesFold/);
+// Categories lived inline on Explore (2026-09-14, T-E1); IA P5 (2026-10-26) moved it to You and left
+// explore.tsx as a redirect only.
+assert.match(read('src/app/(tabs)/explore.tsx'), /<Redirect href="\/you\?section=categories" \/>/, 'explore.tsx is only the redirect');
+assert.doesNotMatch(read('src/app/(tabs)/explore.tsx'), /CategoriesFold/);
+assert.match(read('src/app/(tabs)/you.tsx'), /CategoriesFold/);
+assert.doesNotMatch(read('src/app/(tabs)/you.tsx'), /'\/categories'/);
 assert.doesNotMatch(read('src/app/(tabs)/explore.tsx'), /'\/categories'/);
 assert.ok(
   !existsSync('src/app/(tabs)/categories.tsx'),
-  'the /categories route must stay deleted — Categories lives inline on Explore',
+  'the /categories route must stay deleted — Categories lives on You',
 );
 assert.doesNotMatch(read('src/app/(tabs)/explore.tsx'), /SageStoryFold/);
 assert.ok(!existsSync('src/app/(tabs)/sage.tsx'), 'the Sage tab is gone');

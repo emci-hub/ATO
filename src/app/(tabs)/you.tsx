@@ -4,7 +4,10 @@ import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AtoTokenCard } from '@/components/ato-token-card';
+import { CategoriesFold } from '@/components/categories-fold';
+import { CategoryDeepDiveCard } from '@/components/category-deep-dive-card';
 import { ChangeCard } from '@/components/change-card';
+import { FullProfileFold } from '@/components/full-profile-fold';
 import { IdentityCard } from '@/components/identity-card';
 import { Appear, SkeletonCard } from '@/components/motion';
 import { NAV_PIXEL_HEADER_INSET } from '@/components/nav-pixel';
@@ -17,11 +20,20 @@ import { ThemedView } from '@/components/themed-view';
 import { YourWeekCard } from '@/components/your-week-card';
 import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
 import { useSession } from '@/hooks/use-session';
+import { useCircleContext } from '@/lib/circle-context';
+import { atoTokenBalanceOf } from '@/lib/ato-tokens';
+import { isFullProfileDone } from '@/lib/full-profile-gate';
 import { fetchHomeBootstrap } from '@/lib/home-bootstrap';
+import { aiConsentFor } from '@/lib/me';
 import { useMeContext } from '@/lib/me-context';
+import { isTabUnlocked } from '@/lib/nav/nav-order';
 import { SETTINGS_TITLE } from '@/lib/polish-copy';
 import { NO_PINCH_ZOOM } from '@/lib/theme/chrome';
 import { settledAxisLabel, type TraitTrack } from '@/lib/trait-stability';
+
+/** `?section=` targets that scroll You to a block. */
+const SECTION_KEYS = ['shape', 'traits', 'categories', 'profile', 'tokens'] as const;
+type SectionKey = (typeof SECTION_KEYS)[number];
 
 /**
  * You — who you are, your tokens, and your week. Every settings control (look,
@@ -38,6 +50,11 @@ import { settledAxisLabel, type TraitTrack } from '@/lib/trait-stability';
  * lately) moved here from Explore (IA phase P4), reusing those same tracks. A
  * `?section=shape|traits` link scrolls to them.
  *
+ * Explore is gone (IA phase P5): "Your categories" (the tiles + the deep dive card)
+ * and "Full profile" live here too, with `Legends ›` / `Circle ›` rows. The
+ * `section` param also accepts `categories`, `profile` and `tokens`; `/explore`
+ * redirects to `/you?section=categories`.
+ *
  * The saved-facts list ("Teach Sage") has been hidden since 2026-10-14; the
  * data stays until docs/sage-cleanup.md drops it.
  */
@@ -46,6 +63,7 @@ export default function YouScreen() {
   const { session } = useSession();
   const userId = session?.user.id;
   const { me, refresh } = useMeContext();
+  const { hasCircle } = useCircleContext();
   const params = useLocalSearchParams<{ section?: string }>();
   const scrollRef = useRef<ScrollView>(null);
   const sectionY = useRef<Record<string, number>>({});
@@ -95,7 +113,9 @@ export default function YouScreen() {
 
   // `?section=shape|traits` scrolls to that block once the tracks have landed
   // (the blocks lay out after the skeleton is replaced).
-  const wantedSection = params.section === 'shape' || params.section === 'traits' ? params.section : null;
+  const wantedSection = (SECTION_KEYS as readonly string[]).includes(params.section ?? '')
+    ? (params.section as SectionKey)
+    : null;
   const scrollToSection = useCallback(() => {
     if (!wantedSection || !tracksReady) return;
     const y = sectionY.current[wantedSection];
@@ -104,7 +124,7 @@ export default function YouScreen() {
   useEffect(() => {
     scrollToSection();
   }, [scrollToSection]);
-  const markSection = (key: 'shape' | 'traits') => (event: { nativeEvent: { layout: { y: number } } }) => {
+  const markSection = (key: SectionKey) => (event: { nativeEvent: { layout: { y: number } } }) => {
     sectionY.current[key] = event.nativeEvent.layout.y;
     scrollToSection();
   };
@@ -167,11 +187,49 @@ export default function YouScreen() {
             </View>
           ) : null}
 
+          {/* "Your categories": the fixed tiles (the point of the old Explore tab) and, once the
+              profile is done, the one-a-day deep dive card. Same props and gates as before. */}
+          {me ? (
+            <View style={styles.traitsBlock} onLayout={markSection('categories')}>
+              <CategoriesFold
+                me={me}
+                tracks={tracksReady ? tracks : undefined}
+                onUpdated={() => refresh()}
+                unlocked={isFullProfileDone(tracks, tracksReady)}
+              />
+              {isFullProfileDone(tracks, tracksReady) ? (
+                <CategoryDeepDiveCard
+                  userId={me.id}
+                  tracks={tracks}
+                  consentGranted={aiConsentFor(me) === 'granted'}
+                  tokens={atoTokenBalanceOf(me)}
+                  onSpent={() => void refresh()}
+                />
+              ) : null}
+            </View>
+          ) : null}
+
+          {/* "Full profile": every trait band in full. */}
+          {me ? (
+            <View onLayout={markSection('profile')}>
+              <FullProfileFold me={me} onUpdated={() => refresh()} />
+            </View>
+          ) : null}
+
           {/* Tokens: the balance and the last few earns / spends. */}
-          {me ? <AtoTokenCard me={me} /> : null}
+          {me ? (
+            <View onLayout={markSection('tokens')}>
+              <AtoTokenCard me={me} />
+            </View>
+          ) : null}
 
           {/* The last seven days in three counts. Local + one read, no AI. */}
           {me ? <YourWeekCard me={me} /> : null}
+
+          <NavRow label="Legends" onPress={() => router.push('/legends')} />
+          {isTabUnlocked('circle', { hasCircle }) ? (
+            <NavRow label="Circle" onPress={() => router.push('/circle')} />
+          ) : null}
 
           <Pressable
             accessibilityRole="button"
@@ -186,6 +244,22 @@ export default function YouScreen() {
         </ScrollView>
       </SafeAreaView>
     </ThemedView>
+  );
+}
+
+/** A one-line "Label ›" row to another screen (same look as the Settings row). */
+function NavRow({ label, onPress }: { label: string; onPress: () => void }) {
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      onPress={onPress}
+      style={({ pressed }) => [styles.settingsRow, pressed && styles.pressed]}>
+      <ThemedView type="backgroundElement" style={styles.settingsCard}>
+        <ThemedText type="smallBold">{label}</ThemedText>
+        <ThemedText themeColor="textSecondary">›</ThemedText>
+      </ThemedView>
+    </Pressable>
   );
 }
 

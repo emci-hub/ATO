@@ -155,7 +155,14 @@ ok('mode-aware: Pet mode shows Pet / Eggs / Room tools in six groups, one shared
   assert.ok(APP_DEV_HIDDEN_PATHS.includes('/play'), 'Play keeps its own button — never two at once');
   // '/sage' is a placeholder screen with nothing of its own to test (2026-10-03).
   assert.equal(appDevScreen('/sage'), null, 'the Sage placeholder has no tools of its own');
-  for (const p of ['/', '/explore', '/intake-sweep', '/you']) {
+  // IA P5: Explore is not a screen any more (it redirects to You); its trait-band tools follow the bands to /you.
+  assert.equal(appDevScreen('/explore'), null, 'the Explore route has no tools of its own (it redirects)');
+  assert.deepEqual(
+    [...(appDevScreen('/you')?.sections ?? [])],
+    ['you-tools', 'ai-consent', 'local-data', 'traits', 'band-stepper'],
+    'You carries the trait and band tools that used to sit on Explore',
+  );
+  for (const p of ['/', '/intake-sweep', '/you']) {
     const s = appDevScreen(p);
     assert.ok(s && s.sections.length > 0, `${p} has its own tools`);
     assert.equal(new Set(s.sections).size, s.sections.length, `${p}: no section twice`);

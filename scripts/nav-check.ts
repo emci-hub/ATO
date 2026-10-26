@@ -63,10 +63,13 @@ assert.deepEqual(
   'what the bar actually shows: Home, Insights, You, Play',
 );
 assert.ok(!isTabParked('legends') && !poolIdsInLayout(DEFAULT_NAV_LAYOUT).includes('legends'), 'Legends is in More');
-assert.ok(!poolIdsInLayout(DEFAULT_NAV_LAYOUT).includes('questions') && !poolIdsInLayout(DEFAULT_NAV_LAYOUT).includes('explore'), 'Questions and Explore are in More');
+assert.ok(!poolIdsInLayout(DEFAULT_NAV_LAYOUT).includes('questions'), 'Questions is in More');
+// IA P5: Explore is no longer a tab at all (its content lives on You).
+assert.ok(!(NAV_TAB_IDS as readonly string[]).includes('explore'), 'explore is not a nav pool id');
+assert.ok(!('explore' in NAV_TABS), 'explore is not in the NAV_TABS registry');
 assert.ok(poolIdsInLayout(DEFAULT_NAV_LAYOUT).includes('you') && poolIdsInLayout(DEFAULT_NAV_LAYOUT).includes('play'), 'You and Play are on the bar');
 assert.equal(DEFAULT_NAV_LAYOUT.slots.length, SLOT_COUNT);
-ok('bar shows Home / Insights / You / Play + fixed More; Questions, Explore, Legends and Circle are in More');
+ok('bar shows Home / Insights / You / Play + fixed More; Questions, Legends and Circle are in More; Explore is gone');
 
 // Play is a pool id whose destination is the pushed root screen /play (no tab trigger).
 assert.equal(NAV_TABS.play.href, '/play');
@@ -78,18 +81,18 @@ ok('Play is a registry pool tab that pushes /play');
 // NAV_LAYOUT_VERSION lives inside the layout JSON: an older or missing version resets ONCE on read
 // (including a fully valid old layout); a layout saved from the edit screen is stamped and kept.
 assert.equal(NAV_LAYOUT_VERSION, 3);
-const oldLayout = { slots: ['home', 'insights', 'questions', 'explore'] };
+const oldLayout = { slots: ['home', 'insights', 'questions', 'legends'] };
 assert.deepEqual(normalizeNavLayout(oldLayout).slots, DEFAULT_NAV_LAYOUT.slots, 'an unversioned layout resets to the new bar');
 assert.deepEqual(normalizeNavLayout({ ...oldLayout, version: 2 }).slots, DEFAULT_NAV_LAYOUT.slots, 'an older version resets too');
 assert.deepEqual(
-  normalizeNavLayout({ slots: ['home', 'insights', 'questions', 'explore'], version: NAV_LAYOUT_VERSION }).slots,
-  ['home', 'insights', 'questions', 'explore'],
+  normalizeNavLayout({ slots: ['home', 'insights', 'questions', 'legends'], version: NAV_LAYOUT_VERSION }).slots,
+  ['home', 'insights', 'questions', 'legends'],
   'a current-version layout the user chose is kept',
 );
 assert.equal(normalizeNavLayout(null).version, NAV_LAYOUT_VERSION);
-const stamped = normalizeNavLayout({ slots: ['home', 'insights', 'legends', 'explore'] }, { resetShort: false });
+const stamped = normalizeNavLayout({ slots: ['home', 'insights', 'legends', 'questions'] }, { resetShort: false });
 assert.equal(stamped.version, NAV_LAYOUT_VERSION, 'a saved edit is stamped with the current version');
-assert.deepEqual(stamped.slots, ['home', 'insights', 'legends', 'explore'], 'and keeps the user’s order');
+assert.deepEqual(stamped.slots, ['home', 'insights', 'legends', 'questions'], 'and keeps the user’s order');
 assert.deepEqual(normalizeNavLayout(stamped).slots, stamped.slots, 'so the next read does not reset it again');
 ok('layout version 3: old layouts reset once, edited layouts are stamped and persist');
 
@@ -109,11 +112,24 @@ assert.deepEqual(normalizeNavLayout(['nope', 7]).slots, DEFAULT_NAV_LAYOUT.slots
 ok('normalizeNavLayout(null/empty/invalid) yields the exact default layout');
 
 // Interleaving is preserved (home/insights can sit anywhere).
-const interleaved = normalizeNavLayout({ slots: ['explore', 'home', 'insights', 'you'], version: NAV_LAYOUT_VERSION });
-assert.deepEqual(interleaved.slots, ['explore', 'home', 'insights', 'you']);
+const interleaved = normalizeNavLayout({ slots: ['legends', 'home', 'insights', 'you'], version: NAV_LAYOUT_VERSION });
+assert.deepEqual(interleaved.slots, ['legends', 'home', 'insights', 'you']);
 const insightsFirst = normalizeNavLayout({ slots: ['insights', 'you', 'home', 'legends'], version: NAV_LAYOUT_VERSION });
 assert.deepEqual(insightsFirst.slots, ['insights', 'you', 'home', 'legends']);
 ok('normalizeNavLayout preserves home/insights interleaving');
+
+// IA P5: a saved layout that still holds the removed 'explore' loses it and backfills from the default.
+const withExplore = normalizeNavLayout({ slots: ['home', 'insights', 'explore', 'legends'], version: NAV_LAYOUT_VERSION });
+assert.ok(!withExplore.slots.includes('explore' as never), 'a saved explore slot is dropped');
+assert.equal(withExplore.slots.length, SLOT_COUNT);
+assert.equal(poolIdsInLayout(withExplore).length, POOL_SLOTS, 'and the bar is backfilled to a full layout');
+assert.deepEqual(withExplore.slots, DEFAULT_NAV_LAYOUT.slots, 'a layout left short by the drop resets to the default');
+const fuller = normalizeNavLayout({ slots: ['home', 'legends', 'explore', 'questions', 'insights'], version: NAV_LAYOUT_VERSION });
+assert.ok(!fuller.slots.includes('explore' as never) && fuller.slots.includes('legends') && fuller.slots.includes('questions'), 'a fuller layout loses only explore and keeps the other picks');
+const onlyExplore = normalizeNavLayout({ slots: ['explore', 'home', 'insights', 'explore'], version: NAV_LAYOUT_VERSION });
+assert.ok(!onlyExplore.slots.includes('explore' as never));
+assert.equal(onlyExplore.slots.length, SLOT_COUNT);
+ok('a saved layout containing explore loses it and backfills');
 
 // Bare array shape is accepted too.
 assert.deepEqual(normalizeNavLayout(['home', 'insights', 'legends', 'questions'], { resetShort: false }).slots, [
@@ -127,10 +143,10 @@ ok('normalizeNavLayout accepts a bare array as well as { slots }');
 // Saved layouts that say "sage" migrate to "insights" in place (check:tab-rename
 // pins the details). A layout with fewer than POOL_SLOTS pool tabs resets ONCE
 // on read; a fuller layout keeps the user's first two picks.
-assert.deepEqual(normalizeNavLayout({ slots: ['home', 'explore', 'sage'], version: NAV_LAYOUT_VERSION }).slots, DEFAULT_NAV_LAYOUT.slots);
+assert.deepEqual(normalizeNavLayout({ slots: ['home', 'questions', 'sage'], version: NAV_LAYOUT_VERSION }).slots, DEFAULT_NAV_LAYOUT.slots);
 assert.deepEqual(
-  normalizeNavLayout({ slots: ['home', 'legends', 'explore', 'you', 'sage'], version: NAV_LAYOUT_VERSION }).slots,
-  ['home', 'legends', 'explore', 'insights'],
+  normalizeNavLayout({ slots: ['home', 'legends', 'questions', 'you', 'sage'], version: NAV_LAYOUT_VERSION }).slots,
+  ['home', 'legends', 'questions', 'insights'],
   'a saved choice keeps its order; the third pool tab moves to More',
 );
 // The reset is a READ rule. A layout the user just edited down to 1 tab is
@@ -142,7 +158,7 @@ assert.match(read('src/lib/me.ts'), /normalizeNavLayout\(layout, \{ resetShort: 
 ok('a short saved layout resets once; a full one keeps its order; an edited one is padded');
 
 // Duplicates dropped; invalid ids dropped; too many pool ids trimmed to POOL_SLOTS.
-const duped = normalizeNavLayout({ slots: ['home', 'home', 'insights', 'explore', 'explore', 'you', 'around', 'nope'], version: NAV_LAYOUT_VERSION });
+const duped = normalizeNavLayout({ slots: ['home', 'home', 'insights', 'questions', 'questions', 'you', 'around', 'nope'], version: NAV_LAYOUT_VERSION });
 assert.equal(duped.slots.length, SLOT_COUNT);
 assert.equal(duped.slots.filter((s) => s === 'home').length, 1);
 assert.equal(poolIdsInLayout(duped).length, POOL_SLOTS);
@@ -166,7 +182,7 @@ ok('pool is the NAV_TABS registry — extensible, no hardcoded slot ids');
 
 assert.deepEqual(lockedTabIds({ hasCircle: false }), []);
 assert.deepEqual(lockedTabIds({ hasCircle: true }), []);
-assert.equal(isTabUnlocked('explore', { hasCircle: false }), true);
+assert.equal(isTabUnlocked('questions', { hasCircle: false }), true);
 assert.equal(isTabUnlocked('circle', { hasCircle: false }), true);
 assert.equal(isTabUnlocked('circle', { hasCircle: true }), true);
 ok('Circle is never locked (Add by handle lives in the tab, so a friend gate would block the first friend)');
@@ -222,6 +238,8 @@ assert.ok(
   'HIDDEN_TAB_ROUTES triggers must render inside <TabList>, or expo-router/ui never registers those routes and pushes to them silently no-op (this is exactly how /roll shipped unreachable)'
 );
 assert.match(tabs, /\{ name: 'roll', href: '\/roll' \}/);
+// IA P5: the explore route file stays (it redirects to You), so its hidden trigger must stay registered inside TabList.
+assert.match(tabs, /\{ name: 'explore', href: '\/explore' \}/, 'hidden explore trigger kept so the redirect route stays navigable');
 assert.ok(
   !(NAV_TAB_IDS as readonly string[]).includes('roll'),
   'roll must not be a NAV_TABS pool id — it is pushed from Legends, never a bar/More destination'

@@ -45,11 +45,11 @@ ok('Home + Insights pinned, nothing parked, five buttons with More');
 // before NAV_LAYOUT_VERSION resets once on read, so the migration is exercised on current-version layouts
 // (and on the write path); an unversioned legacy layout resets to the default.
 const V = NAV_LAYOUT_VERSION;
-assert.deepEqual(normalizeNavLayout({ slots: ['home', 'sage', 'explore', 'you'] }).slots, DEFAULT_NAV_LAYOUT.slots, 'an unversioned legacy layout resets once');
-assert.deepEqual(normalizeNavLayout({ slots: ['home', 'questions', 'explore', 'you', 'sage'], version: V }).slots, [
+assert.deepEqual(normalizeNavLayout({ slots: ['home', 'sage', 'legends', 'you'] }).slots, DEFAULT_NAV_LAYOUT.slots, 'an unversioned legacy layout resets once');
+assert.deepEqual(normalizeNavLayout({ slots: ['home', 'questions', 'legends', 'you', 'sage'], version: V }).slots, [
   'home',
   'questions',
-  'explore',
+  'legends',
   'insights',
 ]);
 assert.deepEqual(normalizeNavLayout({ slots: ['sage', 'home', 'legends', 'you'], version: V }).slots, [
@@ -58,9 +58,9 @@ assert.deepEqual(normalizeNavLayout({ slots: ['sage', 'home', 'legends', 'you'],
   'legends',
   'you',
 ]);
-assert.deepEqual(normalizeNavLayout(['home', 'explore', 'sage', 'you'], { resetShort: false }).slots, ['home', 'explore', 'insights', 'you']);
+assert.deepEqual(normalizeNavLayout(['home', 'legends', 'sage', 'you'], { resetShort: false }).slots, ['home', 'legends', 'insights', 'you']);
 // "sage" and "insights" both present → one Insights, never two.
-const both = normalizeNavLayout({ slots: ['home', 'sage', 'insights', 'explore', 'you'], version: V }).slots;
+const both = normalizeNavLayout({ slots: ['home', 'sage', 'insights', 'legends', 'you'], version: V }).slots;
 assert.equal(both.filter((id) => id === 'insights').length, 1);
 assert.ok(!(both as string[]).includes('sage'));
 // Writes migrate too (the edit screen commits with resetShort: false).
