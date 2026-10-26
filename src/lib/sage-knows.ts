@@ -290,7 +290,11 @@ export function pickSageKnowsAxis(
 }
 
 function secondPerson(line: string): string {
-  return line.replace(/\bThey\b/g, 'You').replace(/\bthey\b/g, 'you');
+  return line
+    .replace(/\bThey\b/g, 'You')
+    .replace(/\bthey\b/g, 'you')
+    .replace(/\bthemselves\b/g, 'yourself')
+    .replace(/\btheir\b/g, 'your');
 }
 
 function knockLead(chip: string): string {

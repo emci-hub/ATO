@@ -18,10 +18,11 @@ function asYou(line: string, lead: 'You' | 'And you'): string {
     .replace(/^They're /, lead === 'You' ? "You're " : "And you're ")
     .replace(/^They've /, lead === 'You' ? "You've " : "And you've ")
     .replace(/^They /, lead === 'You' ? 'You ' : 'And you ');
+  const you = swapped.replace(/\bthemselves\b/g, 'yourself').replace(/\btheir\b/g, 'your');
   if (line.includes('they already know they like')) {
-    return swapped.replace('they already know they like', 'you already know you like');
+    return you.replace('they already know they like', 'you already know you like');
   }
-  return swapped;
+  return you;
 }
 
 /**

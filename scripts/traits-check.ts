@@ -23,6 +23,7 @@ import {
   optionalProgressLabel,
   traitPatch,
   traitPromptLines,
+  TRAIT_POLE_LINES,
   type TraitAxis,
 } from '../src/lib/traits';
 import {
@@ -312,8 +313,15 @@ async function main() {
   // "exact score never reaches the prompt"), and traitPromptLines below still paraphrases.
   assert.ok(!existsSync(resolve(root, 'src/lib/insight/generate-insight.ts')), 'the AI daily-insight builder stays deleted');
   const extLines = traitPromptLines({ extraversion: 0.25 });
-  assert.match(extLines, /quieter time/);
+  assert.match(extLines, /time to themselves/);
+  assert.doesNotMatch(extLines, /\bthey\b[^.]*\byourself\b/i);
   assert.doesNotMatch(extLines, /0\.25/);
+  // Third-person trait lines never slip into second person ("They recharge with time to yourself").
+  for (const [axis, pair] of Object.entries(TRAIT_POLE_LINES)) {
+    for (const line of [pair.low, pair.high]) {
+      assert.doesNotMatch(line, /\b(they|he|she)\b[^.]*\byour(self|s)?\b/i, `${axis}: third-person line mixes in "you/yourself": "${line}"`);
+    }
+  }
   // Only the fence itself is asserted here. The insight prompt deliberately
   // NAMES these terms in its rules ("Never Myers-Briggs..."), so a substring
   // check against the builder would fail on the very instruction that forbids
@@ -329,7 +337,7 @@ async function main() {
   const omitted = traitPromptLines({ extraversion: null, openness: null, autonomy: null, growth_mindset: null });
   assert.equal(omitted, '');
   const extraLines = traitPromptLines({ autonomy: 0.9, growth_mindset: null, locus_of_control: null, self_efficacy: null });
-  assert.match(extraLines, /their own way/);
+  assert.match(extraLines, /choose a way of doing the task/);
   assert.doesNotMatch(extraLines, /growth mindset|locus of control|self-efficacy|self-determination/i);
   assert.doesNotMatch(extraLines, /0\.9/);
   ok('Sage prompt omits null axes, paraphrases behavior, and names no framework');

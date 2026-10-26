@@ -382,7 +382,7 @@ export const TRAIT_POLE_LINES: Record<TraitAxis, { low: string; high: string }> 
   },
   extraversion: {
     high: "They look for time with other people.",
-    low: "They recharge with time to yourself.",
+    low: "They recharge with time to themselves.",
   },
   agreeableness: {
     high: "They give the other plan a yes to keep things easy.",
@@ -439,7 +439,7 @@ export const TRAIT_POLE_LINES: Record<TraitAxis, { low: string; high: string }> 
 };
 
 const TRAIT_MID_LINES: Partial<Record<TraitAxis, string>> = {
-  extraversion: "They split time between other people and time to yourself.",
+  extraversion: "They split time between other people and time to themselves.",
   openness: "They mix a known favorite with a new option.",
   conscientiousness: "They plan some things and leave others open.",
   agreeableness: "They weigh going along against stating a blunt point.",
