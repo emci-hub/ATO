@@ -46,7 +46,7 @@ export const EGG_LINE: Record<EggType, string> = {
 export const EGG_POOLS: Record<EggType, readonly string[]> = {
   knight: ['aurex', 'oni', 'raven', 'void-raven', 'archangel', 'ironclad-kabuto'],
   wizard: ['morwen', 'corvus', 'maldrath', 'velkhar', 'frost-lich', 'zipline-shade'],
-  village: ['neon-viper', 'elowen', 'kael', 'sak', 'cyber-shinobi', 'kitsune'],
+  village: ['neon-viper', 'elowen', 'kael', 'sak', 'cyber-shinobi', 'kitsune', 'kabuki-gear'],
 };
 
 export function heroEgg(heroId: string): EggType | null {
@@ -472,6 +472,7 @@ export const HERO_SHINY_COLOR: Record<string, string> = {
   kitsune: '#6FE0FF',
   'ironclad-kabuto': '#FF9F1C',
   'zipline-shade': '#B8FF3C',
+  'kabuki-gear': '#FF5A36',
 };
 export const HERO_DYE_COLOR: Record<string, string> = {
   aurex: '#FF4D6D',
@@ -492,6 +493,7 @@ export const HERO_DYE_COLOR: Record<string, string> = {
   kitsune: '#B98CFF',
   'ironclad-kabuto': '#E85D75',
   'zipline-shade': '#9B6BFF',
+  'kabuki-gear': '#FFD6A5',
 };
 
 /** A shiny's colour: its hero's own for Classic, else the Prism style's. */

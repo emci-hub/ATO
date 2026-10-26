@@ -43,6 +43,8 @@ export const ART_SOURCES: Record<string, ImageSourcePropType> = {
   'hero.frost-lich.streetwear.core': require('@/assets/art/heroes/in-use/frost-lich/streetwear/hero_frost-lich_streetwear.core.png'),
   'hero.ironclad-kabuto.streetwear.combat': require('@/assets/art/heroes/in-use/ironclad-kabuto/streetwear/hero_ironclad-kabuto_streetwear.combat.png'),
   'hero.ironclad-kabuto.streetwear.core': require('@/assets/art/heroes/in-use/ironclad-kabuto/streetwear/hero_ironclad-kabuto_streetwear.core.png'),
+  'hero.kabuki-gear.streetwear.combat': require('@/assets/art/heroes/in-use/kabuki-gear/streetwear/hero_kabuki-gear_streetwear.combat.png'),
+  'hero.kabuki-gear.streetwear.core': require('@/assets/art/heroes/in-use/kabuki-gear/streetwear/hero_kabuki-gear_streetwear.core.png'),
   'hero.kael.cast.atlas': require('@/assets/art/heroes/in-use/kael/cast/atlas.png'),
   'hero.kael.streetwear.combat': require('@/assets/art/heroes/in-use/kael/streetwear/hero_kael_streetwear.combat.png'),
   'hero.kael.streetwear.core': require('@/assets/art/heroes/in-use/kael/streetwear/hero_kael_streetwear.core.png'),
@@ -297,6 +299,8 @@ export type ArtId =
   | 'hero.frost-lich.streetwear.core'
   | 'hero.ironclad-kabuto.streetwear.combat'
   | 'hero.ironclad-kabuto.streetwear.core'
+  | 'hero.kabuki-gear.streetwear.combat'
+  | 'hero.kabuki-gear.streetwear.core'
   | 'hero.kael.cast.atlas'
   | 'hero.kael.streetwear.combat'
   | 'hero.kael.streetwear.core'
@@ -1408,6 +1412,12 @@ export const ART = {
         core: 'hero.ironclad-kabuto.streetwear.core',
       },
     },
+    kabukiGear: {
+      streetwear: {
+        combat: 'hero.kabuki-gear.streetwear.combat',
+        core: 'hero.kabuki-gear.streetwear.core',
+      },
+    },
     kael: {
       cast: {
         atlas: 'hero.kael.cast.atlas',
@@ -2248,6 +2258,15 @@ export const SHEET = {
       attack: 'sheets/streetwear/heroes/ironclad-kabuto/Attack',
       skill: 'sheets/streetwear/heroes/ironclad-kabuto/Skill',
       hurt: 'sheets/streetwear/heroes/ironclad-kabuto/Hurt',
+    },
+    'kabuki-gear': {
+      rotations: 'sheets/streetwear/heroes/kabuki-gear/rotations',
+      idle: 'sheets/streetwear/heroes/kabuki-gear/Idle',
+      walk: 'sheets/streetwear/heroes/kabuki-gear/Walk',
+      dash: 'sheets/streetwear/heroes/kabuki-gear/Dash',
+      attack: 'sheets/streetwear/heroes/kabuki-gear/Attack',
+      skill: 'sheets/streetwear/heroes/kabuki-gear/Skill',
+      hurt: 'sheets/streetwear/heroes/kabuki-gear/Hurt',
     },
     kael: {
       rotations: 'sheets/streetwear/heroes/kael/rotations',

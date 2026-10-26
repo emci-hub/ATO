@@ -200,9 +200,9 @@ const lines = petLines();
 assert.ok(lines.some((l) => l.id === 'line_knight'), 'Knight → Raven line');
 assert.ok(lines.some((l) => l.id === 'line_wizard'), 'Wizard → Maldrath line');
 assert.ok(lines.some((l) => l.id === 'line_village'), 'Village Girl → Elowen line');
-assert.equal(lines.filter((l) => l.id.startsWith('solo_')).length, 18, 'every hero as its own line');
+assert.equal(lines.filter((l) => l.id.startsWith('solo_')).length, 19, 'every hero as its own line');
 assert.equal(new Set(lines.map((l) => l.id)).size, lines.length, 'unique line ids');
-ok(`pet lines: 3 themed + 18 heroes (${lines.length} total)`);
+ok(`pet lines: 3 themed + 19 heroes (${lines.length} total)`);
 
 /* -------------------------------------------------------------- TD links --- */
 

@@ -340,5 +340,24 @@
       "skill": "Skill",
       "hurt": "Hurt"
     }
+  },
+  {
+    "id": "kabuki-gear",
+    "name": "Kabuki Gear",
+    "acquire": "Free (airport)",
+    "role": "hero",
+    "folder": "assets/play/skins/cast/heroes/kabuki-gear",
+    "unlock": "free_farm",
+    "skillId": "skill_kabuki_gear",
+    "kit": { "behavior": "chain", "element": "ember" },
+    "face": "ew",
+    "clips": {
+      "idle": "Idle",
+      "walk": "Walk",
+      "dash": "Dash",
+      "attack": "Attack",
+      "skill": "Skill",
+      "hurt": "Hurt"
+    }
   }
 ]

@@ -1,0 +1,31 @@
+{
+  "version": 1,
+  "hero": "kabuki-gear",
+  "slug": "hero.kabuki-gear.streetwear",
+  "canvas": [192, 192],
+  "rawDir": "art-src/pixellab/hero.kabuki-gear.streetwear/migrated/raw",
+  "footRow": 150,
+  "heightBand": [114, 124],
+  "lines": { "hip": 120, "shoulder": 62 },
+  "directions": {
+    "east": {
+      "parts": {
+        "cape": [[54, 32], [98, 32], [96, 42], [92, 46], [88, 56], [86, 66], [84, 86], [70, 90], [54, 76]]
+      }
+    },
+    "west": {
+      "parts": {
+        "cape": [[96, 32], [130, 32], [136, 60], [134, 84], [124, 92], [108, 92], [104, 70], [100, 56], [98, 44]]
+      }
+    }
+  },
+  "recipes": {
+    "breathing-idle": {
+      "offsets": [0, 1, 2, 1],
+      "capeOffsets": [0, 1, 1, 1],
+      "headExtra": [0, 0, 1, 0],
+      "ms": [400, 250, 400, 250]
+    }
+  },
+  "notes": "Kabuki Gear (M3 hero 3): tall stiff animatronic; the white mane is the cape part (it trails a frame late); legs and boots locked below the hip line. The tessen fans are hidden in the side rotations, so no prop mask. Masks read off the 192 rotations (lowest pixel row 150, body rows 33-150)."
+}

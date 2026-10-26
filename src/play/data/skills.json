@@ -160,5 +160,14 @@
     "damage": 4,
     "slow_ms": 2000,
     "slow_pct": 0.34
+  },
+  {
+    "id": "skill_kabuki_gear",
+    "name": "Ember Veil",
+    "description": "A ring of ember fans slows and scorches nearby foes.",
+    "radius": 25,
+    "damage": 4,
+    "slow_ms": 2000,
+    "slow_pct": 0.34
   }
 ]

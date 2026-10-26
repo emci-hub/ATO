@@ -1,0 +1,753 @@
+{
+  "sheets/streetwear/heroes/kabuki-gear/Attack": {
+    "sheet": "art/heroes/in-use/kabuki-gear/streetwear/hero_kabuki-gear_streetwear.combat.png",
+    "sheetW": 1071,
+    "sheetH": 987,
+    "frames": {
+      "east/frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 122,
+        "h": 123
+      },
+      "east/frame_001": {
+        "x": 123,
+        "y": 0,
+        "w": 122,
+        "h": 123
+      },
+      "east/frame_002": {
+        "x": 246,
+        "y": 0,
+        "w": 122,
+        "h": 123
+      },
+      "east/frame_003": {
+        "x": 369,
+        "y": 0,
+        "w": 122,
+        "h": 123
+      },
+      "east/frame_004": {
+        "x": 492,
+        "y": 0,
+        "w": 122,
+        "h": 123
+      },
+      "east/frame_005": {
+        "x": 615,
+        "y": 0,
+        "w": 122,
+        "h": 123
+      },
+      "east/frame_006": {
+        "x": 738,
+        "y": 0,
+        "w": 122,
+        "h": 123
+      },
+      "east/frame_007": {
+        "x": 861,
+        "y": 0,
+        "w": 122,
+        "h": 123
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 124,
+        "w": 122,
+        "h": 123
+      },
+      "west/frame_001": {
+        "x": 123,
+        "y": 124,
+        "w": 122,
+        "h": 123
+      },
+      "west/frame_002": {
+        "x": 246,
+        "y": 124,
+        "w": 122,
+        "h": 123
+      },
+      "west/frame_003": {
+        "x": 369,
+        "y": 124,
+        "w": 122,
+        "h": 123
+      },
+      "west/frame_004": {
+        "x": 492,
+        "y": 124,
+        "w": 122,
+        "h": 123
+      },
+      "west/frame_005": {
+        "x": 615,
+        "y": 124,
+        "w": 122,
+        "h": 123
+      },
+      "west/frame_006": {
+        "x": 738,
+        "y": 124,
+        "w": 122,
+        "h": 123
+      },
+      "west/frame_007": {
+        "x": 861,
+        "y": 124,
+        "w": 122,
+        "h": 123
+      }
+    },
+    "offsetX": 30,
+    "offsetY": 29,
+    "sourceW": 192,
+    "sourceH": 192,
+    "ms": 65,
+    "holds": [
+      90,
+      70,
+      45,
+      40,
+      45,
+      60,
+      80,
+      90
+    ],
+    "dirs": [
+      "east",
+      "west"
+    ],
+    "tier": "combat"
+  },
+  "sheets/streetwear/heroes/kabuki-gear/Dash": {
+    "sheet": "art/heroes/in-use/kabuki-gear/streetwear/hero_kabuki-gear_streetwear.combat.png",
+    "sheetW": 1071,
+    "sheetH": 987,
+    "frames": {
+      "east/frame_000": {
+        "x": 0,
+        "y": 496,
+        "w": 84,
+        "h": 122
+      },
+      "east/frame_001": {
+        "x": 85,
+        "y": 496,
+        "w": 84,
+        "h": 122
+      },
+      "east/frame_002": {
+        "x": 170,
+        "y": 496,
+        "w": 84,
+        "h": 122
+      },
+      "east/frame_003": {
+        "x": 255,
+        "y": 496,
+        "w": 84,
+        "h": 122
+      },
+      "east/frame_004": {
+        "x": 340,
+        "y": 496,
+        "w": 84,
+        "h": 122
+      },
+      "east/frame_005": {
+        "x": 425,
+        "y": 496,
+        "w": 84,
+        "h": 122
+      },
+      "east/frame_006": {
+        "x": 510,
+        "y": 496,
+        "w": 84,
+        "h": 122
+      },
+      "east/frame_007": {
+        "x": 595,
+        "y": 496,
+        "w": 84,
+        "h": 122
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 619,
+        "w": 84,
+        "h": 122
+      },
+      "west/frame_001": {
+        "x": 85,
+        "y": 619,
+        "w": 84,
+        "h": 122
+      },
+      "west/frame_002": {
+        "x": 170,
+        "y": 619,
+        "w": 84,
+        "h": 122
+      },
+      "west/frame_003": {
+        "x": 255,
+        "y": 619,
+        "w": 84,
+        "h": 122
+      },
+      "west/frame_004": {
+        "x": 340,
+        "y": 619,
+        "w": 84,
+        "h": 122
+      },
+      "west/frame_005": {
+        "x": 425,
+        "y": 619,
+        "w": 84,
+        "h": 122
+      },
+      "west/frame_006": {
+        "x": 510,
+        "y": 619,
+        "w": 84,
+        "h": 122
+      },
+      "west/frame_007": {
+        "x": 595,
+        "y": 619,
+        "w": 84,
+        "h": 122
+      }
+    },
+    "offsetX": 54,
+    "offsetY": 30,
+    "sourceW": 192,
+    "sourceH": 192,
+    "ms": 50,
+    "holds": [
+      60,
+      50,
+      40,
+      40,
+      40,
+      40,
+      50,
+      80
+    ],
+    "dirs": [
+      "east",
+      "west"
+    ],
+    "tier": "combat"
+  },
+  "sheets/streetwear/heroes/kabuki-gear/Hurt": {
+    "sheet": "art/heroes/in-use/kabuki-gear/streetwear/hero_kabuki-gear_streetwear.combat.png",
+    "sheetW": 1071,
+    "sheetH": 987,
+    "frames": {
+      "east/frame_000": {
+        "x": 0,
+        "y": 742,
+        "w": 84,
+        "h": 122
+      },
+      "east/frame_001": {
+        "x": 85,
+        "y": 742,
+        "w": 84,
+        "h": 122
+      },
+      "east/frame_002": {
+        "x": 170,
+        "y": 742,
+        "w": 84,
+        "h": 122
+      },
+      "east/frame_003": {
+        "x": 255,
+        "y": 742,
+        "w": 84,
+        "h": 122
+      },
+      "east/frame_004": {
+        "x": 340,
+        "y": 742,
+        "w": 84,
+        "h": 122
+      },
+      "east/frame_005": {
+        "x": 425,
+        "y": 742,
+        "w": 84,
+        "h": 122
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 865,
+        "w": 84,
+        "h": 122
+      },
+      "west/frame_001": {
+        "x": 85,
+        "y": 865,
+        "w": 84,
+        "h": 122
+      },
+      "west/frame_002": {
+        "x": 170,
+        "y": 865,
+        "w": 84,
+        "h": 122
+      },
+      "west/frame_003": {
+        "x": 255,
+        "y": 865,
+        "w": 84,
+        "h": 122
+      },
+      "west/frame_004": {
+        "x": 340,
+        "y": 865,
+        "w": 84,
+        "h": 122
+      },
+      "west/frame_005": {
+        "x": 425,
+        "y": 865,
+        "w": 84,
+        "h": 122
+      }
+    },
+    "offsetX": 50,
+    "offsetY": 30,
+    "sourceW": 192,
+    "sourceH": 192,
+    "ms": 140,
+    "holds": [
+      100,
+      120,
+      160,
+      160,
+      150,
+      150
+    ],
+    "dirs": [
+      "east",
+      "west"
+    ],
+    "tier": "combat"
+  },
+  "sheets/streetwear/heroes/kabuki-gear/Idle": {
+    "sheet": "art/heroes/in-use/kabuki-gear/streetwear/hero_kabuki-gear_streetwear.core.png",
+    "sheetW": 683,
+    "sheetH": 871,
+    "frames": {
+      "east/frame_000": {
+        "x": 0,
+        "y": 508,
+        "w": 80,
+        "h": 120
+      },
+      "east/frame_001": {
+        "x": 81,
+        "y": 508,
+        "w": 80,
+        "h": 120
+      },
+      "east/frame_002": {
+        "x": 162,
+        "y": 508,
+        "w": 80,
+        "h": 120
+      },
+      "east/frame_003": {
+        "x": 243,
+        "y": 508,
+        "w": 80,
+        "h": 120
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 629,
+        "w": 80,
+        "h": 120
+      },
+      "west/frame_001": {
+        "x": 81,
+        "y": 629,
+        "w": 80,
+        "h": 120
+      },
+      "west/frame_002": {
+        "x": 162,
+        "y": 629,
+        "w": 80,
+        "h": 120
+      },
+      "west/frame_003": {
+        "x": 243,
+        "y": 629,
+        "w": 80,
+        "h": 120
+      }
+    },
+    "offsetX": 54,
+    "offsetY": 32,
+    "sourceW": 192,
+    "sourceH": 192,
+    "ms": 325,
+    "holds": [
+      400,
+      250,
+      400,
+      250
+    ],
+    "dirs": [
+      "east",
+      "west"
+    ],
+    "tier": "core"
+  },
+  "sheets/streetwear/heroes/kabuki-gear/Skill": {
+    "sheet": "art/heroes/in-use/kabuki-gear/streetwear/hero_kabuki-gear_streetwear.combat.png",
+    "sheetW": 1071,
+    "sheetH": 987,
+    "frames": {
+      "east/frame_000": {
+        "x": 0,
+        "y": 248,
+        "w": 133,
+        "h": 123
+      },
+      "east/frame_001": {
+        "x": 134,
+        "y": 248,
+        "w": 133,
+        "h": 123
+      },
+      "east/frame_002": {
+        "x": 268,
+        "y": 248,
+        "w": 133,
+        "h": 123
+      },
+      "east/frame_003": {
+        "x": 402,
+        "y": 248,
+        "w": 133,
+        "h": 123
+      },
+      "east/frame_004": {
+        "x": 536,
+        "y": 248,
+        "w": 133,
+        "h": 123
+      },
+      "east/frame_005": {
+        "x": 670,
+        "y": 248,
+        "w": 133,
+        "h": 123
+      },
+      "east/frame_006": {
+        "x": 804,
+        "y": 248,
+        "w": 133,
+        "h": 123
+      },
+      "east/frame_007": {
+        "x": 938,
+        "y": 248,
+        "w": 133,
+        "h": 123
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 372,
+        "w": 133,
+        "h": 123
+      },
+      "west/frame_001": {
+        "x": 134,
+        "y": 372,
+        "w": 133,
+        "h": 123
+      },
+      "west/frame_002": {
+        "x": 268,
+        "y": 372,
+        "w": 133,
+        "h": 123
+      },
+      "west/frame_003": {
+        "x": 402,
+        "y": 372,
+        "w": 133,
+        "h": 123
+      },
+      "west/frame_004": {
+        "x": 536,
+        "y": 372,
+        "w": 133,
+        "h": 123
+      },
+      "west/frame_005": {
+        "x": 670,
+        "y": 372,
+        "w": 133,
+        "h": 123
+      },
+      "west/frame_006": {
+        "x": 804,
+        "y": 372,
+        "w": 133,
+        "h": 123
+      },
+      "west/frame_007": {
+        "x": 938,
+        "y": 372,
+        "w": 133,
+        "h": 123
+      }
+    },
+    "offsetX": 29,
+    "offsetY": 29,
+    "sourceW": 192,
+    "sourceH": 192,
+    "ms": 70,
+    "holds": [
+      70,
+      70,
+      60,
+      60,
+      60,
+      60,
+      90,
+      90
+    ],
+    "dirs": [
+      "east",
+      "west"
+    ],
+    "tier": "combat"
+  },
+  "sheets/streetwear/heroes/kabuki-gear/Walk": {
+    "sheet": "art/heroes/in-use/kabuki-gear/streetwear/hero_kabuki-gear_streetwear.core.png",
+    "sheetW": 683,
+    "sheetH": 871,
+    "frames": {
+      "north/frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 113,
+        "h": 126
+      },
+      "north/frame_001": {
+        "x": 114,
+        "y": 0,
+        "w": 113,
+        "h": 126
+      },
+      "north/frame_002": {
+        "x": 228,
+        "y": 0,
+        "w": 113,
+        "h": 126
+      },
+      "north/frame_003": {
+        "x": 342,
+        "y": 0,
+        "w": 113,
+        "h": 126
+      },
+      "north/frame_004": {
+        "x": 456,
+        "y": 0,
+        "w": 113,
+        "h": 126
+      },
+      "north/frame_005": {
+        "x": 570,
+        "y": 0,
+        "w": 113,
+        "h": 126
+      },
+      "east/frame_000": {
+        "x": 0,
+        "y": 127,
+        "w": 113,
+        "h": 126
+      },
+      "east/frame_001": {
+        "x": 114,
+        "y": 127,
+        "w": 113,
+        "h": 126
+      },
+      "east/frame_002": {
+        "x": 228,
+        "y": 127,
+        "w": 113,
+        "h": 126
+      },
+      "east/frame_003": {
+        "x": 342,
+        "y": 127,
+        "w": 113,
+        "h": 126
+      },
+      "east/frame_004": {
+        "x": 456,
+        "y": 127,
+        "w": 113,
+        "h": 126
+      },
+      "east/frame_005": {
+        "x": 570,
+        "y": 127,
+        "w": 113,
+        "h": 126
+      },
+      "south/frame_000": {
+        "x": 0,
+        "y": 254,
+        "w": 113,
+        "h": 126
+      },
+      "south/frame_001": {
+        "x": 114,
+        "y": 254,
+        "w": 113,
+        "h": 126
+      },
+      "south/frame_002": {
+        "x": 228,
+        "y": 254,
+        "w": 113,
+        "h": 126
+      },
+      "south/frame_003": {
+        "x": 342,
+        "y": 254,
+        "w": 113,
+        "h": 126
+      },
+      "south/frame_004": {
+        "x": 456,
+        "y": 254,
+        "w": 113,
+        "h": 126
+      },
+      "south/frame_005": {
+        "x": 570,
+        "y": 254,
+        "w": 113,
+        "h": 126
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 381,
+        "w": 113,
+        "h": 126
+      },
+      "west/frame_001": {
+        "x": 114,
+        "y": 381,
+        "w": 113,
+        "h": 126
+      },
+      "west/frame_002": {
+        "x": 228,
+        "y": 381,
+        "w": 113,
+        "h": 126
+      },
+      "west/frame_003": {
+        "x": 342,
+        "y": 381,
+        "w": 113,
+        "h": 126
+      },
+      "west/frame_004": {
+        "x": 456,
+        "y": 381,
+        "w": 113,
+        "h": 126
+      },
+      "west/frame_005": {
+        "x": 570,
+        "y": 381,
+        "w": 113,
+        "h": 126
+      }
+    },
+    "offsetX": 39,
+    "offsetY": 26,
+    "sourceW": 192,
+    "sourceH": 192,
+    "ms": 133,
+    "holds": [
+      140,
+      130,
+      140,
+      130,
+      130,
+      130
+    ],
+    "dirs": [
+      "north",
+      "east",
+      "south",
+      "west"
+    ],
+    "tier": "core"
+  },
+  "sheets/streetwear/heroes/kabuki-gear/rotations": {
+    "sheet": "art/heroes/in-use/kabuki-gear/streetwear/hero_kabuki-gear_streetwear.core.png",
+    "sheetW": 683,
+    "sheetH": 871,
+    "frames": {
+      "north": {
+        "x": 0,
+        "y": 750,
+        "w": 115,
+        "h": 121
+      },
+      "east": {
+        "x": 116,
+        "y": 750,
+        "w": 115,
+        "h": 121
+      },
+      "south": {
+        "x": 232,
+        "y": 750,
+        "w": 115,
+        "h": 121
+      },
+      "west": {
+        "x": 348,
+        "y": 750,
+        "w": 115,
+        "h": 121
+      }
+    },
+    "offsetX": 37,
+    "offsetY": 31,
+    "sourceW": 192,
+    "sourceH": 192,
+    "ms": 100,
+    "dirs": [
+      "north",
+      "east",
+      "south",
+      "west"
+    ],
+    "tier": "core"
+  }
+}

@@ -1,0 +1,56 @@
+{
+  "tool": "pixellab",
+  "model": "skeleton-v3 (Walk) + v3 custom (Attack, Dash, Skill, Hurt)",
+  "prompt": "own-style tessen-fan / ember chain set, see params.clips",
+  "negative": null,
+  "seed": null,
+  "size": "128 import, clips 168 px, padded to 192 (lowest pixel on row 150)",
+  "view": "low top-down",
+  "direction": null,
+  "palette": null,
+  "referenceImageIds": [],
+  "params": {
+    "pixellabCharacter": "ec41d823-d467-4ee6-b163-bcc9b53cd920",
+    "importSource": "docs/art/mecha-m1/kabuki-gear.png (first sketch, kept exactly), create_character v3 reference import, 4 directions, 2 gens",
+    "clips": {
+      "Walk": "animate_character skeleton-v3 template walking-6-frames, east + west + north + south (3 gens each)",
+      "Attack": "animate_character v3 custom 'always facing right/left, strict side profile: whips the tessen fan forward in a wide spinning slash, fan stays in hand, ember sparks + orange cable streak', 8 frames + reference, east + west (4 each, no re-roll)",
+      "Dash": "v3 custom 'fast stiff glide, tessen fans folded back, mane streaming', east + west (4 each)",
+      "Skill": "v3 custom 'raises both tessen fans, spins them on orange chain cables in a whirling ring of ember flames, slams them down, flames burst outward', east + west (4 each)",
+      "Hurt": "v3 custom 'struck, rocks back stiffly, mane whips forward, cable sparks', 6 frames + reference, east + west (3 each)",
+      "Idle": "art engine breathing-idle (0 gens), rig art-src/rigs/kabuki-gear.json (white mane = cape part), 4 frames 400/250/400/250, 7 gates pass"
+    },
+    "effects": "Attack ember sparks + orange chain streak, Skill ember flame ring on chain cables (all drawn by PixelLab inside the clip)",
+    "discarded": "nothing, no re-rolls"
+  },
+  "cost": 44,
+  "createdAt": "2026-10-26T00:00:00.000Z",
+  "operator": "agent",
+  "picked": true,
+  "critique": {
+    "score": null,
+    "notes": "M3 hero 3; frames padded to 192, feet row 150; raw PixelLab output kept in m3-test/ (outside raw/)"
+  },
+  "dirMap": {
+    "animations\\Attack": "attack",
+    "animations\\Attack\\east": "e",
+    "animations\\Attack\\west": "w",
+    "animations\\Dash": "dash",
+    "animations\\Dash\\east": "e",
+    "animations\\Dash\\west": "w",
+    "animations\\Hurt": "hurt",
+    "animations\\Hurt\\east": "e",
+    "animations\\Hurt\\west": "w",
+    "animations\\Idle": "idle",
+    "animations\\Idle\\east": "e",
+    "animations\\Idle\\west": "w",
+    "animations\\Skill": "skill",
+    "animations\\Skill\\east": "e",
+    "animations\\Skill\\west": "w",
+    "animations\\Walk": "walk",
+    "animations\\Walk\\east": "e",
+    "animations\\Walk\\west": "w",
+    "animations\\Walk\\north": "n",
+    "animations\\Walk\\south": "s"
+  }
+}

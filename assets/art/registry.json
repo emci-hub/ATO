@@ -1877,6 +1877,64 @@
       "part": "core"
     },
     {
+      "id": "hero.kabuki-gear.streetwear.combat",
+      "path": "assets/art/heroes/in-use/kabuki-gear/streetwear/hero_kabuki-gear_streetwear.combat.png",
+      "category": "heroes",
+      "type": "character",
+      "theme": "streetwear",
+      "placement": "floor",
+      "camera": "td-3q-low",
+      "size": {
+        "w": 1071,
+        "h": 987
+      },
+      "status": "approved",
+      "source": "pixellab",
+      "diskBytes": 227162,
+      "decodedBytes": 4228308,
+      "format": "png32",
+      "notes": "md5:888ae0e0b065f2adbfb7167a54743e52",
+      "inUse": true,
+      "set": "kabuki-gear",
+      "variant": "streetwear",
+      "tags": [],
+      "usedBy": [
+        "assets/art/legacy-play-sheets.json",
+        "assets/play/sheets/streetwear/heroes/kabuki-gear/sheets.json",
+        "src/play/generated-play-sheets.ts"
+      ],
+      "part": "combat"
+    },
+    {
+      "id": "hero.kabuki-gear.streetwear.core",
+      "path": "assets/art/heroes/in-use/kabuki-gear/streetwear/hero_kabuki-gear_streetwear.core.png",
+      "category": "heroes",
+      "type": "character",
+      "theme": "streetwear",
+      "placement": "floor",
+      "camera": "td-3q-low",
+      "size": {
+        "w": 683,
+        "h": 871
+      },
+      "status": "approved",
+      "source": "pixellab",
+      "diskBytes": 88804,
+      "decodedBytes": 2379572,
+      "format": "png8",
+      "notes": "md5:2732d48740bb14ebb939702cd5780538",
+      "inUse": true,
+      "set": "kabuki-gear",
+      "variant": "streetwear",
+      "tags": [],
+      "usedBy": [
+        "assets/art/legacy-play-sheets.json",
+        "assets/play/sheets/streetwear/heroes/kabuki-gear/sheets.json",
+        "src/play/generated-play-sheets.ts"
+      ],
+      "part": "core"
+    },
+    {
       "id": "hero.kael.cast.atlas",
       "path": "assets/art/heroes/in-use/kael/cast/atlas.png",
       "type": "character",
