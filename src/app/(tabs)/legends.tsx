@@ -82,7 +82,7 @@ export const legendsPaidLine = (tokens: number) =>
   `Want another from the story library? It costs ${AI_TOKEN_PRICE} tokens (you have ${tokens}).`;
 export const LEGENDS_PAID_FAILED =
   'The legend card did not load, so this reveal was not saved. If tokens were charged for this try, they come back once today.';
-export const LEGENDS_PAID_QUOTA = 'That’s the most extra legend reveals for today. Come back tomorrow.';
+export const LEGENDS_PAID_QUOTA = 'No more extra legend reveals today. Come back tomorrow.';
 export const HALL_CHAPTERS_COPY = 'You’ve met every legend here. The frames now hide new chapters about them.';
 export const HALL_EMPTY_COPY = 'Nothing left to reveal in this hall today. Try another hall.';
 export const HALL_ALL_TOLD_COPY = 'You’ve heard every story in this hall.';

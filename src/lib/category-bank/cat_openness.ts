@@ -23,18 +23,18 @@ export const CAT_OPENNESS: BarCard = {
       tryThis: [
         'Ask a quieter friend which place they want, so the next plan starts with them.',
         'Leave one night this week empty, so you can sit still.',
-        'Go back to one place you already like, so the usual gets a turn.',
+        'Go back to a place you already know and enjoy.',
       ],
     },
     mid: {
       summary: [
-        'You will try something new with other people, and you still keep time for what you already like.',
+        'You balance trying new things with sticking to what you already enjoy.',
         'You try the new option when someone is going with you, and you keep the known one when the day ran long.',
         'You split the week between time with people and time for something you already know.',
       ],
       strength: [
         'You can do a busy day with people and a quiet day, so different plans can include you.',
-        'You pick a new option you actually want, even when other people are loud about a different one.',
+        'You choose what genuinely interests you, even when others prefer something else.',
         'You show up for the group plan and you still leave when you need time to yourself.',
       ],
       watchOut: [
@@ -67,7 +67,7 @@ export const CAT_OPENNESS: BarCard = {
       tryThis: [
         'Say yes to one small new thing this week, so a new place gets one try.',
         'Invite one close friend to a new place with you, so you are not walking in alone.',
-        'Ask a friend what they tried lately, so you hear about a new place with no plan attached.',
+        'Ask a friend what they tried lately to hear about something new.',
       ],
     },
   },

@@ -202,12 +202,12 @@ export const ATTACHMENT_ANXIETY_IDEAS: readonly InsightIdea[] = [
     ],
     why: 'Noticing replies shows how much you value the person, but there are many reasons for a quiet phone that have nothing to do with you.',
     try: [
-      'Write down two ordinary reasons someone might not have replied yet, so the worry has company.',
+      'Write down two ordinary reasons someone might not have replied yet.',
       'Put your phone in another room for twenty minutes after you send a message, so you stop checking.',
     ],
     watch: [
       'Notice how often the reason for a slow reply turns out to be simple.',
-      'Notice what you do with your hands and eyes while you wait.',
+      'Notice what you do while waiting for a reply.',
     ],
   }),
   idea('ftw_attachment_anxiety_h_08', ['attachment_anxiety:high'], {
@@ -282,17 +282,17 @@ export const ATTACHMENT_ANXIETY_IDEAS: readonly InsightIdea[] = [
     ],
     why: 'Wanting to be important to the people you love is natural, but their other friendships rarely take anything away from yours.',
     try: [
-      'Ask the person how their time with friends went, so you hear about it from them.',
+      'Ask a friend how their time with other people went.',
       'Plan something you look forward to while they’re out, so the time apart has its own point.',
     ],
     watch: [
       'Notice what you picture when you’re apart.',
-      'Notice how things feel once they’re back.',
+      'Notice how things feel once you’re back together.',
     ],
   }),
   idea('ftw_attachment_anxiety_l_07', ['attachment_anxiety:low'], {
     focus: [
-      'When a friend is quiet for a week, you tend to assume they’re busy and reach out when it fits.',
+      'When a friend is quiet for a week, you tend to assume they’re busy.',
       'You usually don’t take a gap in contact personally.',
       'When someone you like goes quiet, you tend to give them space without much thought.',
     ],
@@ -302,7 +302,7 @@ export const ATTACHMENT_ANXIETY_IDEAS: readonly InsightIdea[] = [
       'Ask a friend how they’ve been after a long gap, so you catch up on what you missed.',
     ],
     watch: [
-      'Notice which friends are quiet because they’re busy and which because something’s wrong.',
+      'Notice which friends are quiet because they’re busy and which are quiet because something’s wrong.',
       'Notice how a short check-in lands.',
     ],
   }),
@@ -318,8 +318,8 @@ export const ATTACHMENT_ANXIETY_IDEAS: readonly InsightIdea[] = [
       'Send a short message the day before a plan, so both of you remember.',
     ],
     watch: [
-      'Notice which loose plans actually happened.',
-      'Notice how often a date makes a plan more likely to happen.',
+      'Notice which loose plans actually happen.',
+      'Notice how often setting a date makes a plan more likely to happen.',
     ],
   }),
   idea('ftw_attachment_anxiety_l_09', ['attachment_anxiety:low'], {
@@ -334,14 +334,14 @@ export const ATTACHMENT_ANXIETY_IDEAS: readonly InsightIdea[] = [
       'Check in the next day after an argument, so it doesn’t sit open for a week.',
     ],
     watch: [
-      'Notice whether the other person needs more attention than you gave.',
+      'Notice whether the other person needs more attention than you usually give.',
       'Notice how a quick check-in changes how things feel.',
     ],
   }),
   idea('ftw_attachment_anxiety_l_10', ['attachment_anxiety:low'], {
     focus: [
       'When a close friend or partner needs reassurance, you tend to find it hard to see why.',
-      'You usually feel secure without hearing it often, so a friend’s need for it can surprise you.',
+      'You usually feel secure without hearing reassurance often, so a friend’s need for it can surprise you.',
       'When someone asks if you’re still okay, you tend to wonder why they’re asking.',
     ],
     why: 'Your steadiness can feel safe to others, but people who need more reassurance may read your calm as distance.',

@@ -7,7 +7,7 @@ export const CAT_INDEPENDENCE: MapCard = {
     // Self-directed + Connected
     hh: {
       summary: [
-        'You like doing a thing your own way, with close people around.',
+        'You like doing things your own way, with close friends around.',
         'When you make a plan, you want room to shape it and someone you like in it.',
         'You want your own say and a real connection in the same week.',
       ],
@@ -30,13 +30,13 @@ export const CAT_INDEPENDENCE: MapCard = {
     // Self-directed + Self-contained
     hl: {
       summary: [
-        'You do things your own way, and you feel fine spending a long stretch on your own.',
+        'You feel comfortable spending long stretches of time on your own.',
         'When you have free time, you spend it on your own projects.',
         'You rely on yourself more than you rely on other people.',
       ],
       strength: [
-        'You handle things on your own, and you don’t need much help to finish them.',
-        'You pick the evening your way, then you spend it that way.',
+        'You handle tasks on your own without needing much help.',
+        'You prefer spending your evenings on your own terms.',
         'You can enjoy your own company for a long stretch of days.',
       ],
       watchOut: [
@@ -53,12 +53,12 @@ export const CAT_INDEPENDENCE: MapCard = {
     // Guided + Connected
     lh: {
       summary: [
-        'You feel best making plans with the people close to you, and you like them to lead.',
+        'You feel best making plans with close friends and letting them take the lead.',
         'When there’s a decision, you want a word from friends or family before you pick.',
         'You enjoy being on a team more than heading off on your own.',
       ],
       strength: [
-        'People like planning with you, and you do your share of the shared tasks.',
+        'You do your part when working on plans with others.',
         'You ask what other people think, and you use what they tell you.',
         'You keep people close by putting them in the plan.',
       ],
@@ -82,7 +82,7 @@ export const CAT_INDEPENDENCE: MapCard = {
       ],
       strength: [
         'You keep things calm, and people find you easy to work beside.',
-        'You follow a plan well, and you do it without a lot of noise.',
+        'You follow a plan well without making a fuss.',
         'You can feel content without needing a lot from other people.',
       ],
       watchOut: [

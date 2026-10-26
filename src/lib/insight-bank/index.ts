@@ -105,11 +105,11 @@ for (const entry of ALL_IDEAS) {
  * working). Add a line here whenever a focus text is reworded.
  */
 export const RETIRED_FOCUS_TEXT: Readonly<Record<string, string>> = {
-  "At a restaurant, you usually pick a dish you have never ordered, even when you already know a favorite.":
+  "You tend to pick what you have not tried, even when you already know a favorite.":
     "Your answers suggest you like trying new things, even when a favorite is right there.",
-  "Choosing where to eat, you can skip the usual place for one you have not tried.":
+  "You often skip the familiar option for one you have not tried.":
     "From your answers, you like trying new things, even when a favorite is right there.",
-  "The new item on the menu sometimes gets your order before the dish you already like.":
+  "A new option often appeals to you more than one you already know you like.":
     "The pattern in your answers is that you like trying new things, even when a favorite is right there.",
   "Your answers suggest you like trying something new, even when a familiar option is already there.":
     "Your answers suggest you like trying new things, even when a favorite is right there.",
@@ -121,13 +121,13 @@ export const RETIRED_FOCUS_TEXT: Readonly<Record<string, string>> = {
     "You recharge with time to yourself.",
   "A calendar full of social plans can leave you tired before the week is over.":
     "From your answers, you recharge with time to yourself.",
-  "You sometimes come back to yourself in time alone, especially after a long day around people.":
+  "You recharge with time to yourself, especially after a long day around people.":
     "The pattern in your answers is that you recharge with time to yourself.",
   "You usually keep every promise you make, even the ones you said yes to too fast.":
     "Your answers also show a use when the plan is worth finishing.",
   "You usually keep your promises, even the ones you said yes to too fast.":
     "Your answers also show a use when the plan is worth finishing.",
-  "You adapt to new plans easily, but small tasks tend to stack up when there’s no deadline.":
+  "Small tasks tend to stack up when there is no deadline.":
     "From your answers, you keep plans loose on purpose.",
   "You handle changing plans well, but small tasks can pile up when there’s no deadline.":
     "From your answers, you keep plans loose on purpose.",
@@ -135,7 +135,7 @@ export const RETIRED_FOCUS_TEXT: Readonly<Record<string, string>> = {
     "From the outside, you move on from a bad day even when it is still going.",
   "You usually see problems as smaller than others do, so people may feel you’re not taking them seriously.":
     "From the outside, you move on from a bad day even when it is still going.",
-  "When something goes wrong, you tend to sleep fine and feel better by morning.":
+  "When something goes wrong, you tend to feel better by the next morning.":
     "A thing you might skip is a problem that needed another look.",
   "When something goes wrong, you tend to feel more settled by the next day.":
     "A thing you might skip is a problem that needed another look.",
@@ -143,21 +143,21 @@ export const RETIRED_FOCUS_TEXT: Readonly<Record<string, string>> = {
     "Your answers also show a use when the bad day does not need the whole week.",
   "People tend to call you first when something goes wrong.":
     "Your answers also show a use when the bad day does not need the whole week.",
-  "A new option can pull you in while a favorite is still available.":
+  "A new option can pull you in, even when you already have a favorite.":
     "From your answers, you like trying new things, even when a favorite is right there.",
   "You can want the new thing and still have a favorite sitting there.":
     "The pattern in your answers is that you like trying new things, even when a favorite is right there.",
-  "Starting a new project can excite you, and the last stretch can drag once it stops feeling new.":
+  "The last stretch of a project can drag once it stops feeling new.":
     "The catch in your answers is passing on something that would have been more fun.",
-  "When a project stops feeling new, you usually lose interest before the last pages are done.":
+  "When a project stops feeling new, you usually lose interest before it is finished.":
     "What this can cost you is passing on something that would have been more fun.",
-  "A fresh doc is easy for you to open, and the slow middle of an old one can sit untouched.":
+  "An old project can sit untouched once the excitement fades.":
     "A cost worth naming for you is passing on something that would have been more fun.",
   "When a friend mentions a topic you do not know, you usually ask a string of questions about it.":
     "Someone else might notice that you reach for a new option even when a favorite is still there.",
   "A coworker bringing up something unfamiliar can pull a lot of questions out of you.":
     "From the outside, you reach for a new option even when a favorite is still there.",
-  "In the group chat, a subject you have never heard of sometimes gets you digging in.":
+  "A subject you have never heard of sometimes gets you digging in.":
     "Other people can see that you reach for a new option even when a favorite is still there.",
   "When the week starts looking the same, you usually get restless before the people around you do.":
     "What you might miss is a favorite you would have enjoyed.",
@@ -171,27 +171,27 @@ export const RETIRED_FOCUS_TEXT: Readonly<Record<string, string>> = {
     "Your answers also show a use when the new option is actually the better one.",
   "You sometimes enjoy a place you stumbled on more than the sight you had planned.":
     "There is a use for you when the new option is actually the better one.",
-  "When friends suggest a new place, you usually say yes and start adding more people to the chat.":
+  "You like trying new things and bringing people along with you.":
     "Your answers suggest two things at once: you try new things, and you want people around.",
-  "A new plan with friends can turn, in your hands, into a bigger group before the night arrives.":
+  "You tend to bring more people along when you try something new.":
     "Both can be true for you in the same week: you try new things, and you want people around.",
-  "You sometimes want company for a thing you have not tried, and the invite list grows.":
+  "You like having company when you try something new.":
     "In the same week, you try new things, and you want people around.",
   "When you go out to eat, you usually order the dish you already know you like.":
     "Your answers suggest you stick with something you already know you like.",
-  "You can go back to the same few places because you already know they are good.":
+  "You tend to return to places you already know are good.":
     "From your answers, you stick with something you already know you like.",
   "Choosing where to go, you sometimes stick with the spot you already trust.":
     "The pattern in your answers is that you stick with something you already know you like.",
   "When work changes a process that already worked, you usually feel frustrated before you see the point.":
     "The catch in your answers is skipping a change that would have been better.",
-  "A new tool from your boss can have you missing the old way for a while.":
+  "A new tool can have you missing the old way for a while.":
     "What this can cost you is skipping a change that would have been better.",
-  "You sometimes prefer the system that already works over the new one in the work chat.":
+  "You sometimes prefer the system that already works over a new one.":
     "A cost worth naming for you is skipping a change that would have been better.",
   "When you want to relax, you usually rewatch a show you already love instead of starting a new one.":
     "Someone else might notice that you stay with a known favorite even when a new option waits.",
-  "A tired night can send you back to a familiar movie or a playlist you already know.":
+  "When you are tired, you usually return to what is familiar.":
     "From the outside, you stay with a known favorite even when a new option waits.",
   "After a long day, you sometimes reach for the songs and shows you already know by heart.":
     "Other people can see that you stay with a known favorite even when a new option waits.",
@@ -207,47 +207,47 @@ export const RETIRED_FOCUS_TEXT: Readonly<Record<string, string>> = {
     "Your answers also show a use when the favorite still fits.",
   "You sometimes wait to see if a new idea holds up before you say yes to it.":
     "There is a use for you when the favorite still fits.",
-  "A routine that works usually gets followed by you the same way, even when someone wants to change it.":
+  "You usually stick with a routine that works, even when someone wants to change it.":
     "Your answers suggest two things at once: you keep a known favorite, and you finish the plan.",
   "Once you have a system, you can keep using it exactly, down to the same order in the morning.":
     "Both can be true for you in the same week: you keep a known favorite, and you finish the plan.",
-  "You sometimes trust the proven checklist and stick to it, even when a coworker suggests another way.":
+  "You tend to stick to a proven method, even when someone suggests another way.":
     "In the same week, you keep a known favorite, and you finish the plan.",
   "The sink is empty and your laptop is usually still open on the couch past the time you meant to stop.":
     "Your answers suggest you see a plan through once it is started.",
   "A blank Saturday can start with your to-do list, and the couch waits until the last box is checked.":
     "From your answers, you see a plan through once it is started.",
-  "Your laundry usually gets folded before you sit down, even when nothing on the list is due.":
+  "You prefer to finish your tasks before you sit down to relax.":
     "The pattern in your answers is that you see a plan through once it is started.",
-  "A last-minute text that moves dinner can annoy you, even when the new restaurant is one you like.":
+  "A last-minute change can annoy you, even when the new plan works well.":
     "The catch in your answers is a plan that crowds the rest of the day.",
-  "Your calendar still shows 7pm after a friend moves it, and the change can stick on the bus home.":
+  "When a plan changes suddenly, the frustration can linger long after the shift.":
     "What this can cost you is a plan that crowds the rest of the day.",
-  "When Friday’s reservation slides, you sometimes stay irritated even though the new time works.":
+  "When a schedule shifts, you can stay irritated even though the new timing works.":
     "A cost worth naming for you is a plan that crowds the rest of the day.",
-  "In the work chat, you usually post the schedule before anyone else has typed a plan.":
+  "You tend to organize the schedule before anyone else steps in to plan.":
     "Someone else might notice that you keep going until the plan is done.",
-  "The shared doc for a group project can sit empty until you fill in the dates yourself.":
+  "Group plans often stall until you step in and set the timeline yourself.":
     "From the outside, you keep going until the plan is done.",
-  "On a friend trip, you sometimes end up holding the booking list because you want it done right.":
+  "You often take charge of group plans so they get done properly.":
     "Other people can see that you keep going until the plan is done.",
-  "An email can sit in drafts while you reread it, even when the first version was already fine.":
+  "You tend to reread a draft even when the first version was already fine.":
     "What you might miss is time the plan did not leave you.",
-  "Before a hand-in, you usually go over the same paragraph in the doc more than once.":
+  "You tend to review your work multiple times before you consider it finished.":
     "Your answers leave room to miss time the plan did not leave you.",
-  "A text with your name on it sometimes gets one more comma fix right before you send it.":
+  "You often give messages an extra edit before sending them.":
     "A thing you might skip is time the plan did not leave you.",
-  "A coworker asks for a favor in chat, you say yes, and the task usually stays on your list until it is done.":
+  "When you agree to help someone, you follow through until the task is complete.":
     "The helpful side for you shows up when the plan is worth finishing.",
-  "A promise you made too fast on Tuesday can still own your Thursday night.":
+  "A promise you make quickly can take over your schedule later.":
     "Your answers also show a use when the plan is worth finishing.",
-  "When a friend needs a thing done, your name is usually the first one that comes up in the group chat.":
+  "When friends need help getting something done, they know they can rely on you.":
     "There is a use for you when the plan is worth finishing.",
-  "The file is in on time, and you can still be awake at midnight thinking about the slide deck.":
+  "Your work is in on time, and you can still lie awake at midnight thinking about it.":
     "Your answers suggest two things at once: you finish the plan, and you feel a bad day longer.",
   "You usually hit the deadline, and the worry about it can outlast the work itself.":
     "Both can be true for you in the same week: you finish the plan, and you feel a bad day longer.",
-  "A week of due dates gets finished, while your shoulders can stay tight the whole time.":
+  "You get through a week of due dates, but your shoulders can stay tight the whole time.":
     "In the same week, you finish the plan, and you feel a bad day longer.",
   "A moved dinner barely registers for you, but your dry cleaning can sit by the door for days.":
     "Your answers suggest you keep plans loose on purpose.",
@@ -255,31 +255,31 @@ export const RETIRED_FOCUS_TEXT: Readonly<Record<string, string>> = {
     "From your answers, you keep plans loose on purpose.",
   "With a blank Saturday, the pharmacy run usually waits until you are out of what you needed.":
     "The pattern in your answers is that you keep plans loose on purpose.",
-  "When friends ask about Saturday in the chat, your reply is usually closer to the day than a yes.":
+  "When friends ask about Saturday in the chat, you usually wait until closer to the day to answer.":
     "The catch in your answers is a loose plan that never gets finished.",
-  "Your weekend plans usually get a real yes on Saturday morning, not when the group chat asks on Wednesday.":
+  "You usually wait to commit to weekend plans until the day arrives rather than deciding days early.":
     "What this can cost you is a loose plan that never gets finished.",
-  "A friend trying to book a table can get a maybe from you while the night stays open.":
+  "You tend to give a maybe so your options stay open instead of committing to a plan.":
     "A cost worth naming for you is a loose plan that never gets finished.",
-  "Your desk looks messy to a roommate, and you can still pull the charger out of the pile.":
+  "Your space might look disorganized to others even when you know where everything is.":
     "Someone else might notice that you leave the plan open even when others want it locked.",
-  "The kitchen counter can look chaotic, and you usually know which bag has the keys.":
+  "A room that looks cluttered to other people can still make sense to you.":
     "From the outside, you leave the plan open even when others want it locked.",
-  "Mail on your dresser sometimes sits there until someone else points at the pile.":
+  "Clutter around you might sit untouched until someone else mentions it.":
     "Other people can see that you leave the plan open even when others want it locked.",
-  "A new morning alarm for a workout can go strong for a week, then you turn it off.":
+  "You might follow a new routine for a week before dropping it.":
     "What you might miss is a finish that needed a tighter plan.",
-  "You usually open a habit app at full speed, and the streak can fade after a few weeks.":
+  "Starting a new routine is often easier for you than maintaining it.":
     "Your answers leave room to miss a finish that needed a tighter plan.",
-  "When the same run route gets dull, you sometimes drift off it without a big decision.":
+  "You tend to lose interest once a routine feels repetitive.":
     "A thing you might skip is a finish that needed a tighter plan.",
-  "A long text from a friend can sit opened while you wait for the right reply.":
+  "Messages that require careful thought can take you longer to answer.":
     "The helpful side for you shows up when the day needs room to change.",
-  "You usually mean to answer, and the message that needs a real thought can stay unanswered.":
+  "You might delay answering when a message requires real thought.":
     "Your answers also show a use when the day needs room to change.",
   "A voice note that needs a careful reply can slip past the evening you meant to send one.":
     "There is a use for you when the day needs room to change.",
-  "A new idea in your notes can pull you off the half-finished project sitting on the desk.":
+  "A fresh idea can easily pull your attention away from unfinished work.":
     "Your answers suggest two things at once: you keep plans loose, and you try new things.",
   "When a fresh plan shows up, you usually leave the open tab and start the new one.":
     "Both can be true for you in the same week: you keep plans loose, and you try new things.",
@@ -295,7 +295,7 @@ export const RETIRED_FOCUS_TEXT: Readonly<Record<string, string>> = {
     "The catch in your answers is a week with no time left to come back.",
   "A problem at work can stay unclear until you talk it through out loud with your partner.":
     "What this can cost you is a week with no time left to come back.",
-  "You sometimes hit call on a hard day instead of sitting with it alone on the bus.":
+  "You sometimes call someone on a hard day instead of sitting with it alone.":
     "A cost worth naming for you is a week with no time left to come back.",
   "When the group chat goes quiet, you usually type something before the pause has a chance.":
     "Someone else might notice that you pick time with other people over a quiet evening.",
@@ -337,7 +337,7 @@ export const RETIRED_FOCUS_TEXT: Readonly<Record<string, string>> = {
     "You recharge with time to yourself after time around other people.",
   "Even with a close friend, you can prefer the chat thread to a phone call.":
     "From the outside, you recharge with time to yourself after time with other people.",
-  "An unexpected call sometimes waits while you reply in a message once it stops ringing.":
+  "You sometimes let an unexpected call ring out and reply by text instead.":
     "Other people can see that you recharge with time to yourself after time with other people.",
   "At a party, you usually find one person and stay in that conversation most of the night.":
     "You recharge with time to yourself, so a plan you like can still wait.",
@@ -353,7 +353,7 @@ export const RETIRED_FOCUS_TEXT: Readonly<Record<string, string>> = {
     "There is a use for you when you need time to yourself before the next plan.",
   "You can want the evening alone and still miss a close friend when the week has no plan with them.":
     "You recharge with time to yourself, and you need a real tie.",
-  "A big group plan sometimes feels like the wrong shape, because you want quiet and one real person.":
+  "A big group plan sometimes feels wrong, because you'd rather have a quiet night with one close friend.":
     "Both can be true for you in the same week: you recharge with time to yourself, and you need a real tie.",
   "After a stretch alone, you usually want one real talk with someone close, not a crowded night.":
     "In the same week, you recharge with time to yourself, and you need a real tie.",
@@ -389,7 +389,7 @@ export const RETIRED_FOCUS_TEXT: Readonly<Record<string, string>> = {
     "There is a use for you when the easy yes keeps the peace.",
   "Something bothers you, and you usually let it go instead of bringing it up in the chat.":
     "Your answers suggest two things at once: you go along, and you step back.",
-  "Small annoyances can stay with you, unsent, so the evening stays calm.":
+  "You can keep small annoyances to yourself so the evening stays calm.":
     "Both can be true for you in the same week: you go along, and you step back.",
   "A friend or partner upsets you, and you usually say it’s fine even when it isn’t.":
     "In the same week, you go along, and you step back.",
@@ -455,7 +455,7 @@ export const RETIRED_FOCUS_TEXT: Readonly<Record<string, string>> = {
     "A thing you might skip is a problem that needed another look.",
   "When friends or family are stressed, they usually come to you because you stay calm.":
     "The helpful side for you shows up when the bad day does not need the whole week.",
-  "A crisis in the group chat can land in your messages first.":
+  "When there's a crisis in the group chat, people often message you first.":
     "Your answers also show a use when the bad day does not need the whole week.",
   "You sometimes end up as the person who handles it when something goes wrong in the family.":
     "There is a use for you when the bad day does not need the whole week.",
@@ -515,7 +515,7 @@ export const RETIRED_FOCUS_TEXT: Readonly<Record<string, string>> = {
     "A cost worth naming for you is a worry that outruns what was actually said.",
   "A friend cancels dinner, and you can spend the walk home wondering if you did something wrong.":
     "Someone else might notice that you reread a warm message for a sign people will pull away.",
-  "The dropped plan stays on your calendar, and you usually take it personally even when the reason was plain.":
+  "A friend drops a plan, and you usually take it personally even when the reason was plain.":
     "From the outside, you reread a warm message for a sign people will pull away.",
   "A friend drops Saturday in the group chat, and you scroll back for something you might have said.":
     "Other people can see that you reread a warm message for a sign people will pull away.",
@@ -529,7 +529,7 @@ export const RETIRED_FOCUS_TEXT: Readonly<Record<string, string>> = {
     "The helpful side for you shows up when a real risk of distance is worth a check.",
   "You sometimes send another text before a friend has answered the last one.":
     "Your answers also show a use when a real risk of distance is worth a check.",
-  "After a few days of them not starting the chat, you sometimes reach out more than you did last month.":
+  "After a few days of a friend not starting the chat, you sometimes reach out more than usual.":
     "There is a use for you when a real risk of distance is worth a check.",
   "A day with no text from your partner can feel long, and you usually want a goodnight message.":
     "Your answers suggest two things at once: you check they will stay, and you stay close.",
@@ -545,7 +545,7 @@ export const RETIRED_FOCUS_TEXT: Readonly<Record<string, string>> = {
     "The pattern in your answers is that you let a gap in contact pass without dwelling on it.",
   "Your partner heads out without you, and you usually take the couch for your own evening.":
     "The catch in your answers is a gap that actually mattered.",
-  "Saturday with their friends usually feels fine to you, and you keep the plan you already had.":
+  "Your partner's Saturday with their friends usually feels fine to you, and you keep the plan you already had.":
     "What this can cost you is a gap that actually mattered.",
   "A few busy days from someone close usually don’t feel personal, and you wait until they’re free.":
     "A cost worth naming for you is a gap that actually mattered.",
@@ -561,7 +561,7 @@ export const RETIRED_FOCUS_TEXT: Readonly<Record<string, string>> = {
     "Your answers leave room to miss a gap that was a real signal.",
   "A friend’s care usually feels clear to you without a text that spells it out.":
     "A thing you might skip is a gap that was a real signal.",
-  "A new person at a party can get your trust quickly, and you might talk about your week on the way home.":
+  "A new person at a party can earn your trust quickly, and you might tell them about your week.":
     "The helpful side for you shows up when most gaps are just slow replies.",
   "Over a second coffee, you usually believe a new friend means what they say.":
     "Your answers also show a use when most gaps are just slow replies.",
@@ -599,7 +599,7 @@ export const RETIRED_FOCUS_TEXT: Readonly<Record<string, string>> = {
     "A thing you might skip is a closeness you would have wanted.",
   "A long hug or a very sweet text can leave you a bit uncomfortable, even from someone you care about.":
     "The helpful side for you shows up when a little room can keep the bond workable.",
-  "You usually show care by doing the thing, the ride, the errand, more than by saying it.":
+  "You usually show care by doing things, like a ride or an errand, more than by saying it.":
     "Your answers also show a use when a little room can keep the bond workable.",
   "A friend says something very emotional, and you can sit there unsure what to text back.":
     "There is a use for you when a little room can keep the bond workable.",
@@ -619,7 +619,7 @@ export const RETIRED_FOCUS_TEXT: Readonly<Record<string, string>> = {
     "The catch in your answers is closeness with no room to breathe.",
   "With people you trust, you usually say the feeling out loud instead of sitting on it.":
     "What this can cost you is closeness with no room to breathe.",
-  "A feeling shows up, and you can say it in the kitchen before you’ve had time to edit it.":
+  "A feeling shows up, and you can say it out loud before you've had time to edit it.":
     "A cost worth naming for you is closeness with no room to breathe.",
   "A problem at home usually has you asking a friend or your family early, before you’ve tried it alone.":
     "Someone else might notice that you stay in once closeness has started.",
@@ -683,11 +683,11 @@ export const RETIRED_FOCUS_TEXT: Readonly<Record<string, string>> = {
     "In the same week, you say your point, and you widen the plan.",
   "A roommate leaves dishes in the sink, and you usually wash them instead of saying anything.":
     "Your answers suggest you step back in a disagreement even when the point is ready.",
-  "Small things that bother you can stay unsaid, and you keep the kitchen quiet.":
+  "Small things that bother you can stay unsaid, so the peace holds.":
     "From your answers, you step back in a disagreement even when the point is ready.",
   "A friend keeps showing up late to the movie, and you usually don’t mention the start time.":
     "The pattern in your answers is that you step back in a disagreement even when the point is ready.",
-  "You disagree in a meeting, and you usually keep the point in your notes instead of the room.":
+  "You disagree in a meeting, and you usually keep the point to yourself instead of saying it.":
     "The catch in your answers is a point that never gets said.",
   "Your concern can wait until after the meeting, and sometimes it never makes it into a message.":
     "What this can cost you is a point that never gets said.",
@@ -737,7 +737,7 @@ export const RETIRED_FOCUS_TEXT: Readonly<Record<string, string>> = {
     "Other people can see that you widen the plan so the other person can live with it.",
   "A group project goes well, and you usually hand the credit to the other names on it.":
     "What you might miss is the part you needed to keep.",
-  "You can let someone else take the lead, or the praise, even when you did a lot of the file.":
+  "You can let someone else take the lead, or the praise, even when you did a lot of the work.":
     "Your answers leave room to miss the part you needed to keep.",
   "Praise shows up at work, and you usually point it toward the team instead of your own part.":
     "A thing you might skip is the part you needed to keep.",
@@ -789,7 +789,7 @@ export const RETIRED_FOCUS_TEXT: Readonly<Record<string, string>> = {
     "Both can be true for you in the same week: you protect the outcome, and you say your point.",
   "You disagree with someone, and you usually keep making the case until it’s settled.":
     "In the same week, you protect the outcome, and you say your point.",
-  "Your boss hands you a task, and you usually want to do it your way rather than from their steps.":
+  "Your boss hands you a task, and you usually want to do it your way rather than follow their steps.":
     "Your answers suggest you want to do a task in a way you chose.",
   "A set process in the work doc can feel too fixed, and you prefer to choose how the work gets done.":
     "From your answers, you want to do a task in a way you chose.",
@@ -807,15 +807,15 @@ export const RETIRED_FOCUS_TEXT: Readonly<Record<string, string>> = {
     "From the outside, you pick your own way even when a set path is available.",
   "Faced with a decision, you usually work it out alone before you bring it to the group chat.":
     "Other people can see that you pick your own way even when a set path is available.",
-  "A rule that doesn’t make sense can have you questioning it, or finding a way around the form.":
+  "A rule that doesn’t make sense can have you questioning it, or finding a way around it.":
     "What you might miss is a set path that would have worked.",
-  "You usually want the reason for a rule before you follow it on the next task.":
+  "You usually want the reason for a rule before you follow it.":
     "Your answers leave room to miss a set path that would have worked.",
   "A “we’ve always done it this way” at work can make you want to change the step.":
     "A thing you might skip is a set path that would have worked.",
   "A project that started as your idea usually gets your best hours, late and early.":
     "The helpful side for you shows up when a self-chosen way can fit better.",
-  "A task you chose can matter more to you than the one that landed in your inbox assigned.":
+  "A task you chose can matter more to you than one that was assigned to you.":
     "Your answers also show a use when a self-chosen way can fit better.",
   "Once you set the goal yourself, you can work much harder than you do on a handed-down list.":
     "There is a use for you when a self-chosen way can fit better.",
@@ -827,7 +827,7 @@ export const RETIRED_FOCUS_TEXT: Readonly<Record<string, string>> = {
     "In the same week, you choose the way, and you can skip the tie.",
   "A new task can feel better once someone explains what “done” looks like before you start.":
     "Your answers suggest you follow a path that is already set.",
-  "You usually work best when your boss gives you the steps, not only the goal in the chat.":
+  "You usually work best when your boss gives you the steps, not only the goal.":
     "From your answers, you follow a path that is already set.",
   "A vague assignment can have you waiting for more direction before you open the file.":
     "The pattern in your answers is that you follow a path that is already set.",
@@ -835,7 +835,7 @@ export const RETIRED_FOCUS_TEXT: Readonly<Record<string, string>> = {
     "The catch in your answers is a path that was never questioned.",
   "You can like it when someone else picks the restaurant and the time.":
     "What this can cost you is a path that was never questioned.",
-  "A group that needs a decision usually gets your silence while someone else leads.":
+  "When a group needs a decision, you usually stay quiet and let someone else lead.":
     "A cost worth naming for you is a path that was never questioned.",
   "A decision on your plate usually starts with you asking a few people what they’d do.":
     "Someone else might notice that you take the set path even when your own way is available.",
@@ -845,11 +845,11 @@ export const RETIRED_FOCUS_TEXT: Readonly<Record<string, string>> = {
     "Other people can see that you take the set path even when your own way is available.",
   "A job with a clear role and a steady routine can leave you settled, and the work goes well.":
     "What you might miss is a way you would have chosen.",
-  "A project with a named lead usually feels better to you, because you know your part of the file.":
+  "A project with a named lead usually feels better to you, because you know your part.":
     "Your answers leave room to miss a way you would have chosen.",
   "A team with named roles on the doc usually feels more comfortable to you than a loose one.":
     "A thing you might skip is a way you would have chosen.",
-  "Someone who knows the topic better usually gets your follow, and you let them lead the call.":
+  "You usually follow someone who knows the topic better and let them lead the call.":
     "The helpful side for you shows up when a set path can be the right one.",
   "You can trust a more experienced coworker to decide when you’re both looking at the same problem.":
     "Your answers also show a use when a set path can be the right one.",
@@ -857,7 +857,7 @@ export const RETIRED_FOCUS_TEXT: Readonly<Record<string, string>> = {
     "There is a use for you when a set path can be the right one.",
   "Plans and decisions usually feel best when you make them with the people close to you, not alone.":
     "Your answers suggest two things at once: you take the set path, and you need a real tie.",
-  "A choice on the calendar can have you wanting your partner or friends in the text before you lock it.":
+  "Before you lock in a plan, you can want your partner or friends to weigh in.":
     "Both can be true for you in the same week: you take the set path, and you need a real tie.",
   "Picking a place for dinner can feel better with your partner in the text than choosing alone.":
     "In the same week, you take the set path, and you need a real tie.",
@@ -867,7 +867,7 @@ export const RETIRED_FOCUS_TEXT: Readonly<Record<string, string>> = {
     "From your answers, you trust that a hard task can be handled.",
   "Something difficult needs an owner, and you usually say you’ve got it before anyone else does.":
     "The pattern in your answers is that you trust that a hard task can be handled.",
-  "Stuck on a problem, you usually keep going alone because you’re sure you’ll figure the file out.":
+  "Stuck on a problem, you usually keep going alone because you’re sure you’ll figure it out.":
     "The catch in your answers is a trust that skips a needed check.",
   "A stuck line in the doc can feel solvable to you, so you stay with it instead of asking for help.":
     "What this can cost you is a trust that skips a needed check.",
@@ -921,9 +921,9 @@ export const RETIRED_FOCUS_TEXT: Readonly<Record<string, string>> = {
     "Your answers leave room to miss the small start that was available.",
   "Your boss says you did well, and you can decide they’re just being nice in the meeting.":
     "A thing you might skip is the small start that was available.",
-  "A coworker does well in the meeting, and you usually compare notes with yourself and feel behind.":
+  "A coworker does well in the meeting, and you usually compare yourself to them and feel behind.":
     "The helpful side for you shows up when an honest doubt can be useful.",
-  "You can notice what other people do better than you, faster than you notice your own file.":
+  "You can notice what other people do better than you, faster than you notice what you do well.":
     "Your answers also show a use when an honest doubt can be useful.",
   "Friends’ updates can have you forgetting how far your own year has actually moved.":
     "There is a use for you when an honest doubt can be useful.",
@@ -1031,7 +1031,7 @@ export const RETIRED_FOCUS_TEXT: Readonly<Record<string, string>> = {
     "A thing you might skip is a rest the next try did not allow.",
   "A look at your week can turn into a list of things you want to get better at.":
     "The helpful side for you shows up when a next try can be the right move.",
-  "You usually have a course tab and a skill video open beside the work you already do.":
+  "You usually have a course or a how-to video open alongside your regular work.":
     "Your answers also show a use when a next try can be the right move.",
   "Free time on the couch sometimes goes to learning something instead of the show you meant to watch.":
     "There is a use for you when a next try can be the right move.",
@@ -1043,7 +1043,7 @@ export const RETIRED_FOCUS_TEXT: Readonly<Record<string, string>> = {
     "In the same week, you look for the change, and you look at your part.",
   "Choosing what to do, you usually pick the task you already know you can do well.":
     "Your answers suggest you can treat a miss as the end of that path.",
-  "A new skill that feels hard on the first try can get set aside by you as not for you.":
+  "If a new skill feels hard on the first try, you can set it aside as not for you.":
     "From your answers, you can treat a miss as the end of that path.",
   "You sometimes stay with the job you already do well and leave the unfamiliar one on the list.":
     "The pattern in your answers is that you can treat a miss as the end of that path.",
@@ -1067,7 +1067,7 @@ export const RETIRED_FOCUS_TEXT: Readonly<Record<string, string>> = {
     "A thing you might skip is a try that was still open.",
   "When something new does not work the first time, you usually stop and move on.":
     "The helpful side for you shows up when some misses really are the end of a path.",
-  "A new hobby that feels awkward can get dropped by you before the second try.":
+  "You can drop a new hobby that feels awkward before the second try.":
     "Your answers also show a use when some misses really are the end of a path.",
   "You sometimes read a rough start as proof the thing is not for you.":
     "There is a use for you when some misses really are the end of a path.",
@@ -1097,7 +1097,7 @@ export const RETIRED_FOCUS_TEXT: Readonly<Record<string, string>> = {
     "Other people can see that you look for the part you could steer instead of blaming the day.",
   "When something goes wrong, you usually skip blame and look at your own choices.":
     "What you might miss is the part that was actually outside your hands.",
-  "A bad outcome can have you asking what you can do, not whose fault the email was.":
+  "A bad outcome can have you asking what you can do, not whose fault it was.":
     "Your answers leave room to miss the part that was actually outside your hands.",
   "You sometimes leave other people’s part out of the story when you look back.":
     "A thing you might skip is the part that was actually outside your hands.",
@@ -1121,13 +1121,13 @@ export const RETIRED_FOCUS_TEXT: Readonly<Record<string, string>> = {
     "The pattern in your answers is that you figure a bad outcome was bound to happen.",
   "When something goes well, you usually say you got lucky.":
     "The catch in your answers is a cause that ignores a real lever.",
-  "Praise for a project can get “the timing was right” from you instead of what you did.":
+  "When a project gets praise, you can say the timing was right instead of naming what you did.":
     "What this can cost you is a cause that ignores a real lever.",
-  "A win sometimes gets credited by you to the team or the timing, and your part stays quiet.":
+  "You sometimes credit a win to the team or the timing and leave your own part out.":
     "A cost worth naming for you is a cause that ignores a real lever.",
   "When you want something to change, you usually wait to see if it happens on its own.":
     "Someone else might notice that you treat the outcome as bound to happen even when a lever is visible.",
-  "A problem in the work chat can get time from you before you step in.":
+  "A problem in the work chat can sit for a while before you step in.":
     "From the outside, you treat the outcome as bound to happen even when a lever is visible.",
   "You sometimes give a mess a few days to sort itself before you touch it.":
     "Other people can see that you treat the outcome as bound to happen even when a lever is visible.",
@@ -1151,7 +1151,7 @@ export const RETIRED_FOCUS_TEXT: Readonly<Record<string, string>> = {
     "In the same week, you blame the day, and you shake a bad day off.",
   "When someone asks if you can handle a task, you usually say yes before you have heard the details.":
     "Your answers suggest you expect to finish a big task once it is started.",
-  "A new problem can land and you already trust you will find a way through it.":
+  "When a new problem lands, you already trust you will find a way through it.":
     "From your answers, you expect to finish a big task once it is started.",
   "You sometimes take the extra work in the chat because you believe you can figure it out.":
     "The pattern in your answers is that you expect to finish a big task once it is started.",
@@ -1249,7 +1249,7 @@ export const RETIRED_FOCUS_TEXT: Readonly<Record<string, string>> = {
     "The helpful side for you shows up when play can make the task worth doing.",
   "An embarrassing moment in the group chat can become a joke from you before it becomes a worry.":
     "Your answers also show a use when play can make the task worth doing.",
-  "You sometimes do not sit with a typo you sent; the joke arrives and you move on.":
+  "A typo you sent usually gets a laugh from you, and then you move on.":
     "There is a use for you when play can make the task worth doing.",
   "When things go wrong, you usually stay calm and find something in it to laugh about.":
     "Your answers suggest two things at once: you turn it into play, and you shake a bad day off.",
@@ -1291,7 +1291,7 @@ export const RETIRED_FOCUS_TEXT: Readonly<Record<string, string>> = {
     "Your answers suggest two things at once: you take it straight, and you finish the plan.",
   "You can finish the work on the list before you let yourself relax on the couch.":
     "Both can be true for you in the same week: you take it straight, and you finish the plan.",
-  "Fun sometimes waits, in your week, until the work is done and the list is clear.":
+  "Fun usually waits until the work is done and the list is clear.":
     "In the same week, you take it straight, and you finish the plan.",
   "Your lock screen sometimes takes the first minute of the morning, while the kettle is still cold.":
     "Your lock screen might take the first minute of the morning.",

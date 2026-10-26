@@ -8,20 +8,20 @@ export const CAT_RESILIENCE: BarCard = {
       summary: [
         'When something goes wrong, you stay calm, trust what you can do, and look for the lesson.',
         'You come back quickly after a setback at work or at home.',
-        'You handle a hard day, and you come out of it with a clearer next step.',
+        'You come out of a hard day with a clear next step.',
       ],
       strength: [
         'You stay steady when the pressure builds at work or at home.',
         'When something fails, you take the lesson and you try again.',
-        'You trust yourself to handle a hard thing when it shows up on your desk.',
+        'You trust yourself to handle a hard problem when it shows up.',
       ],
       watchOut: [
-        'Sometimes you push through stress that really needed a break.',
+        'Sometimes you push through stress when you really need a break.',
         'Sometimes people hand you more than your share.',
         'Sometimes you expect other people to come back as fast as you do.',
       ],
       tryThis: [
-        'Take a real break after your next stressful day, so the next one still has you.',
+        'Take a real break after a stressful day so you are ready for the next one.',
         'Ask a stressed friend what they need, so your calm can be useful to them too.',
         'Say no to one extra task this week, so you don’t carry more than your share.',
       ],
@@ -30,7 +30,7 @@ export const CAT_RESILIENCE: BarCard = {
       summary: [
         'You handle some kinds of pressure well, and other kinds stay with you for a while.',
         'When a setback hits, you usually come back, but it can take you some time.',
-        'You can stay steady through a hard meeting, but a long week can still get to you on Friday.',
+        'Short-term pressure is manageable for you, but prolonged strain can wear you down.',
       ],
       strength: [
         'You come back from a setback, and you pick up one useful piece on the way.',
@@ -51,8 +51,8 @@ export const CAT_RESILIENCE: BarCard = {
     low: {
       summary: [
         'You feel pressure in your body, and a setback can stay with you well past the day.',
-        'When something goes wrong, you feel it deeply and you doubt yourself afterward.',
-        'A stressful stretch is hard for you, and you need extra time before you feel steady again.',
+        'When something goes wrong, you tend to doubt yourself afterward.',
+        'You need extra time after a stressful stretch to feel steady again.',
       ],
       strength: [
         'You take a problem seriously, and you prepare for it with care.',
