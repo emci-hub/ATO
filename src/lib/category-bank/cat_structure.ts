@@ -12,7 +12,7 @@ export const CAT_STRUCTURE: MapCard = {
         'You pair a curious idea with real follow-through, from the first note to the done list.',
       ],
       strength: [
-        'You make a new idea real instead of only talking about it in the chat.',
+        'You make a new idea real instead of only talking about it.',
         'You plan a trip, a project or a change with the steps written down.',
         'You can bring a fresh idea and a solid plan to the same table.',
       ],
@@ -24,23 +24,23 @@ export const CAT_STRUCTURE: MapCard = {
       tryThis: [
         'Leave one day this week with no plan, so you have room to rest.',
         'Pick one new idea to finish before you start another, so the plans don’t pile up.',
-        'Ask the people in your plan what pace works for them, so they can keep up.',
+        'Ask the people planning with you what pace works for them.',
       ],
     },
     // Adventurous + Flexible
     hl: {
       summary: [
-        'You follow a new idea in the moment instead of sticking to a list you wrote earlier.',
+        'You follow a new idea in the moment instead of sticking to an earlier plan.',
         'When something new comes up, you jump in and sort it out as you go.',
-        'You like a surprise, and you keep the plan loose on purpose.',
+        'You keep your plans loose on purpose.',
       ],
       strength: [
-        'You shift quickly, and you can enjoy a turn you didn’t expect.',
+        'You adapt easily to an unexpected turn.',
         'You can find something good in a last-minute change of plan.',
         'You can try a new thing without every step figured out first.',
       ],
       watchOut: [
-        'Sometimes a thing you start doesn’t get a finish.',
+        'Sometimes a thing you start doesn’t get finished.',
         'Sometimes someone who plans ahead feels unsure about you.',
         'Sometimes your small tasks pile up behind a new one.',
       ],
@@ -58,13 +58,13 @@ export const CAT_STRUCTURE: MapCard = {
         'You feel best with a clear plan and steps you already know.',
       ],
       strength: [
-        'You keep a plan organized, and people can rely on you to hold it.',
+        'You keep a plan organized, and people can rely on you to stick to it.',
         'You get a thing done the same solid way each time you do it.',
         'When a plan slips, people can count on you to put it back on the calendar.',
       ],
       watchOut: [
         'Sometimes a sudden change throws your whole day off.',
-        'Sometimes you miss a better way to do the task.',
+        'Sometimes you miss a better way to do a task.',
         'Sometimes you stick with a plan after it has stopped working for you.',
       ],
       tryThis: [
@@ -91,8 +91,8 @@ export const CAT_STRUCTURE: MapCard = {
         'Sometimes you reach for the usual option.',
       ],
       tryThis: [
-        'Set a deadline for one task you’ve been putting off, so it gets a finish.',
-        'Try one small new thing this week, so the usual week has one new piece.',
+        'Set a deadline for one task you’ve been putting off, so you actually finish it.',
+        'Try one small new thing this week to mix up your routine.',
         'Write down one goal for this month, so the days have a direction.',
       ],
     },

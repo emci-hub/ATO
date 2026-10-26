@@ -1,6 +1,6 @@
 # Privacy Policy — ATO
 
-**Last updated:** October 22, 2026
+**Last updated:** October 26, 2026
 
 ATO ("the app," "we," "us") is operated by Michael Malig, in Alberta, Canada. This policy explains what we collect, why, who can see it, how long we keep it, and how you control it.
 
@@ -58,18 +58,15 @@ ATO is for reflection and fun. It is not therapy, counselling or medical advice.
 
 ## AI in ATO
 
-Legends cards and category deep dives come from a stored story library on your phone. No model writes a new card when you open one. Insights, questions and category cards are stored copy too. Some lines in the story library were drafted earlier with Google's Gemini model. Your phone does not send a prompt for these cards.
+ATO does not use any outside AI service. Legends cards, category deep dives, insights, questions and category cards are all stored copy. No model writes a card when you open one, and nothing you type or answer is sent to an AI model.
 
-What Google does with a request depends on Google's Gemini API terms: on Google's paid plan, Google does not use prompts or replies to improve its products; on its free plan, Google may use them to improve its products and people at Google may review them. On both, Google keeps them for a limited time to detect abuse. Because a request that was sent never contained anything that identifies you, it cannot be tied back to you either way.
-
-The story library does not ask you to turn a model on. The You tab no longer sends Legends cards or category deep dives to a model.
+Some older lines in the story library were drafted with Google's Gemini model before launch. Those drafts never contained anything that identifies you. ATO no longer sends anything to Google's Gemini API or to any other AI provider.
 
 ## Who else processes your data
 
 We use a small number of service providers to run ATO. We don't sell your data to anyone, ever. Each one handles data under its own published terms:
 
 - **Supabase** (database and sign-in) — your profile, answers, Checks, Circle data, reports, chat and Divecore save live here. https://supabase.com/privacy
-- **Google (Gemini API)** — the AI-written cards described above. https://ai.google.dev/gemini-api/terms
 - **Resend** — sends the one-time sign-in codes to your email; it keeps email data for 30 days. https://resend.com/legal/privacy-policy
 - **Sentry** — receives crash and error reports (see Device, above) and keeps them for up to 90 days. https://sentry.io/privacy/
 - **ImprovMX** — forwards email sent to our support address to our inbox. It does not store message content and keeps delivery logs for 7 days. https://improvmx.com/privacy/
@@ -95,7 +92,7 @@ ATO is for people 18 and older. Marking yourself as "going" to an 18+ night also
 - **The deletion record** (described below): 2 years after the deletion, then deleted.
 - **Database backups:** any backups are deleted automatically within 30 days.
 - **Support emails:** as long as needed to answer you.
-- **Providers:** Resend 30 days, Sentry up to 90 days, ImprovMX delivery logs 7 days, Google for a limited time under its terms (see above).
+- **Providers:** Resend 30 days, Sentry up to 90 days, ImprovMX delivery logs 7 days.
 
 ## Your controls
 
@@ -106,7 +103,7 @@ ATO is for people 18 and older. Marking yourself as "going" to an 18+ night also
 - **Delete your account:** always available in-app, at the bottom of the You tab. It deletes your account and the data stored under it: profile, answers, Checks, saved profiles, Circle links, requests and switches, Divecore save, AI usage log and token history. It revokes your Sign in with Apple token. This is permanent and cannot be undone. Two things are kept, each for 2 years:
   - a short deletion record (an ID, whether an Apple identity existed, and the result of the Apple revoke; no profile content), so we can prove the deletion happened;
   - reports you filed or that were filed about you, without your account ID (the reported @handle and reason stay, see above).
-  Cards in the shared AI library stay in the library with no link to you.
+  Cards in the shared story library stay in the library with no link to you.
 
 ## Security and breaches
 

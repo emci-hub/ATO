@@ -171,7 +171,7 @@ export default function InsightsScreen() {
                   <ThemedText type="smallBold">Answer the questions</ThemedText>
                   <ThemedText type="small" themeColor="textSecondary">
                     {fullProfileLockedLine(fullProfileProgress(tracks))}{' '}
-                    {earlyRead ? 'The rest of Insights opens once they are done.' : 'Insights opens once they are done.'}
+                    {earlyRead ? 'The rest of Insights opens once you finish the questions.' : 'Insights opens once you finish the questions.'}
                   </ThemedText>
                 </View>
                 <ThemedText themeColor="textSecondary">›</ThemedText>

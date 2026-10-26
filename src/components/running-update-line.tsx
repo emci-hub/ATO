@@ -85,13 +85,13 @@ export function RunningUpdateLine({ compact = false }: { compact?: boolean }) {
   const copyValue = snap.groupId ?? snap.updateId ?? label.line;
   const secret = useRef({ n: 0, at: 0 });
   // This row renders on You for EVERY account, so the 5-tap shortcut below
-  // has to carry the same gate `/ai-lab` itself does — otherwise any user
-  // could open the provider switcher. Copy-to-clipboard stays open to all;
+  // has to carry the same gate `/dev-lab` itself does — otherwise any user
+  // could open the dev lab. Copy-to-clipboard stays open to all;
   // only the hidden navigation is gated.
   const { devAccess } = useMeContext();
   const devUnlocked = useDevAccessUnlocked();
   const pinUnlocked = useDevPinUnlocked();
-  const canOpenAiLab =
+  const canOpenDevLab =
     hubAccess({
       toolsAvailable: DEV_TOOLS_AVAILABLE,
       isDev: __DEV__ || devUnlocked || pinUnlocked,
@@ -122,7 +122,7 @@ export function RunningUpdateLine({ compact = false }: { compact?: boolean }) {
           secret.current.n += 1;
           if (secret.current.n >= 5) {
             secret.current.n = 0;
-            if (canOpenAiLab) router.push('/ai-lab');
+            if (canOpenDevLab) router.push('/dev-lab');
           }
         }}
         style={styles.column}>
