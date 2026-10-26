@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "hero": "gearbreaker",
+  "slug": "hero.gearbreaker.streetwear",
+  "canvas": [192, 192],
+  "rawDir": "art-src/pixellab/hero.gearbreaker.streetwear/migrated/raw",
+  "footRow": 150,
+  "heightBand": [117, 125],
+  "lines": { "hip": 125, "shoulder": 70 },
+  "directions": {
+    "east": { "parts": {} },
+    "west": { "parts": {} }
+  },
+  "recipes": {
+    "breathing-idle": {
+      "offsets": [0, 1, 1, 1],
+      "capeOffsets": [0, 0, 0, 0],
+      "headExtra": [0, 0, 1, 0],
+      "ms": [400, 250, 400, 250]
+    }
+  },
+  "notes": "Gearbreaker (M3 hero 5): hunched heavy brute, about 121 px tall. No cape or held prop in the side views (gauntlets are part of the body), so the breath is a plain body lift with the legs and boots locked below the hip line. Masks read off the 192 rotations (lowest pixel row 150, body rows 30-150)."
+}

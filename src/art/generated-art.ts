@@ -41,6 +41,10 @@ export const ART_SOURCES: Record<string, ImageSourcePropType> = {
   'hero.frost-lich.cast.atlas': require('@/assets/art/heroes/in-use/frost-lich/cast/atlas.png'),
   'hero.frost-lich.streetwear.combat': require('@/assets/art/heroes/in-use/frost-lich/streetwear/hero_frost-lich_streetwear.combat.png'),
   'hero.frost-lich.streetwear.core': require('@/assets/art/heroes/in-use/frost-lich/streetwear/hero_frost-lich_streetwear.core.png'),
+  'hero.gearbreaker.streetwear.combat': require('@/assets/art/heroes/in-use/gearbreaker/streetwear/hero_gearbreaker_streetwear.combat.png'),
+  'hero.gearbreaker.streetwear.core': require('@/assets/art/heroes/in-use/gearbreaker/streetwear/hero_gearbreaker_streetwear.core.png'),
+  'hero.hush-bot.streetwear.combat': require('@/assets/art/heroes/in-use/hush-bot/streetwear/hero_hush-bot_streetwear.combat.png'),
+  'hero.hush-bot.streetwear.core': require('@/assets/art/heroes/in-use/hush-bot/streetwear/hero_hush-bot_streetwear.core.png'),
   'hero.ironclad-kabuto.streetwear.combat': require('@/assets/art/heroes/in-use/ironclad-kabuto/streetwear/hero_ironclad-kabuto_streetwear.combat.png'),
   'hero.ironclad-kabuto.streetwear.core': require('@/assets/art/heroes/in-use/ironclad-kabuto/streetwear/hero_ironclad-kabuto_streetwear.core.png'),
   'hero.kabuki-gear.streetwear.combat': require('@/assets/art/heroes/in-use/kabuki-gear/streetwear/hero_kabuki-gear_streetwear.combat.png'),
@@ -297,6 +301,10 @@ export type ArtId =
   | 'hero.frost-lich.cast.atlas'
   | 'hero.frost-lich.streetwear.combat'
   | 'hero.frost-lich.streetwear.core'
+  | 'hero.gearbreaker.streetwear.combat'
+  | 'hero.gearbreaker.streetwear.core'
+  | 'hero.hush-bot.streetwear.combat'
+  | 'hero.hush-bot.streetwear.core'
   | 'hero.ironclad-kabuto.streetwear.combat'
   | 'hero.ironclad-kabuto.streetwear.core'
   | 'hero.kabuki-gear.streetwear.combat'
@@ -1406,6 +1414,18 @@ export const ART = {
         core: 'hero.frost-lich.streetwear.core',
       },
     },
+    gearbreaker: {
+      streetwear: {
+        combat: 'hero.gearbreaker.streetwear.combat',
+        core: 'hero.gearbreaker.streetwear.core',
+      },
+    },
+    hushBot: {
+      streetwear: {
+        combat: 'hero.hush-bot.streetwear.combat',
+        core: 'hero.hush-bot.streetwear.core',
+      },
+    },
     ironcladKabuto: {
       streetwear: {
         combat: 'hero.ironclad-kabuto.streetwear.combat',
@@ -2249,6 +2269,24 @@ export const SHEET = {
       skill: 'sheets/streetwear/heroes/frost-lich/Skill',
       hurt: 'sheets/streetwear/heroes/frost-lich/Hurt',
       faint: 'sheets/streetwear/heroes/frost-lich/Faint',
+    },
+    gearbreaker: {
+      rotations: 'sheets/streetwear/heroes/gearbreaker/rotations',
+      idle: 'sheets/streetwear/heroes/gearbreaker/Idle',
+      walk: 'sheets/streetwear/heroes/gearbreaker/Walk',
+      dash: 'sheets/streetwear/heroes/gearbreaker/Dash',
+      attack: 'sheets/streetwear/heroes/gearbreaker/Attack',
+      skill: 'sheets/streetwear/heroes/gearbreaker/Skill',
+      hurt: 'sheets/streetwear/heroes/gearbreaker/Hurt',
+    },
+    'hush-bot': {
+      rotations: 'sheets/streetwear/heroes/hush-bot/rotations',
+      idle: 'sheets/streetwear/heroes/hush-bot/Idle',
+      walk: 'sheets/streetwear/heroes/hush-bot/Walk',
+      dash: 'sheets/streetwear/heroes/hush-bot/Dash',
+      attack: 'sheets/streetwear/heroes/hush-bot/Attack',
+      skill: 'sheets/streetwear/heroes/hush-bot/Skill',
+      hurt: 'sheets/streetwear/heroes/hush-bot/Hurt',
     },
     'ironclad-kabuto': {
       rotations: 'sheets/streetwear/heroes/ironclad-kabuto/rotations',

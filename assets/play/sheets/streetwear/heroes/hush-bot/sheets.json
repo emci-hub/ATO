@@ -1,0 +1,753 @@
+{
+  "sheets/streetwear/heroes/hush-bot/Attack": {
+    "sheet": "art/heroes/in-use/hush-bot/streetwear/hero_hush-bot_streetwear.combat.png",
+    "sheetW": 1039,
+    "sheetH": 961,
+    "frames": {
+      "east/frame_000": {
+        "x": 0,
+        "y": 266,
+        "w": 115,
+        "h": 118
+      },
+      "east/frame_001": {
+        "x": 116,
+        "y": 266,
+        "w": 115,
+        "h": 118
+      },
+      "east/frame_002": {
+        "x": 232,
+        "y": 266,
+        "w": 115,
+        "h": 118
+      },
+      "east/frame_003": {
+        "x": 348,
+        "y": 266,
+        "w": 115,
+        "h": 118
+      },
+      "east/frame_004": {
+        "x": 464,
+        "y": 266,
+        "w": 115,
+        "h": 118
+      },
+      "east/frame_005": {
+        "x": 580,
+        "y": 266,
+        "w": 115,
+        "h": 118
+      },
+      "east/frame_006": {
+        "x": 696,
+        "y": 266,
+        "w": 115,
+        "h": 118
+      },
+      "east/frame_007": {
+        "x": 812,
+        "y": 266,
+        "w": 115,
+        "h": 118
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 385,
+        "w": 115,
+        "h": 118
+      },
+      "west/frame_001": {
+        "x": 116,
+        "y": 385,
+        "w": 115,
+        "h": 118
+      },
+      "west/frame_002": {
+        "x": 232,
+        "y": 385,
+        "w": 115,
+        "h": 118
+      },
+      "west/frame_003": {
+        "x": 348,
+        "y": 385,
+        "w": 115,
+        "h": 118
+      },
+      "west/frame_004": {
+        "x": 464,
+        "y": 385,
+        "w": 115,
+        "h": 118
+      },
+      "west/frame_005": {
+        "x": 580,
+        "y": 385,
+        "w": 115,
+        "h": 118
+      },
+      "west/frame_006": {
+        "x": 696,
+        "y": 385,
+        "w": 115,
+        "h": 118
+      },
+      "west/frame_007": {
+        "x": 812,
+        "y": 385,
+        "w": 115,
+        "h": 118
+      }
+    },
+    "offsetX": 34,
+    "offsetY": 34,
+    "sourceW": 192,
+    "sourceH": 192,
+    "ms": 65,
+    "holds": [
+      90,
+      70,
+      45,
+      40,
+      45,
+      60,
+      80,
+      90
+    ],
+    "dirs": [
+      "east",
+      "west"
+    ],
+    "tier": "combat"
+  },
+  "sheets/streetwear/heroes/hush-bot/Dash": {
+    "sheet": "art/heroes/in-use/hush-bot/streetwear/hero_hush-bot_streetwear.combat.png",
+    "sheetW": 1039,
+    "sheetH": 961,
+    "frames": {
+      "east/frame_000": {
+        "x": 0,
+        "y": 738,
+        "w": 87,
+        "h": 111
+      },
+      "east/frame_001": {
+        "x": 88,
+        "y": 738,
+        "w": 87,
+        "h": 111
+      },
+      "east/frame_002": {
+        "x": 176,
+        "y": 738,
+        "w": 87,
+        "h": 111
+      },
+      "east/frame_003": {
+        "x": 264,
+        "y": 738,
+        "w": 87,
+        "h": 111
+      },
+      "east/frame_004": {
+        "x": 352,
+        "y": 738,
+        "w": 87,
+        "h": 111
+      },
+      "east/frame_005": {
+        "x": 440,
+        "y": 738,
+        "w": 87,
+        "h": 111
+      },
+      "east/frame_006": {
+        "x": 528,
+        "y": 738,
+        "w": 87,
+        "h": 111
+      },
+      "east/frame_007": {
+        "x": 616,
+        "y": 738,
+        "w": 87,
+        "h": 111
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 850,
+        "w": 87,
+        "h": 111
+      },
+      "west/frame_001": {
+        "x": 88,
+        "y": 850,
+        "w": 87,
+        "h": 111
+      },
+      "west/frame_002": {
+        "x": 176,
+        "y": 850,
+        "w": 87,
+        "h": 111
+      },
+      "west/frame_003": {
+        "x": 264,
+        "y": 850,
+        "w": 87,
+        "h": 111
+      },
+      "west/frame_004": {
+        "x": 352,
+        "y": 850,
+        "w": 87,
+        "h": 111
+      },
+      "west/frame_005": {
+        "x": 440,
+        "y": 850,
+        "w": 87,
+        "h": 111
+      },
+      "west/frame_006": {
+        "x": 528,
+        "y": 850,
+        "w": 87,
+        "h": 111
+      },
+      "west/frame_007": {
+        "x": 616,
+        "y": 850,
+        "w": 87,
+        "h": 111
+      }
+    },
+    "offsetX": 51,
+    "offsetY": 41,
+    "sourceW": 192,
+    "sourceH": 192,
+    "ms": 50,
+    "holds": [
+      60,
+      50,
+      40,
+      40,
+      40,
+      40,
+      50,
+      80
+    ],
+    "dirs": [
+      "east",
+      "west"
+    ],
+    "tier": "combat"
+  },
+  "sheets/streetwear/heroes/hush-bot/Hurt": {
+    "sheet": "art/heroes/in-use/hush-bot/streetwear/hero_hush-bot_streetwear.combat.png",
+    "sheetW": 1039,
+    "sheetH": 961,
+    "frames": {
+      "east/frame_000": {
+        "x": 0,
+        "y": 504,
+        "w": 115,
+        "h": 116
+      },
+      "east/frame_001": {
+        "x": 116,
+        "y": 504,
+        "w": 115,
+        "h": 116
+      },
+      "east/frame_002": {
+        "x": 232,
+        "y": 504,
+        "w": 115,
+        "h": 116
+      },
+      "east/frame_003": {
+        "x": 348,
+        "y": 504,
+        "w": 115,
+        "h": 116
+      },
+      "east/frame_004": {
+        "x": 464,
+        "y": 504,
+        "w": 115,
+        "h": 116
+      },
+      "east/frame_005": {
+        "x": 580,
+        "y": 504,
+        "w": 115,
+        "h": 116
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 621,
+        "w": 115,
+        "h": 116
+      },
+      "west/frame_001": {
+        "x": 116,
+        "y": 621,
+        "w": 115,
+        "h": 116
+      },
+      "west/frame_002": {
+        "x": 232,
+        "y": 621,
+        "w": 115,
+        "h": 116
+      },
+      "west/frame_003": {
+        "x": 348,
+        "y": 621,
+        "w": 115,
+        "h": 116
+      },
+      "west/frame_004": {
+        "x": 464,
+        "y": 621,
+        "w": 115,
+        "h": 116
+      },
+      "west/frame_005": {
+        "x": 580,
+        "y": 621,
+        "w": 115,
+        "h": 116
+      }
+    },
+    "offsetX": 36,
+    "offsetY": 36,
+    "sourceW": 192,
+    "sourceH": 192,
+    "ms": 140,
+    "holds": [
+      100,
+      120,
+      160,
+      160,
+      150,
+      150
+    ],
+    "dirs": [
+      "east",
+      "west"
+    ],
+    "tier": "combat"
+  },
+  "sheets/streetwear/heroes/hush-bot/Idle": {
+    "sheet": "art/heroes/in-use/hush-bot/streetwear/hero_hush-bot_streetwear.core.png",
+    "sheetW": 569,
+    "sheetH": 765,
+    "frames": {
+      "east/frame_000": {
+        "x": 0,
+        "y": 448,
+        "w": 88,
+        "h": 105
+      },
+      "east/frame_001": {
+        "x": 89,
+        "y": 448,
+        "w": 88,
+        "h": 105
+      },
+      "east/frame_002": {
+        "x": 178,
+        "y": 448,
+        "w": 88,
+        "h": 105
+      },
+      "east/frame_003": {
+        "x": 267,
+        "y": 448,
+        "w": 88,
+        "h": 105
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 554,
+        "w": 88,
+        "h": 105
+      },
+      "west/frame_001": {
+        "x": 89,
+        "y": 554,
+        "w": 88,
+        "h": 105
+      },
+      "west/frame_002": {
+        "x": 178,
+        "y": 554,
+        "w": 88,
+        "h": 105
+      },
+      "west/frame_003": {
+        "x": 267,
+        "y": 554,
+        "w": 88,
+        "h": 105
+      }
+    },
+    "offsetX": 51,
+    "offsetY": 47,
+    "sourceW": 192,
+    "sourceH": 192,
+    "ms": 325,
+    "holds": [
+      400,
+      250,
+      400,
+      250
+    ],
+    "dirs": [
+      "east",
+      "west"
+    ],
+    "tier": "core"
+  },
+  "sheets/streetwear/heroes/hush-bot/Skill": {
+    "sheet": "art/heroes/in-use/hush-bot/streetwear/hero_hush-bot_streetwear.combat.png",
+    "sheetW": 1039,
+    "sheetH": 961,
+    "frames": {
+      "east/frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 129,
+        "h": 132
+      },
+      "east/frame_001": {
+        "x": 130,
+        "y": 0,
+        "w": 129,
+        "h": 132
+      },
+      "east/frame_002": {
+        "x": 260,
+        "y": 0,
+        "w": 129,
+        "h": 132
+      },
+      "east/frame_003": {
+        "x": 390,
+        "y": 0,
+        "w": 129,
+        "h": 132
+      },
+      "east/frame_004": {
+        "x": 520,
+        "y": 0,
+        "w": 129,
+        "h": 132
+      },
+      "east/frame_005": {
+        "x": 650,
+        "y": 0,
+        "w": 129,
+        "h": 132
+      },
+      "east/frame_006": {
+        "x": 780,
+        "y": 0,
+        "w": 129,
+        "h": 132
+      },
+      "east/frame_007": {
+        "x": 910,
+        "y": 0,
+        "w": 129,
+        "h": 132
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 133,
+        "w": 129,
+        "h": 132
+      },
+      "west/frame_001": {
+        "x": 130,
+        "y": 133,
+        "w": 129,
+        "h": 132
+      },
+      "west/frame_002": {
+        "x": 260,
+        "y": 133,
+        "w": 129,
+        "h": 132
+      },
+      "west/frame_003": {
+        "x": 390,
+        "y": 133,
+        "w": 129,
+        "h": 132
+      },
+      "west/frame_004": {
+        "x": 520,
+        "y": 133,
+        "w": 129,
+        "h": 132
+      },
+      "west/frame_005": {
+        "x": 650,
+        "y": 133,
+        "w": 129,
+        "h": 132
+      },
+      "west/frame_006": {
+        "x": 780,
+        "y": 133,
+        "w": 129,
+        "h": 132
+      },
+      "west/frame_007": {
+        "x": 910,
+        "y": 133,
+        "w": 129,
+        "h": 132
+      }
+    },
+    "offsetX": 28,
+    "offsetY": 20,
+    "sourceW": 192,
+    "sourceH": 192,
+    "ms": 70,
+    "holds": [
+      70,
+      70,
+      60,
+      60,
+      60,
+      60,
+      90,
+      90
+    ],
+    "dirs": [
+      "east",
+      "west"
+    ],
+    "tier": "combat"
+  },
+  "sheets/streetwear/heroes/hush-bot/Walk": {
+    "sheet": "art/heroes/in-use/hush-bot/streetwear/hero_hush-bot_streetwear.core.png",
+    "sheetW": 569,
+    "sheetH": 765,
+    "frames": {
+      "north/frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 94,
+        "h": 111
+      },
+      "north/frame_001": {
+        "x": 95,
+        "y": 0,
+        "w": 94,
+        "h": 111
+      },
+      "north/frame_002": {
+        "x": 190,
+        "y": 0,
+        "w": 94,
+        "h": 111
+      },
+      "north/frame_003": {
+        "x": 285,
+        "y": 0,
+        "w": 94,
+        "h": 111
+      },
+      "north/frame_004": {
+        "x": 380,
+        "y": 0,
+        "w": 94,
+        "h": 111
+      },
+      "north/frame_005": {
+        "x": 475,
+        "y": 0,
+        "w": 94,
+        "h": 111
+      },
+      "east/frame_000": {
+        "x": 0,
+        "y": 112,
+        "w": 94,
+        "h": 111
+      },
+      "east/frame_001": {
+        "x": 95,
+        "y": 112,
+        "w": 94,
+        "h": 111
+      },
+      "east/frame_002": {
+        "x": 190,
+        "y": 112,
+        "w": 94,
+        "h": 111
+      },
+      "east/frame_003": {
+        "x": 285,
+        "y": 112,
+        "w": 94,
+        "h": 111
+      },
+      "east/frame_004": {
+        "x": 380,
+        "y": 112,
+        "w": 94,
+        "h": 111
+      },
+      "east/frame_005": {
+        "x": 475,
+        "y": 112,
+        "w": 94,
+        "h": 111
+      },
+      "south/frame_000": {
+        "x": 0,
+        "y": 224,
+        "w": 94,
+        "h": 111
+      },
+      "south/frame_001": {
+        "x": 95,
+        "y": 224,
+        "w": 94,
+        "h": 111
+      },
+      "south/frame_002": {
+        "x": 190,
+        "y": 224,
+        "w": 94,
+        "h": 111
+      },
+      "south/frame_003": {
+        "x": 285,
+        "y": 224,
+        "w": 94,
+        "h": 111
+      },
+      "south/frame_004": {
+        "x": 380,
+        "y": 224,
+        "w": 94,
+        "h": 111
+      },
+      "south/frame_005": {
+        "x": 475,
+        "y": 224,
+        "w": 94,
+        "h": 111
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 336,
+        "w": 94,
+        "h": 111
+      },
+      "west/frame_001": {
+        "x": 95,
+        "y": 336,
+        "w": 94,
+        "h": 111
+      },
+      "west/frame_002": {
+        "x": 190,
+        "y": 336,
+        "w": 94,
+        "h": 111
+      },
+      "west/frame_003": {
+        "x": 285,
+        "y": 336,
+        "w": 94,
+        "h": 111
+      },
+      "west/frame_004": {
+        "x": 380,
+        "y": 336,
+        "w": 94,
+        "h": 111
+      },
+      "west/frame_005": {
+        "x": 475,
+        "y": 336,
+        "w": 94,
+        "h": 111
+      }
+    },
+    "offsetX": 50,
+    "offsetY": 41,
+    "sourceW": 192,
+    "sourceH": 192,
+    "ms": 133,
+    "holds": [
+      140,
+      130,
+      140,
+      130,
+      130,
+      130
+    ],
+    "dirs": [
+      "north",
+      "east",
+      "south",
+      "west"
+    ],
+    "tier": "core"
+  },
+  "sheets/streetwear/heroes/hush-bot/rotations": {
+    "sheet": "art/heroes/in-use/hush-bot/streetwear/hero_hush-bot_streetwear.core.png",
+    "sheetW": 569,
+    "sheetH": 765,
+    "frames": {
+      "north": {
+        "x": 0,
+        "y": 660,
+        "w": 88,
+        "h": 105
+      },
+      "east": {
+        "x": 89,
+        "y": 660,
+        "w": 88,
+        "h": 105
+      },
+      "south": {
+        "x": 178,
+        "y": 660,
+        "w": 88,
+        "h": 105
+      },
+      "west": {
+        "x": 267,
+        "y": 660,
+        "w": 88,
+        "h": 105
+      }
+    },
+    "offsetX": 51,
+    "offsetY": 47,
+    "sourceW": 192,
+    "sourceH": 192,
+    "ms": 100,
+    "dirs": [
+      "north",
+      "east",
+      "south",
+      "west"
+    ],
+    "tier": "core"
+  }
+}

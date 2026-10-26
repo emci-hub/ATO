@@ -453,6 +453,44 @@
         "south",
         "west"
       ]
+    },
+    "heroes/gearbreaker": {
+      "footAt": 0.7865,
+      "groundAt": 0.7604,
+      "bodyRatio": 0.6302,
+      "clips": {
+        "Attack": 8,
+        "Dash": 8,
+        "Hurt": 6,
+        "Idle": 4,
+        "Skill": 8,
+        "Walk": 6
+      },
+      "walkOrder": [
+        "north",
+        "east",
+        "south",
+        "west"
+      ]
+    },
+    "heroes/hush-bot": {
+      "footAt": 0.7865,
+      "groundAt": 0.7656,
+      "bodyRatio": 0.5365,
+      "clips": {
+        "Attack": 8,
+        "Dash": 8,
+        "Hurt": 6,
+        "Idle": 4,
+        "Skill": 8,
+        "Walk": 6
+      },
+      "walkOrder": [
+        "north",
+        "east",
+        "south",
+        "west"
+      ]
     }
   },
   "fx": {

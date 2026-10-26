@@ -169,5 +169,23 @@
     "damage": 4,
     "slow_ms": 2000,
     "slow_pct": 0.34
+  },
+  {
+    "id": "skill_hush_bot",
+    "name": "Root Veil",
+    "description": "Grapple roots slow and bind nearby foes.",
+    "radius": 25,
+    "damage": 4,
+    "slow_ms": 2000,
+    "slow_pct": 0.34
+  },
+  {
+    "id": "skill_gearbreaker",
+    "name": "Piston Veil",
+    "description": "A piston slam slows and drags in nearby foes.",
+    "radius": 25,
+    "damage": 4,
+    "slow_ms": 2000,
+    "slow_pct": 0.34
   }
 ]

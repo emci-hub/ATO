@@ -1,0 +1,31 @@
+{
+  "version": 1,
+  "hero": "hush-bot",
+  "slug": "hero.hush-bot.streetwear",
+  "canvas": [192, 192],
+  "rawDir": "art-src/pixellab/hero.hush-bot.streetwear/migrated/raw",
+  "footRow": 150,
+  "heightBand": [100, 107],
+  "lines": { "hip": 120, "shoulder": 86 },
+  "directions": {
+    "east": {
+      "parts": {
+        "cape": [[112, 100], [124, 102], [124, 134], [112, 134]]
+      }
+    },
+    "west": {
+      "parts": {
+        "cape": [[69, 100], [82, 100], [84, 134], [69, 134]]
+      }
+    }
+  },
+  "recipes": {
+    "breathing-idle": {
+      "offsets": [0, 1, 1, 1],
+      "capeOffsets": [0, 0, 1, 1],
+      "headExtra": [0, 0, 1, 0],
+      "ms": [400, 250, 400, 250]
+    }
+  },
+  "notes": "Hush Bot (M3 hero 4): small quick toy-mecha, about 100 px tall. The grapple chain is the cape part (it lags the body a frame); the backpack scroll cannon moves with the body; legs and boots locked below the hip line. Masks read off the 192 rotations (lowest pixel row 150, body rows 48-150)."
+}

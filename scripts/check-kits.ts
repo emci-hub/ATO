@@ -78,6 +78,8 @@ const EXPECTED: Record<string, [Behavior, Element]> = {
   'ironclad-kabuto': ['chain', 'tide'],
   'zipline-shade': ['splash', 'void'],
   'kabuki-gear': ['chain', 'ember'],
+  'hush-bot': ['pull', 'root'],
+  gearbreaker: ['pull', 'ember'],
 };
 
 const heroes = allHeroes();

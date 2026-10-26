@@ -359,5 +359,43 @@
       "skill": "Skill",
       "hurt": "Hurt"
     }
+  },
+  {
+    "id": "hush-bot",
+    "name": "Hush Bot",
+    "acquire": "Free (airport)",
+    "role": "hero",
+    "folder": "assets/play/skins/cast/heroes/hush-bot",
+    "unlock": "free_farm",
+    "skillId": "skill_hush_bot",
+    "kit": { "behavior": "pull", "element": "root" },
+    "face": "ew",
+    "clips": {
+      "idle": "Idle",
+      "walk": "Walk",
+      "dash": "Dash",
+      "attack": "Attack",
+      "skill": "Skill",
+      "hurt": "Hurt"
+    }
+  },
+  {
+    "id": "gearbreaker",
+    "name": "Gearbreaker",
+    "acquire": "Free (airport)",
+    "role": "hero",
+    "folder": "assets/play/skins/cast/heroes/gearbreaker",
+    "unlock": "free_farm",
+    "skillId": "skill_gearbreaker",
+    "kit": { "behavior": "pull", "element": "ember" },
+    "face": "ew",
+    "clips": {
+      "idle": "Idle",
+      "walk": "Walk",
+      "dash": "Dash",
+      "attack": "Attack",
+      "skill": "Skill",
+      "hurt": "Hurt"
+    }
   }
 ]

@@ -1,6 +1,6 @@
 # ATO art library
 
-Generated. 581 live entries.
+Generated. 585 live entries.
 Open `assets/art/_contact/library.html` (desktop / file://) or `library-portable.html` on a phone.
 Every tile is a preview (animated main clip, still, or individual sprites) — not the raw sheet.
 Reuse before create. New art goes in `assets/art/<category>/in-use|unused/<set>/<variant>/`.
@@ -8,7 +8,7 @@ Viewer lists one card per set (not each clip/file).
 
 ## Categories
 
-- **heroes** (204: 62 in use / 142 unused) — Heroes
+- **heroes** (208: 66 in use / 142 unused) — Heroes
 - **enemies-bosses** (32: 24 in use / 8 unused) — Enemies / bosses
 - **ui** (26: 11 in use / 15 unused) — UI
 - **icons** (148: 67 in use / 81 unused) — Icons
@@ -250,6 +250,13 @@ Viewer lists one card per set (not each clip/file).
 | `hero.frost-lich.streetwear.combat` | 1231×1223 | approved | — | assets/art/legacy-play-sheets.json, assets/play/sheets/streetwear/heroes/frost-lich/sheets.json, src/play/generated-play-sheets.ts |
 | `hero.frost-lich.streetwear.core` | 1119×838 | approved | — | assets/art/legacy-play-sheets.json, assets/play/sheets/streetwear/heroes/frost-lich/sheets.json, src/play/generated-play-sheets.ts |
 
+## heroes · gearbreaker · streetwear · in-use
+
+| id | size | status | score | usedBy |
+|---|---|---|---|---|
+| `hero.gearbreaker.streetwear.combat` | 1095×1041 | approved | — | assets/art/legacy-play-sheets.json, assets/play/sheets/streetwear/heroes/gearbreaker/sheets.json, src/play/generated-play-sheets.ts |
+| `hero.gearbreaker.streetwear.core` | 737×751 | approved | — | assets/art/legacy-play-sheets.json, assets/play/sheets/streetwear/heroes/gearbreaker/sheets.json, src/play/generated-play-sheets.ts |
+
 ## heroes · gorilla-titan · primal · unused
 
 | id | size | status | score | usedBy |
@@ -262,6 +269,13 @@ Viewer lists one card per set (not each clip/file).
 | `pet.gorilla-titan.primal.south-east` | 244×244 | resource | — | — |
 | `pet.gorilla-titan.primal.south-west` | 244×244 | resource | — | — |
 | `pet.gorilla-titan.primal.west` | 244×244 | resource | — | — |
+
+## heroes · hush-bot · streetwear · in-use
+
+| id | size | status | score | usedBy |
+|---|---|---|---|---|
+| `hero.hush-bot.streetwear.combat` | 1039×961 | approved | — | assets/art/legacy-play-sheets.json, assets/play/sheets/streetwear/heroes/hush-bot/sheets.json, src/play/generated-play-sheets.ts |
+| `hero.hush-bot.streetwear.core` | 569×765 | approved | — | assets/art/legacy-play-sheets.json, assets/play/sheets/streetwear/heroes/hush-bot/sheets.json, src/play/generated-play-sheets.ts |
 
 ## heroes · ironclad-kabuto · streetwear · in-use
 

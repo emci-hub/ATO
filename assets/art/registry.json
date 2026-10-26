@@ -1819,6 +1819,122 @@
       "part": "core"
     },
     {
+      "id": "hero.gearbreaker.streetwear.combat",
+      "path": "assets/art/heroes/in-use/gearbreaker/streetwear/hero_gearbreaker_streetwear.combat.png",
+      "category": "heroes",
+      "type": "character",
+      "theme": "streetwear",
+      "placement": "floor",
+      "camera": "td-3q-low",
+      "size": {
+        "w": 1095,
+        "h": 1041
+      },
+      "status": "approved",
+      "source": "pixellab",
+      "diskBytes": 314820,
+      "decodedBytes": 4559580,
+      "format": "png32",
+      "notes": "md5:3e8573efd0bc3f2e8080ca6b967aa196",
+      "inUse": true,
+      "set": "gearbreaker",
+      "variant": "streetwear",
+      "tags": [],
+      "usedBy": [
+        "assets/art/legacy-play-sheets.json",
+        "assets/play/sheets/streetwear/heroes/gearbreaker/sheets.json",
+        "src/play/generated-play-sheets.ts"
+      ],
+      "part": "combat"
+    },
+    {
+      "id": "hero.gearbreaker.streetwear.core",
+      "path": "assets/art/heroes/in-use/gearbreaker/streetwear/hero_gearbreaker_streetwear.core.png",
+      "category": "heroes",
+      "type": "character",
+      "theme": "streetwear",
+      "placement": "floor",
+      "camera": "td-3q-low",
+      "size": {
+        "w": 737,
+        "h": 751
+      },
+      "status": "approved",
+      "source": "pixellab",
+      "diskBytes": 98879,
+      "decodedBytes": 2213948,
+      "format": "png8",
+      "notes": "md5:08c57e9ad0425a6352e514f39090ba9d",
+      "inUse": true,
+      "set": "gearbreaker",
+      "variant": "streetwear",
+      "tags": [],
+      "usedBy": [
+        "assets/art/legacy-play-sheets.json",
+        "assets/play/sheets/streetwear/heroes/gearbreaker/sheets.json",
+        "src/play/generated-play-sheets.ts"
+      ],
+      "part": "core"
+    },
+    {
+      "id": "hero.hush-bot.streetwear.combat",
+      "path": "assets/art/heroes/in-use/hush-bot/streetwear/hero_hush-bot_streetwear.combat.png",
+      "category": "heroes",
+      "type": "character",
+      "theme": "streetwear",
+      "placement": "floor",
+      "camera": "td-3q-low",
+      "size": {
+        "w": 1039,
+        "h": 961
+      },
+      "status": "approved",
+      "source": "pixellab",
+      "diskBytes": 223193,
+      "decodedBytes": 3993916,
+      "format": "png32",
+      "notes": "md5:d6ebadd7b5bea611a82eb610c9df47ac",
+      "inUse": true,
+      "set": "hush-bot",
+      "variant": "streetwear",
+      "tags": [],
+      "usedBy": [
+        "assets/art/legacy-play-sheets.json",
+        "assets/play/sheets/streetwear/heroes/hush-bot/sheets.json",
+        "src/play/generated-play-sheets.ts"
+      ],
+      "part": "combat"
+    },
+    {
+      "id": "hero.hush-bot.streetwear.core",
+      "path": "assets/art/heroes/in-use/hush-bot/streetwear/hero_hush-bot_streetwear.core.png",
+      "category": "heroes",
+      "type": "character",
+      "theme": "streetwear",
+      "placement": "floor",
+      "camera": "td-3q-low",
+      "size": {
+        "w": 569,
+        "h": 765
+      },
+      "status": "approved",
+      "source": "pixellab",
+      "diskBytes": 78589,
+      "decodedBytes": 1741140,
+      "format": "png8",
+      "notes": "md5:891134e6a784aedf07286898f25f927c",
+      "inUse": true,
+      "set": "hush-bot",
+      "variant": "streetwear",
+      "tags": [],
+      "usedBy": [
+        "assets/art/legacy-play-sheets.json",
+        "assets/play/sheets/streetwear/heroes/hush-bot/sheets.json",
+        "src/play/generated-play-sheets.ts"
+      ],
+      "part": "core"
+    },
+    {
       "id": "hero.ironclad-kabuto.streetwear.combat",
       "path": "assets/art/heroes/in-use/ironclad-kabuto/streetwear/hero_ironclad-kabuto_streetwear.combat.png",
       "category": "heroes",

@@ -96,13 +96,13 @@ ok('pet: holds step, slow factor, one-shot length; flat fallback unchanged');
     Faint: 7 * CAST_ACTOR_FRAME_MS.tower.faint!,
   };
   /** Mecha heroes ship without a Faint clip; every other hero must still have one. */
-  const NO_FAINT_HEROES = new Set(['ironclad-kabuto', 'zipline-shade', 'kabuki-gear']);
+  const NO_FAINT_HEROES = new Set(['ironclad-kabuto', 'zipline-shade', 'kabuki-gear', 'hush-bot', 'gearbreaker']);
   const heroes = new Set<string>();
   for (const key of Object.keys(sheets)) {
     const m = /^sheets\/streetwear\/heroes\/([^/]+)\/([A-Za-z]+)$/.exec(key);
     if (m) heroes.add(m[1]);
   }
-  assert.ok(heroes.size >= 19, `19 Streetwear heroes packed (${heroes.size})`);
+  assert.ok(heroes.size >= 21, `21 Streetwear heroes packed (${heroes.size})`);
   for (const hero of heroes) {
     for (const clip of ['Idle', 'Walk', 'Dash', 'Attack', 'Skill', 'Hurt', 'Faint']) {
       const key = `sheets/streetwear/heroes/${hero}/${clip}`;
@@ -121,6 +121,6 @@ ok('pet: holds step, slow factor, one-shot length; flat fallback unchanged');
     }
   }
 }
-ok('data: all 19 hero sheets carry full holds; non-Idle clips keep their old length');
+ok('data: all 21 hero sheets carry full holds; non-Idle clips keep their old length');
 
 console.log('check:clip-holds passed');

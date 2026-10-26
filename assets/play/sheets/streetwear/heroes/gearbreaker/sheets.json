@@ -1,0 +1,753 @@
+{
+  "sheets/streetwear/heroes/gearbreaker/Attack": {
+    "sheet": "art/heroes/in-use/gearbreaker/streetwear/hero_gearbreaker_streetwear.combat.png",
+    "sheetW": 1095,
+    "sheetH": 1041,
+    "frames": {
+      "east/frame_000": {
+        "x": 0,
+        "y": 274,
+        "w": 136,
+        "h": 127
+      },
+      "east/frame_001": {
+        "x": 137,
+        "y": 274,
+        "w": 136,
+        "h": 127
+      },
+      "east/frame_002": {
+        "x": 274,
+        "y": 274,
+        "w": 136,
+        "h": 127
+      },
+      "east/frame_003": {
+        "x": 411,
+        "y": 274,
+        "w": 136,
+        "h": 127
+      },
+      "east/frame_004": {
+        "x": 548,
+        "y": 274,
+        "w": 136,
+        "h": 127
+      },
+      "east/frame_005": {
+        "x": 685,
+        "y": 274,
+        "w": 136,
+        "h": 127
+      },
+      "east/frame_006": {
+        "x": 822,
+        "y": 274,
+        "w": 136,
+        "h": 127
+      },
+      "east/frame_007": {
+        "x": 959,
+        "y": 274,
+        "w": 136,
+        "h": 127
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 402,
+        "w": 136,
+        "h": 127
+      },
+      "west/frame_001": {
+        "x": 137,
+        "y": 402,
+        "w": 136,
+        "h": 127
+      },
+      "west/frame_002": {
+        "x": 274,
+        "y": 402,
+        "w": 136,
+        "h": 127
+      },
+      "west/frame_003": {
+        "x": 411,
+        "y": 402,
+        "w": 136,
+        "h": 127
+      },
+      "west/frame_004": {
+        "x": 548,
+        "y": 402,
+        "w": 136,
+        "h": 127
+      },
+      "west/frame_005": {
+        "x": 685,
+        "y": 402,
+        "w": 136,
+        "h": 127
+      },
+      "west/frame_006": {
+        "x": 822,
+        "y": 402,
+        "w": 136,
+        "h": 127
+      },
+      "west/frame_007": {
+        "x": 959,
+        "y": 402,
+        "w": 136,
+        "h": 127
+      }
+    },
+    "offsetX": 29,
+    "offsetY": 25,
+    "sourceW": 192,
+    "sourceH": 192,
+    "ms": 65,
+    "holds": [
+      90,
+      70,
+      45,
+      40,
+      45,
+      60,
+      80,
+      90
+    ],
+    "dirs": [
+      "east",
+      "west"
+    ],
+    "tier": "combat"
+  },
+  "sheets/streetwear/heroes/gearbreaker/Dash": {
+    "sheet": "art/heroes/in-use/gearbreaker/streetwear/hero_gearbreaker_streetwear.combat.png",
+    "sheetW": 1095,
+    "sheetH": 1041,
+    "frames": {
+      "east/frame_000": {
+        "x": 0,
+        "y": 530,
+        "w": 116,
+        "h": 127
+      },
+      "east/frame_001": {
+        "x": 117,
+        "y": 530,
+        "w": 116,
+        "h": 127
+      },
+      "east/frame_002": {
+        "x": 234,
+        "y": 530,
+        "w": 116,
+        "h": 127
+      },
+      "east/frame_003": {
+        "x": 351,
+        "y": 530,
+        "w": 116,
+        "h": 127
+      },
+      "east/frame_004": {
+        "x": 468,
+        "y": 530,
+        "w": 116,
+        "h": 127
+      },
+      "east/frame_005": {
+        "x": 585,
+        "y": 530,
+        "w": 116,
+        "h": 127
+      },
+      "east/frame_006": {
+        "x": 702,
+        "y": 530,
+        "w": 116,
+        "h": 127
+      },
+      "east/frame_007": {
+        "x": 819,
+        "y": 530,
+        "w": 116,
+        "h": 127
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 658,
+        "w": 116,
+        "h": 127
+      },
+      "west/frame_001": {
+        "x": 117,
+        "y": 658,
+        "w": 116,
+        "h": 127
+      },
+      "west/frame_002": {
+        "x": 234,
+        "y": 658,
+        "w": 116,
+        "h": 127
+      },
+      "west/frame_003": {
+        "x": 351,
+        "y": 658,
+        "w": 116,
+        "h": 127
+      },
+      "west/frame_004": {
+        "x": 468,
+        "y": 658,
+        "w": 116,
+        "h": 127
+      },
+      "west/frame_005": {
+        "x": 585,
+        "y": 658,
+        "w": 116,
+        "h": 127
+      },
+      "west/frame_006": {
+        "x": 702,
+        "y": 658,
+        "w": 116,
+        "h": 127
+      },
+      "west/frame_007": {
+        "x": 819,
+        "y": 658,
+        "w": 116,
+        "h": 127
+      }
+    },
+    "offsetX": 38,
+    "offsetY": 25,
+    "sourceW": 192,
+    "sourceH": 192,
+    "ms": 50,
+    "holds": [
+      60,
+      50,
+      40,
+      40,
+      40,
+      40,
+      50,
+      80
+    ],
+    "dirs": [
+      "east",
+      "west"
+    ],
+    "tier": "combat"
+  },
+  "sheets/streetwear/heroes/gearbreaker/Hurt": {
+    "sheet": "art/heroes/in-use/gearbreaker/streetwear/hero_gearbreaker_streetwear.combat.png",
+    "sheetW": 1095,
+    "sheetH": 1041,
+    "frames": {
+      "east/frame_000": {
+        "x": 0,
+        "y": 786,
+        "w": 119,
+        "h": 127
+      },
+      "east/frame_001": {
+        "x": 120,
+        "y": 786,
+        "w": 119,
+        "h": 127
+      },
+      "east/frame_002": {
+        "x": 240,
+        "y": 786,
+        "w": 119,
+        "h": 127
+      },
+      "east/frame_003": {
+        "x": 360,
+        "y": 786,
+        "w": 119,
+        "h": 127
+      },
+      "east/frame_004": {
+        "x": 480,
+        "y": 786,
+        "w": 119,
+        "h": 127
+      },
+      "east/frame_005": {
+        "x": 600,
+        "y": 786,
+        "w": 119,
+        "h": 127
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 914,
+        "w": 119,
+        "h": 127
+      },
+      "west/frame_001": {
+        "x": 120,
+        "y": 914,
+        "w": 119,
+        "h": 127
+      },
+      "west/frame_002": {
+        "x": 240,
+        "y": 914,
+        "w": 119,
+        "h": 127
+      },
+      "west/frame_003": {
+        "x": 360,
+        "y": 914,
+        "w": 119,
+        "h": 127
+      },
+      "west/frame_004": {
+        "x": 480,
+        "y": 914,
+        "w": 119,
+        "h": 127
+      },
+      "west/frame_005": {
+        "x": 600,
+        "y": 914,
+        "w": 119,
+        "h": 127
+      }
+    },
+    "offsetX": 33,
+    "offsetY": 25,
+    "sourceW": 192,
+    "sourceH": 192,
+    "ms": 140,
+    "holds": [
+      100,
+      120,
+      160,
+      160,
+      150,
+      150
+    ],
+    "dirs": [
+      "east",
+      "west"
+    ],
+    "tier": "combat"
+  },
+  "sheets/streetwear/heroes/gearbreaker/Idle": {
+    "sheet": "art/heroes/in-use/gearbreaker/streetwear/hero_gearbreaker_streetwear.core.png",
+    "sheetW": 737,
+    "sheetH": 751,
+    "frames": {
+      "east/frame_000": {
+        "x": 0,
+        "y": 504,
+        "w": 55,
+        "h": 123
+      },
+      "east/frame_001": {
+        "x": 56,
+        "y": 504,
+        "w": 55,
+        "h": 123
+      },
+      "east/frame_002": {
+        "x": 112,
+        "y": 504,
+        "w": 55,
+        "h": 123
+      },
+      "east/frame_003": {
+        "x": 168,
+        "y": 504,
+        "w": 55,
+        "h": 123
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 628,
+        "w": 55,
+        "h": 123
+      },
+      "west/frame_001": {
+        "x": 56,
+        "y": 628,
+        "w": 55,
+        "h": 123
+      },
+      "west/frame_002": {
+        "x": 112,
+        "y": 628,
+        "w": 55,
+        "h": 123
+      },
+      "west/frame_003": {
+        "x": 168,
+        "y": 628,
+        "w": 55,
+        "h": 123
+      }
+    },
+    "offsetX": 64,
+    "offsetY": 29,
+    "sourceW": 192,
+    "sourceH": 192,
+    "ms": 325,
+    "holds": [
+      400,
+      250,
+      400,
+      250
+    ],
+    "dirs": [
+      "east",
+      "west"
+    ],
+    "tier": "core"
+  },
+  "sheets/streetwear/heroes/gearbreaker/Skill": {
+    "sheet": "art/heroes/in-use/gearbreaker/streetwear/hero_gearbreaker_streetwear.combat.png",
+    "sheetW": 1095,
+    "sheetH": 1041,
+    "frames": {
+      "east/frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 136,
+        "h": 136
+      },
+      "east/frame_001": {
+        "x": 137,
+        "y": 0,
+        "w": 136,
+        "h": 136
+      },
+      "east/frame_002": {
+        "x": 274,
+        "y": 0,
+        "w": 136,
+        "h": 136
+      },
+      "east/frame_003": {
+        "x": 411,
+        "y": 0,
+        "w": 136,
+        "h": 136
+      },
+      "east/frame_004": {
+        "x": 548,
+        "y": 0,
+        "w": 136,
+        "h": 136
+      },
+      "east/frame_005": {
+        "x": 685,
+        "y": 0,
+        "w": 136,
+        "h": 136
+      },
+      "east/frame_006": {
+        "x": 822,
+        "y": 0,
+        "w": 136,
+        "h": 136
+      },
+      "east/frame_007": {
+        "x": 959,
+        "y": 0,
+        "w": 136,
+        "h": 136
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 137,
+        "w": 136,
+        "h": 136
+      },
+      "west/frame_001": {
+        "x": 137,
+        "y": 137,
+        "w": 136,
+        "h": 136
+      },
+      "west/frame_002": {
+        "x": 274,
+        "y": 137,
+        "w": 136,
+        "h": 136
+      },
+      "west/frame_003": {
+        "x": 411,
+        "y": 137,
+        "w": 136,
+        "h": 136
+      },
+      "west/frame_004": {
+        "x": 548,
+        "y": 137,
+        "w": 136,
+        "h": 136
+      },
+      "west/frame_005": {
+        "x": 685,
+        "y": 137,
+        "w": 136,
+        "h": 136
+      },
+      "west/frame_006": {
+        "x": 822,
+        "y": 137,
+        "w": 136,
+        "h": 136
+      },
+      "west/frame_007": {
+        "x": 959,
+        "y": 137,
+        "w": 136,
+        "h": 136
+      }
+    },
+    "offsetX": 38,
+    "offsetY": 16,
+    "sourceW": 192,
+    "sourceH": 192,
+    "ms": 70,
+    "holds": [
+      70,
+      70,
+      60,
+      60,
+      60,
+      60,
+      90,
+      90
+    ],
+    "dirs": [
+      "east",
+      "west"
+    ],
+    "tier": "combat"
+  },
+  "sheets/streetwear/heroes/gearbreaker/Walk": {
+    "sheet": "art/heroes/in-use/gearbreaker/streetwear/hero_gearbreaker_streetwear.core.png",
+    "sheetW": 737,
+    "sheetH": 751,
+    "frames": {
+      "north/frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 122,
+        "h": 125
+      },
+      "north/frame_001": {
+        "x": 123,
+        "y": 0,
+        "w": 122,
+        "h": 125
+      },
+      "north/frame_002": {
+        "x": 246,
+        "y": 0,
+        "w": 122,
+        "h": 125
+      },
+      "north/frame_003": {
+        "x": 369,
+        "y": 0,
+        "w": 122,
+        "h": 125
+      },
+      "north/frame_004": {
+        "x": 492,
+        "y": 0,
+        "w": 122,
+        "h": 125
+      },
+      "north/frame_005": {
+        "x": 615,
+        "y": 0,
+        "w": 122,
+        "h": 125
+      },
+      "east/frame_000": {
+        "x": 0,
+        "y": 126,
+        "w": 122,
+        "h": 125
+      },
+      "east/frame_001": {
+        "x": 123,
+        "y": 126,
+        "w": 122,
+        "h": 125
+      },
+      "east/frame_002": {
+        "x": 246,
+        "y": 126,
+        "w": 122,
+        "h": 125
+      },
+      "east/frame_003": {
+        "x": 369,
+        "y": 126,
+        "w": 122,
+        "h": 125
+      },
+      "east/frame_004": {
+        "x": 492,
+        "y": 126,
+        "w": 122,
+        "h": 125
+      },
+      "east/frame_005": {
+        "x": 615,
+        "y": 126,
+        "w": 122,
+        "h": 125
+      },
+      "south/frame_000": {
+        "x": 0,
+        "y": 252,
+        "w": 122,
+        "h": 125
+      },
+      "south/frame_001": {
+        "x": 123,
+        "y": 252,
+        "w": 122,
+        "h": 125
+      },
+      "south/frame_002": {
+        "x": 246,
+        "y": 252,
+        "w": 122,
+        "h": 125
+      },
+      "south/frame_003": {
+        "x": 369,
+        "y": 252,
+        "w": 122,
+        "h": 125
+      },
+      "south/frame_004": {
+        "x": 492,
+        "y": 252,
+        "w": 122,
+        "h": 125
+      },
+      "south/frame_005": {
+        "x": 615,
+        "y": 252,
+        "w": 122,
+        "h": 125
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 378,
+        "w": 122,
+        "h": 125
+      },
+      "west/frame_001": {
+        "x": 123,
+        "y": 378,
+        "w": 122,
+        "h": 125
+      },
+      "west/frame_002": {
+        "x": 246,
+        "y": 378,
+        "w": 122,
+        "h": 125
+      },
+      "west/frame_003": {
+        "x": 369,
+        "y": 378,
+        "w": 122,
+        "h": 125
+      },
+      "west/frame_004": {
+        "x": 492,
+        "y": 378,
+        "w": 122,
+        "h": 125
+      },
+      "west/frame_005": {
+        "x": 615,
+        "y": 378,
+        "w": 122,
+        "h": 125
+      }
+    },
+    "offsetX": 31,
+    "offsetY": 27,
+    "sourceW": 192,
+    "sourceH": 192,
+    "ms": 133,
+    "holds": [
+      140,
+      130,
+      140,
+      130,
+      130,
+      130
+    ],
+    "dirs": [
+      "north",
+      "east",
+      "south",
+      "west"
+    ],
+    "tier": "core"
+  },
+  "sheets/streetwear/heroes/gearbreaker/rotations": {
+    "sheet": "art/heroes/in-use/gearbreaker/streetwear/hero_gearbreaker_streetwear.core.png",
+    "sheetW": 737,
+    "sheetH": 751,
+    "frames": {
+      "north": {
+        "x": 224,
+        "y": 504,
+        "w": 118,
+        "h": 123
+      },
+      "east": {
+        "x": 343,
+        "y": 504,
+        "w": 118,
+        "h": 123
+      },
+      "south": {
+        "x": 462,
+        "y": 504,
+        "w": 118,
+        "h": 123
+      },
+      "west": {
+        "x": 581,
+        "y": 504,
+        "w": 118,
+        "h": 123
+      }
+    },
+    "offsetX": 32,
+    "offsetY": 29,
+    "sourceW": 192,
+    "sourceH": 192,
+    "ms": 100,
+    "dirs": [
+      "north",
+      "east",
+      "south",
+      "west"
+    ],
+    "tier": "core"
+  }
+}

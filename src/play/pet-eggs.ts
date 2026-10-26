@@ -44,8 +44,8 @@ export const EGG_LINE: Record<EggType, string> = {
 
 /** Themed hero pools — every hero with art, each in exactly one egg. */
 export const EGG_POOLS: Record<EggType, readonly string[]> = {
-  knight: ['aurex', 'oni', 'raven', 'void-raven', 'archangel', 'ironclad-kabuto'],
-  wizard: ['morwen', 'corvus', 'maldrath', 'velkhar', 'frost-lich', 'zipline-shade'],
+  knight: ['aurex', 'oni', 'raven', 'void-raven', 'archangel', 'ironclad-kabuto', 'gearbreaker'],
+  wizard: ['morwen', 'corvus', 'maldrath', 'velkhar', 'frost-lich', 'zipline-shade', 'hush-bot'],
   village: ['neon-viper', 'elowen', 'kael', 'sak', 'cyber-shinobi', 'kitsune', 'kabuki-gear'],
 };
 
@@ -473,6 +473,8 @@ export const HERO_SHINY_COLOR: Record<string, string> = {
   'ironclad-kabuto': '#FF9F1C',
   'zipline-shade': '#B8FF3C',
   'kabuki-gear': '#FF5A36',
+  'hush-bot': '#4DFFB0',
+  gearbreaker: '#FFB020',
 };
 export const HERO_DYE_COLOR: Record<string, string> = {
   aurex: '#FF4D6D',
@@ -494,6 +496,8 @@ export const HERO_DYE_COLOR: Record<string, string> = {
   'ironclad-kabuto': '#E85D75',
   'zipline-shade': '#9B6BFF',
   'kabuki-gear': '#FFD6A5',
+  'hush-bot': '#7CE8C0',
+  gearbreaker: '#6FA8B0',
 };
 
 /** A shiny's colour: its hero's own for Classic, else the Prism style's. */
