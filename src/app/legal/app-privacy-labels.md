@@ -54,7 +54,7 @@ Push token: not collected. Notifications are scheduled on the phone (`expo-notif
 ## Third parties (named in privacy.md)
 
 - **Supabase** — database, sign-in, profile, answers, Checks, Circle, reports, Divecore save, AI usage log, referrals.
-- **Google (Gemini API)** — earlier drafts of some story-library lines (Legends cards and category deep dives). Opening a card does not call a model, and the phone does not send a prompt. The server writer that used to call Gemini for a new card is off. Older requests, when they existed, went from our server and carried no name, handle, email, user id, device id, exact score or answer. ATO may still keep which library cards an account was shown (`ai_library_seen`, `ai_usage`). Google's terms (updated 2026-04-28): paid plan, prompts not used to improve products; free plan, may be used and human-reviewed; both logged for a limited time for abuse. The policy states both, since the billing plan is not confirmed.
+- **No AI provider** — ATO sends nothing to Google's Gemini API or any other AI service. Some older story-library lines were drafted with Gemini before launch; opening a card never calls a model.
 - **Resend** — one-time sign-in codes to email (and invite emails from `review-access`); keeps email data 30 days (Resend docs).
 - **ImprovMX** — forwards support@emgens.com; never stores message content, delivery logs 7 days.
 - **Apple** — Sign in with Apple (may relay a private email); the Apple refresh token is stored to revoke it on account deletion.

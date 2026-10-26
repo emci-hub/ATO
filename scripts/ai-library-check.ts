@@ -189,12 +189,8 @@ async function main() {
     for (const pct of [78, 64, 52, 93, 61, 57]) assert.ok(!pa.includes(`${pct}%`), `exact score ${pct}% never reaches the prompt`);
   }
   {
-    // The provider call carries only the prompt and generation settings: no user, metadata, labels or
-    // safety identifier field, and no header from the person's request is forwarded.
-    const vendors = read('supabase/functions/_shared/ai-vendors.ts');
-    assert.match(vendors, /export async function complete\(prompt: string, maxOutputTokens: number\)/, 'complete() takes only the prompt + a token cap');
-    assert.doesNotMatch(vendors, /\b(user|user_id|userId|metadata|labels|safety_identifier|safetyIdentifier|cachedContent)\s*:/, 'no per-person field in a provider body');
-    assert.doesNotMatch(vendors, /x-forwarded-for|x-real-ip|request\.headers/i, 'no client header forwarded to a provider');
+    // No provider call exists any more (ATO calls no outside AI service).
+    assert.ok(!existsSync(resolve(root, 'supabase/functions/_shared/ai-vendors.ts')), 'the shared AI vendor module is gone: no Edge Function can call a model');
     const fn = read('supabase/functions/ai-library/index.ts');
     assert.doesNotMatch(fn, /await complete\(/, 'ai-library does not call the model');
     const fill = read('supabase/functions/ai-library-fill/index.ts');

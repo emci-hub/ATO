@@ -8,7 +8,7 @@
  * re-gating checklist".
  */
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 
 let passed = 0;
@@ -31,19 +31,13 @@ assert.doesNotMatch(you, /require\('@\/components\/you-dev-tools'\)/);
 ok('the parked You tab loads no crash/push probes at all');
 
 // The You tab renders the Build line for every account, and 5 taps on it push
-// /ai-lab (the AI provider switcher). Both the gesture and the route must carry
-// the dev gate — /ai-lab was the one lab on the authed stack with no guard at
-// all, and unlike the PRE_LAUNCH_DEV labs that hole would have survived the
-// flag flip into public launch.
+// /dev-lab. The gesture must carry the dev gate. /ai-lab (the old AI provider
+// switcher) is gone: ATO calls no outside AI service.
 const runningUpdate = readFileSync(join(root, 'src/components/running-update-line.tsx'), 'utf8');
 assert.match(runningUpdate, /hubAccess\(\{/);
-assert.match(runningUpdate, /if \(canOpenAiLab\) router\.push\('\/ai-lab'\)/);
-ok('Build-line 5-tap shortcut to /ai-lab is gated on hubAccess (the Hub gate; nothing in a release build)');
-
-const aiLab = readFileSync(join(root, 'src/app/ai-lab.tsx'), 'utf8');
-assert.match(aiLab, /hubAccess\(\{/);
-assert.match(aiLab, /return <Redirect href="\/" \/>;/);
-ok('/ai-lab redirects anyone without dev access');
+assert.match(runningUpdate, /if \(canOpenDevLab\) router\.push\('\/dev-lab'\)/);
+assert.ok(!existsSync(join(root, 'src/app/ai-lab.tsx')), 'the AI lab screen is gone');
+ok('Build-line 5-tap shortcut to /dev-lab is gated on hubAccess; /ai-lab is gone');
 
 const metro = readFileSync(join(root, 'metro.config.js'), 'utf8');
 assert.doesNotMatch(metro, /resolveRequest/);

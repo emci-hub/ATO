@@ -63,7 +63,7 @@ export const SEND_FEEDBACK_LABEL = 'Send feedback';
  *    channel/runtime, and an "Original build" vs "OTA update" label. Not a
  *    safety/App-Store invariant like 1-3, but load-bearing for support: it is
  *    how emci tells which OTA a bug report is actually running, and it is
- *    the only entrance to `/ai-lab` (5 taps, dev-gated).
+ *    a 5-tap shortcut to `/dev-lab` (dev-gated).
  *
  * These four are the whole screen. The AI-use disclosure renders
  * unconditionally beside the consent control, exactly as on Home.

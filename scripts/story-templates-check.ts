@@ -7,14 +7,13 @@
  * 18+: dark topics pass), unpaid setups and repeated nouns.
  */
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 import { CATEGORY_DEFS, type CategoryId } from '../src/lib/categories';
 import { STORY_ANGLES, type StoryAngle } from '../src/lib/ai-library/story';
 import type { TraitLean } from '../src/lib/traits';
 import {
-  STORY_AI_POLISH,
   STORY_MAP_CATEGORY_LEAN_TODO,
   STORY_REFERENCES,
   STORY_STAR_TOPICS,
@@ -39,9 +38,9 @@ const pkg = JSON.parse(readFileSync(resolve(root, 'package.json'), 'utf8')) as {
 assert.equal(pkg.scripts['check:story-templates'], 'tsx ./scripts/story-templates-check.ts');
 ok('wired as check:story-templates');
 
-assert.equal(STORY_AI_POLISH, false, 'Gemini/DeepSeek polish stays off until emci flips the flag');
+assert.ok(!existsSync(resolve(root, 'src/lib/story-v3/polish.ts')), 'the model polish module is gone (no AI anywhere)');
 assert.deepEqual([...STORY_MAP_CATEGORY_LEAN_TODO].sort(), ['cat_independence', 'cat_love', 'cat_structure']);
-ok('polish off; map-category high/low left open');
+ok('no model polish; map-category high/low left open');
 
 assert.equal(STORY_STAR_TOPICS.length, 14, '14 star topics');
 assert.equal(STORY_REFERENCES.length, 4, 'four approved reference stories');

@@ -127,7 +127,7 @@ pin(
   fab.includes("canSeeHub: hubAccess({ toolsAvailable: DEV_TOOLS_AVAILABLE, ...gate }) === 'full',"),
 );
 
-for (const rel of ['src/app/ai-lab.tsx', 'src/components/running-update-line.tsx']) {
+for (const rel of ['src/components/running-update-line.tsx']) {
   const file = src(rel);
   pin(
     `${rel} uses the same gate as the Hub's testing groups`,

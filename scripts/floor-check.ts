@@ -96,13 +96,15 @@ for (const type of jsonTypes) {
 }
 ok('collected data types match across PrivacyInfo.xcprivacy, app.json, and nutrition-label doc');
 
-for (const name of ['Supabase', 'Gemini', 'Resend', 'Sentry', 'ImprovMX', 'Apple']) {
+for (const name of ['Supabase', 'Resend', 'Sentry', 'ImprovMX', 'Apple']) {
   assert.match(policy, new RegExp(name), `privacy.md names ${name}`);
   assert.match(labels, new RegExp(name), `labels name ${name}`);
 }
 // A2 (emci 2026-10-22): Gemini only. DeepSeek runs only when DEEPSEEK_API_KEY is set, and emci unsets it.
 assert.doesNotMatch(policy, /DeepSeek/, 'privacy.md no longer names DeepSeek');
-ok('privacy.md and nutrition labels name the third parties (Gemini only, no DeepSeek; ImprovMX for support mail)');
+assert.doesNotMatch(policy, /\*\*Google \(Gemini API\)\*\*/, 'privacy.md lists no AI provider (ATO calls none)');
+assert.match(policy, /does not use any outside AI service/, 'privacy.md says ATO uses no outside AI service');
+ok('privacy.md and nutrition labels name the third parties (no AI provider; ImprovMX for support mail)');
 
 // A2 (roadmap v2, 2026-10-22): legal text is final. No placeholders, the real operator and contact,
 // retention numbers, the access-request promise and the breach line. Same rules on app source and landing.
@@ -125,7 +127,7 @@ export function legalFinalProblems(text: string, kind: 'privacy' | 'terms' | 'su
       [/responsible for privacy/, 'privacy contact'],
       [/Information and Privacy Commissioner/, 'breach notice'],
       [/not therapy/i, 'not-therapy line'],
-      [/paid plan[\s\S]{0,200}free plan/i, 'Gemini terms for both plans'],
+      [/does not use any outside AI service/, 'no-AI line'],
     ] as const) {
       if (!need.test(text)) out.push(`missing: ${why}`);
     }
@@ -148,14 +150,14 @@ assert.doesNotMatch(labels, /\[CONFIRM/, 'labels doc has no [CONFIRM] tag');
 assert.doesNotMatch(read('landing/index.html'), /\[CONFIRM|asstrollogs|AsTrollOGs/i, 'landing index is final');
 // pass/fail pairs
 assert.ok(legalFinalProblems(policy + ' [CONFIRM: x]', 'privacy').includes('has a [CONFIRM] tag'), 'fail: a tag');
-assert.ok(legalFinalProblems(policy.replace(/October 22, 2026/, '[DATE — fill in on publish]'), 'privacy').includes('has a date placeholder'), 'fail: no date');
+assert.ok(legalFinalProblems(policy.replace(/October 26, 2026/, '[DATE — fill in on publish]'), 'privacy').includes('has a date placeholder'), 'fail: no date');
 assert.ok(legalFinalProblems(policy + ' Draft, pending lawyer review', 'privacy').includes('says Draft'), 'fail: Draft');
 assert.ok(legalFinalProblems(policy + ' DRAFT', 'privacy').includes('says Draft'), 'fail: DRAFT in capitals');
 assert.ok(legalFinalProblems(policy + ' with DeepSeek as a fallback', 'privacy').includes('names DeepSeek'), 'fail: DeepSeek');
 assert.ok(legalFinalProblems(policy.replace(/support@emgens\.com/g, 'support@asstrollogs.com'), 'privacy').includes('names the old entity or address'), 'fail: old address');
 assert.ok(legalFinalProblems(policy.replace(/Reports:\*\* 2 years/, 'Reports:** forever'), 'privacy').includes('missing: report retention'), 'fail: report retention dropped');
 assert.ok(legalFinalProblems(policy.replace(/We answer within 30 days/g, 'We answer'), 'privacy').includes('missing: access-request answer time'), 'fail: no answer time');
-assert.ok(legalFinalProblems(policy.replace(/free plan/g, 'other plan'), 'privacy').includes('missing: Gemini terms for both plans'), 'fail: one-plan claim');
+assert.ok(legalFinalProblems(policy.replace(/does not use any outside AI service/g, 'uses AI'), 'privacy').includes('missing: no-AI line'), 'fail: no-AI line dropped');
 assert.deepEqual(legalFinalProblems('Last updated: October 22, 2026 support@emgens.com', 'support'), [], 'pass: a minimal support page');
 ok('legal text is final on app source + landing: no placeholders, operator, contact, retention, access, breach (pass/fail pairs)');
 
@@ -454,7 +456,7 @@ assert.match(home, /\{AI_USE_DISCLOSURE\}/);
 // cards and category deep dives — the disclosure names exactly those two.
 assert.match(
   consent,
-  /AI_USE_DISCLOSURE =\s*'ATO writes your Legends cards and your category deep dives from a stored story library\. No model writes them, and they never include your name or your answers\.'/,
+  /AI_USE_DISCLOSURE =\s*'ATO writes your Legends cards and your category deep dives from a stored story library\. No model writes them, ATO uses no outside AI service, and the cards never include your name or your answers\.'/,
 );
 assert.doesNotMatch(consent, /STORY_LIBRARY_RUNTIME|AI_USE_DISCLOSURE_MODEL/);
 assert.match(consent, /No model writes them/);
