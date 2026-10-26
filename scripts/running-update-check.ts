@@ -126,7 +126,8 @@ assert.match(line, /Updates\.updateId/);
 assert.match(line, /Updates\.manifest/);
 assert.match(line, /Updates\.createdAt/);
 assert.match(line, /formatPublishedAt/);
-assert.match(line, /\/ai-lab/);
+assert.match(line, /\/dev-lab/);
+assert.doesNotMatch(line, /\/ai-lab/);
 ok('You Settings and Dev Tools Hub both show the running-update line');
 
 // App version + build number, no expo-application. Pinned so a later edit

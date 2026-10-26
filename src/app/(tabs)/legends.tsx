@@ -19,7 +19,7 @@ import { ThemedView } from '@/components/themed-view';
 import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { useAccountDataEpoch } from '@/lib/account-data-epoch';
-import { AI_TAP_TIMEOUT_MS } from '@/lib/ai/timeouts';
+import { TAP_TIMEOUT_MS } from '@/lib/tap-timeout';
 import { AI_TOKEN_PRICE, AI_TOKENS_NEEDED, atoTokenBalanceOf } from '@/lib/ato-tokens';
 import { refundAiTokens } from '@/lib/ato-tokens-server';
 import { PRE_LAUNCH_DEV } from '@/lib/dev-mode';
@@ -307,7 +307,7 @@ export default function LegendsScreen() {
         await hydrateStoryLibraryDevice();
         let story;
         try {
-          story = await withTimeout(revealLegendStory({ ...input, consentGranted, free }), AI_TAP_TIMEOUT_MS, 'legend-story');
+          story = await withTimeout(revealLegendStory({ ...input, consentGranted, free }), TAP_TIMEOUT_MS, 'legend-story');
         } catch {
           if (charged) await refundAiTokens('legend');
           story = fallbackLegendStory(input);
