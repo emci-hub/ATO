@@ -1268,9 +1268,9 @@ About 10 min. Needs the 1.2.0 build from TestFlight (not an OTA: the camera plug
 - [ ] **6** Send one Circle chat message to a friend on the same build (or yourself via a test account). -> It sends and decrypts on the other side (chat still works after the runtime bump).
 - [ ] **7** TestFlight (or the iPhone Settings -> ATO row). -> The build shows version 1.2.0.
 
-## Box 85 — Creeps, boss and towers breathe (roadmap step AN4, 2026-10-23, Play-only OTA on runtime 1.2.0)
+## Box 85 — Creeps, boss and towers breathe (roadmap step AN4, 2026-10-23; live since OTA 6ec7a518 on runtime 1.2.0)
 
-About 5 min. Needs the AN4 OTA, which is published only after 1.2 is live in the store (it targets runtime 1.2.0, so restart the 1.2 app twice). Seven characters got the same slow breath the heroes have (rest, small dip, rest, small dip; 1.3 s per loop): creeps Knight, Village-girl, Wizard; the Oni boss; towers Ghost, Lux, Viper. Creeps and the boss only show it when they stand still; their Walk and Death are unchanged.
+About 5 min. The AN4 art has been live since the 2026-10-26 IA OTA `6ec7a518` (runtime 1.2.0, so restart the 1.2 app twice to get it). Seven characters got the same slow breath the heroes have (rest, small dip, rest, small dip; 1.3 s per loop): creeps Knight, Village-girl, Wizard; the Oni boss; towers Ghost, Lux, Viper. Creeps and the boss only show it when they stand still; their Walk and Death are unchanged.
 
 **Report back in ONE message:** `pass`, or `fix` + the character + what you saw, per line.
 
