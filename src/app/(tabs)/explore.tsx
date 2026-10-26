@@ -1,16 +1,12 @@
-import { router, useFocusEffect } from 'expo-router';
+import { useFocusEffect } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { CategoriesFold } from '@/components/categories-fold';
 import { CategoryDeepDiveCard } from '@/components/category-deep-dive-card';
-import { ChangeCard } from '@/components/change-card';
 import { FullProfileFold } from '@/components/full-profile-fold';
-import { Appear, SkeletonCard } from '@/components/motion';
-import { ProfileFillFold } from '@/components/profile-fill-fold';
-import { ShapeCard } from '@/components/shape-card';
-import { TraitBandsFold } from '@/components/trait-bands-fold';
+import { SkeletonCard } from '@/components/motion';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
@@ -21,7 +17,7 @@ import { useAccountDataEpoch } from '@/lib/account-data-epoch';
 import { useMeContext } from '@/lib/me-context';
 import { aiConsentFor } from '@/lib/me';
 import { atoTokenBalanceOf } from '@/lib/ato-tokens';
-import { settledAxisLabel, type TraitTrack } from '@/lib/trait-stability';
+import type { TraitTrack } from '@/lib/trait-stability';
 import { fetchTraitTracks } from '@/lib/trait-tracks-store';
 import { NO_PINCH_ZOOM } from '@/lib/theme/chrome';
 
@@ -96,24 +92,7 @@ export default function ExploreScreen() {
 
           {me ? (
             <>
-              {/* "Your shape" leads (polish pass, emci 2026-10-05): the profile as
-                  one figure, tap a point for the trait. A skeleton until the
-                  tracks land, so a finished profile never flashes blank. */}
-              {tracksReady ? (
-                <Appear>
-                  <ShapeCard
-                    me={me}
-                    tracks={tracks}
-                    settledLabel={settledAxisLabel(tracks)}
-                    onPressSettled={() => {
-                      // Questions ignores an ?axis= (the per-axis feed was removed).
-                      router.push('/intake-sweep');
-                    }}
-                  />
-                </Appear>
-              ) : (
-                <SkeletonCard lines={4} />
-              )}
+              {/* "Your shape" and "Your traits" moved to You (IA phase P4). */}
               {/* Categories stay open as tiles: the full fixed list is the point
                   of this tab (release pass, emci 2026-09-16). */}
               <CategoriesFold
@@ -133,10 +112,6 @@ export default function ExploreScreen() {
                   onSpent={() => void refreshMe()}
                 />
               ) : null}
-              {/* What actually moved lately, from the answer history. No model call. */}
-              <ChangeCard userId={me.id} />
-              <TraitBandsFold me={me} tracks={tracks} />
-              <ProfileFillFold tracks={tracks} />
               <FullProfileFold me={me} onUpdated={() => refreshMe()} />
               {/* The five "being rebuilt" placeholders (2026-10-01) and the
                   "more is coming" line (2026-10-05) are gone: a live screen

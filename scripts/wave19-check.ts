@@ -316,7 +316,9 @@ const widget = read('targets/widget/widgets.swift');
 // alternatives were dropped from the patterns below.
 assert.doesNotMatch(home, /trait_history|spendTokens|TOKEN_PRICE/);
 assert.doesNotMatch(widget, /token|trait_history/);
-assert.match(read('src/app/(tabs)/explore.tsx'), /settledAxisLabel/);
+// IA P4: the settled-axis label moved with the ShapeCard from Explore to You.
+assert.match(read('src/app/(tabs)/you.tsx'), /settledAxisLabel/);
+assert.doesNotMatch(read('src/app/(tabs)/explore.tsx'), /settledAxisLabel/, 'settled label left Explore');
 // SageInsightSpend's Explore call site is parked (Isolation Plan Card 5,
 // 2026-09-15) — inverted per the Card 2/3 "invert, don't delete" convention.
 assert.doesNotMatch(read('src/app/(tabs)/explore.tsx'), /SageInsightSpend/);
