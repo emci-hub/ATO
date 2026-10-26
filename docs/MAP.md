@@ -34,8 +34,10 @@ Generated 2026-09-02 from the tree. Purpose only; for how things connect see `FL
 | `(tabs)/_layout.tsx` | Tab shell: `AppTabs` + always-mounted `NavPixel` |
 | `(tabs)/index.tsx` | Home: today's card, Did/Skip, primary slot, category teaser |
 | `(tabs)/sage.tsx` | REMOVED (Sage tab is gone; the You tab carries the static helpline row) |
-| `(tabs)/explore.tsx` | Explore: title, Categories, The Story, insight spend, observations |
-| `(tabs)/you.tsx` | You: tone, badges, growth, weeks, support region, Full Profile, account |
+| `(tabs)/explore.tsx` | Redirect only (IA P5, 2026-10-26): `<Redirect href="/you?section=categories" />`; Explore is no longer a tab (a hidden trigger in `app-tabs.tsx` keeps old deep links working) |
+| `(tabs)/you.tsx` | You (IA P2-P5): "This is you so far" character, shape + traits blocks, Categories + deep dive, Full Profile, `Legends ›` / `Circle ›` rows; `?section=shape|traits|categories|profile|tokens` scrolls to a block |
+| `settings.tsx` | Settings (IA P1, pushed from the gear on Home or a row on You): appearance, profile details, notifications, Privacy & AI, help + legal, account (sign out, delete), About, Developer |
+| `roll.tsx` | "Your reveals" (IA P6, root Stack screen, display only): today's reveal status, a Reveal row per hall, every legend met |
 | `(tabs)/around.tsx` | Around: weekend shows by typed city, "I'm going" |
 | `(tabs)/circle.tsx` | Circle: scanned friends, peer cards, category compare |
 | `(tabs)/legends.tsx` | Legends: manual-trigger 64-archetype story, 6-skin switch, paid reroll, archive; dev persona strip (dev user only) |
@@ -49,15 +51,16 @@ Generated 2026-09-02 from the tree. Purpose only; for how things connect see `FL
 | `ai-lab.tsx` | Hidden provider switcher (5-tap Build line) + status dots |
 | `*-lab.tsx` (theme, around, pixel, voice; the talk and crisis labs are removed) | Dev labs, behind `PRE_LAUNCH_DEV` |
 | `+native-intent.ts` | Deep-link → route mapping |
-| `copy/library.md` | Library paraphrase lines (`first_cards.md`, the old Day 1–3 cards, was removed in A5) |
-| `voice/voice-reference.txt` | Shared voice register (was `voice/sage.txt`, now gone) |
-| `legal/*.md` | Privacy, terms, App Store privacy-label answers |
+| `../content/copy/library.md` | Library paraphrase lines (moved from `src/app/copy/` in IA P7; `first_cards.md`, the old Day 1–3 cards, was removed in A5) |
+| `../content/voice/voice-reference.txt` | Shared voice register (moved from `src/app/voice/` in IA P7; was `sage.txt`, now gone) |
+| `../content/legal/*.md` | Privacy, terms, App Store privacy-label answers (moved from `src/app/legal/` in IA P7) |
 
 ## `src/components`
 
 | File | Purpose |
 |---|---|
-| `app-tabs.tsx` | Custom JS tab bar over `expo-router/ui`, hidden triggers for More tabs |
+| `app-tabs.tsx` | Custom JS tab bar over `expo-router/ui`, hidden triggers for More tabs; default bar is Home, Insights, You, Play, More (IA P3; Play pushes `/play`) |
+| `token-chip.tsx` | Read-only ATO token balance chip in the Insights and Legends headers; tap opens `/you?section=tokens` (IA P7) |
 | `nav-edit-overlay.tsx`, `nav-more-sheet.tsx`, `nav-pixel.tsx` | Edit-navigation drag mode, More sheet, top-right companion |
 | `themed-text.tsx`, `themed-view.tsx`, `themed-pressable.tsx`, `themed-tab-bar.tsx` | Theme primitives (type scale lives in themed-text) |
 | `appearance-picker.tsx`, `voice-preset-picker.tsx` | Appearance mode / voice pickers |
@@ -81,7 +84,7 @@ Generated 2026-09-02 from the tree. Purpose only; for how things connect see `FL
 | `kenney-character.tsx`, `kenney-credits-card.tsx`, `pixel-face.tsx`, `animated-icon*.tsx` | Sprite character, credits, splash |
 | `trace-pipeline.tsx` | Generic dev trace viewer |
 | `legend-figure-card.tsx`, `legend-figures-dev.tsx` | Legends museum: ??? frames, story card, share sheet; dev tool |
-| `category-deep-dive-card.tsx` | Explore: category list with one number each, leanings %, the deep-dive card (one AI call on tap) |
+| `category-deep-dive-card.tsx` | Categories on You (was Explore): category list with one number each, leanings %, the deep-dive card (one AI call on tap) |
 
 ## `src/lib` — logic (no React except `*-context.tsx`)
 

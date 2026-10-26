@@ -45,7 +45,7 @@ Expected result: **18+** (a "17+" or "18+" band in Apple's current scheme). Do n
 
 ## 3. App Privacy labels
 
-Copy from `src/app/legal/app-privacy-labels.md` (the table there is the source of truth and is pinned by `check:floor`).
+Copy from `src/content/legal/app-privacy-labels.md` (the table there is the source of truth and is pinned by `check:floor`).
 Summary:
 
 - Tracking: **No**. No ATT prompt, no advertising identifier.
@@ -76,17 +76,22 @@ password through our own server). Email codes are not needed for this account.
 The demo account is over 18, has answered the first 48 questions (so Insights is open), has NOT answered the AI consent
 question yet, and has one accepted Circle friend who has sent one chat message.
 
-What to look at (bottom bar: Home, Insights, Questions, Explore, More):
+What to look at (bottom bar since the 2026-10-26 layout pass: Home, Insights, You, Play, More; an older custom bar resets
+to this once):
 - Home: the daily check-in and Today's Pick. The AI consent card ("ATO's AI") is on Home until it is answered
-  (at the bottom of Home for this account). After that, the same choice is in More → You → "ATO's AI" (On/Off).
+  (at the bottom of Home for this account). After that, the same choice is in Settings (gear on Home, or a row on You)
+  → Privacy & AI → "ATO's AI" (On/Off).
 - Insights: one daily insight (Focus · try · watch), loaded on a tap. Written from stored text, not by AI.
-- Questions: the multiple-choice profile questions; answers build the trait profile.
+- You: "This is you so far", your shape and traits, Categories (with the category deep dive) and the Full Profile;
+  Explore is no longer a tab.
+- Play: opens Divecore, the pixel-art pet game.
+- More → Questions: the multiple-choice profile questions; answers build the trait profile.
 - Circle tab (More → Circle if it is not in the bar): a person is added by @handle and must accept. Every friend row has
   a ⋯ menu with Message, Report and Block. Inside a chat, Report and Block are buttons at the top of the screen;
-  long-press a received message to report that one. More → Divecore is the pixel-art pet game; friends can visit each
+  long-press a received message to report that one. Play (the bar) is the pixel-art pet game, Divecore; friends can visit each
   other's Hideout there.
-- More → You: account, legal links (Privacy, Terms), "Delete account" (works in-app, confirms by typing DELETE), and a
-  fixed helpline row.
+- Settings (gear on Home, or a row on You): account, legal links (Privacy, Terms), "Delete account" (works in-app,
+  confirms by typing DELETE), and a fixed helpline row.
 
 AI: only Legends cards and category deep dives are written by a language model on our server (Google Gemini, with
 DeepSeek as a fallback). The phone sends only a trait group, never typed text, a name or answers. Nothing is sent until
@@ -148,7 +153,7 @@ for the 1.0 commit). Change these in ASC only when you submit the 1.1 build (it 
 | Age rating: User-generated content | Yes (names, handles, requests, reports) | Yes, plus 1:1 chat between accepted friends |
 | Messaging / chat between users | No | Yes |
 | Export compliance | `ITSAppUsesNonExemptEncryption = false` | `ITSAppUsesNonExemptEncryption = false` (2026-10-21; `true` was rejected, see below) |
-| App Privacy | 11 types | add **Emails or Text Messages** (Linked, App Functionality); copy from `src/app/legal/app-privacy-labels.md` |
+| App Privacy | 11 types | add **Emails or Text Messages** (Linked, App Functionality); copy from `src/content/legal/app-privacy-labels.md` |
 | Version / What's New | 1.0.0 / "First release." | 1.1.0 / "Message friends in your Circle. End-to-end encrypted." |
 | Screenshot 4 | Circle ⋯ menu | Circle ⋯ menu showing Message, or a chat thread (demo text only) |
 

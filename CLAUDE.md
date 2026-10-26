@@ -73,7 +73,7 @@ Live checks (need real accounts / network / keys) are excluded from the gate and
   Root keeps the Hub's Admin group only. A new dev panel goes inside the `tools`
   branch of `dev-lab.tsx`, or `check:release-mode` fails.
 - **Helpline row is static (emci 2026-10-14; replaced the crisis system).** The Sage tab and every
-  crisis path (card, region picker, flags, message scanning) are gone. The You tab carries one fixed
+  crisis path (card, region picker, flags, message scanning) are gone. Settings (`src/app/settings.tsx`, was the You tab) carries one fixed
   `HelplineRow` (`src/components/helpline-row.tsx`): 988 for US/Canada, findahelpline.com elsewhere, a
   local-emergency line. Never a generated number, never a guessed region, never triggered by or logging
   anything a person typed. Pinned by `check:helpline-row`. Insights is template-only (no model call,
@@ -191,7 +191,7 @@ Live checks (need real accounts / network / keys) are excluded from the gate and
 | Product, roster, live AI model | `docs/ME.md` |
 | Legal, brand, cost | `docs/BUSINESS.md` |
 | Device test checklist | `docs/ATO_DEVICE_TESTS.md` |
-| Sprite gallery artifact (Streetwear art, all facings) — "update the sprite gallery" | `scripts/sprite-gallery/README.md` · https://claude.ai/artifact/9wjcLv4FQu4S8dwqT2RBho |
+| Sprite gallery artifact (Streetwear art, all facings) — "update the sprite gallery" | `scripts/sprite-gallery/README.md` · https://claude.ai/artifact/Uz3UjeHtt4XRb3q9MhoETk |
 | **Making or editing any game art (PixelLab)** — tools order, size ladder, gates | `docs/art/PIXELLAB_GUIDE.md` (read first) · `npm run pixellab:watch` = has PixelLab changed? |
 | Old plan (reference only, not rules) | `docs/archive/OLD_PLAN.md` |
 | Schema + RLS + RPCs | `supabase/migrations/*.sql` (chronological: stage* → wave*) |
