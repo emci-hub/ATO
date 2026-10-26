@@ -18,7 +18,8 @@ export type ReorderableTabId =
   | 'questions'
   | 'around'
   | 'legends'
-  | 'circle';
+  | 'circle'
+  | 'play';
 
 /** The two always-present tabs (not pool tabs; can never leave slots 1–4). */
 export type PinnedTabId = 'home' | 'insights';
@@ -59,7 +60,12 @@ export const NAV_TABS: Record<ReorderableTabId, NavTabMeta> = {
   circle: { label: 'Circle', href: '/circle', icon: 'account-group' },
   questions: { label: 'Questions', href: '/intake-sweep', icon: 'comment-question-outline' },
   legends: { label: 'Legends', href: '/legends', icon: 'book-open-page-variant-outline' },
+  // Play (Divecore) is a root Stack screen, not a tab route: its bar slot pushes /play (app-tabs.tsx).
+  play: { label: 'Play', href: '/play', icon: 'play-circle' },
 };
+
+/** Pool ids whose destination is a pushed root screen, so they get no tab trigger. */
+export const PUSHED_TAB_IDS: readonly ReorderableTabId[] = ['play'];
 
 export const NAV_TAB_IDS = Object.keys(NAV_TABS) as ReorderableTabId[];
 
@@ -138,9 +144,20 @@ export function isTabUnlocked(id: ReorderableTabId, ctx: NavUnlockContext): bool
   return check ? check(ctx) : true;
 }
 
+/**
+ * Layout version stored INSIDE the layout JSON (`me.nav_layout`, no schema change).
+ * A saved layout with an older or missing version resets ONCE to the default on
+ * read (IA phase P3: the bar became Home · Insights · You · Play · More); a layout
+ * saved from the edit screen is stamped with the current version, so later edits
+ * are kept.
+ */
+export const NAV_LAYOUT_VERSION = 3;
+
 export interface NavLayout {
   /** Exactly SLOT_COUNT entries: home + insights once each, plus POOL_SLOTS pool ids. */
   slots: BarSlotId[];
+  /** Absent on the in-code default and on layouts saved before P3. */
+  version?: number;
 }
 
 /**
@@ -156,8 +173,12 @@ export interface NavLayout {
  * next to Home. The bar keeps five buttons, so the default pool is Questions +
  * Explore; You moves to More.
  */
+/*
+ * 2026-10-26 (IA phase P3): the default bar is Home · Insights · You · Play · More.
+ * Questions, Explore, Legends and Circle live in More.
+ */
 export const DEFAULT_NAV_LAYOUT: NavLayout = {
-  slots: ['home', 'insights', 'questions', 'explore'],
+  slots: ['home', 'insights', 'you', 'play'],
 };
 
 function isValidPoolId(value: unknown): value is ReorderableTabId {
@@ -182,6 +203,7 @@ export function normalizeNavLayout(raw: unknown, opts: { resetShort?: boolean } 
   // `resetShort: false`, so a bar the user just edited is padded, never thrown away.
   const resetShort = opts.resetShort !== false;
   let incoming: unknown = raw;
+  let incomingVersion: unknown;
   if (
     raw &&
     typeof raw === 'object' &&
@@ -189,6 +211,13 @@ export function normalizeNavLayout(raw: unknown, opts: { resetShort?: boolean } 
     Array.isArray((raw as { slots?: unknown }).slots)
   ) {
     incoming = (raw as { slots: unknown[] }).slots;
+    incomingVersion = (raw as { version?: unknown }).version;
+  }
+  // A saved layout from before the current version resets ONCE to the default on
+  // read. The write path (`resetShort: false`) is a layout the user just edited,
+  // which is stamped below and never thrown away.
+  if (resetShort && Array.isArray(incoming) && incomingVersion !== NAV_LAYOUT_VERSION) {
+    return { slots: [...DEFAULT_NAV_LAYOUT.slots], version: NAV_LAYOUT_VERSION };
   }
 
   const ordered: BarSlotId[] = [];
@@ -212,7 +241,7 @@ export function normalizeNavLayout(raw: unknown, opts: { resetShort?: boolean } 
   // No valid incoming slots (null / unset / empty / all-invalid) → the default
   // layout, exactly as specified (Home / Insights / Questions / Explore).
   if (ordered.length === 0) {
-    return { slots: [...DEFAULT_NAV_LAYOUT.slots] };
+    return { slots: [...DEFAULT_NAV_LAYOUT.slots], version: NAV_LAYOUT_VERSION };
   }
 
   // A saved layout from before 2026-10-01 holds 2 pool tabs; the bar now holds
@@ -220,7 +249,7 @@ export function normalizeNavLayout(raw: unknown, opts: { resetShort?: boolean } 
   // rather than being padded into a bar nobody chose. A layout saved from the
   // edit screen always has the full set, so a real choice is never overridden.
   if (resetShort && ordered.filter((id) => !isPinnedId(id)).length < POOL_SLOTS) {
-    return { slots: [...DEFAULT_NAV_LAYOUT.slots] };
+    return { slots: [...DEFAULT_NAV_LAYOUT.slots], version: NAV_LAYOUT_VERSION };
   }
 
   // Preserve interleaving while enforcing home/insights once each and POOL_SLOTS pool ids.
@@ -266,5 +295,5 @@ export function normalizeNavLayout(raw: unknown, opts: { resetShort?: boolean } 
     }
   }
 
-  return { slots: slots.slice(0, SLOT_COUNT) };
+  return { slots: slots.slice(0, SLOT_COUNT), version: NAV_LAYOUT_VERSION };
 }
