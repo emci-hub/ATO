@@ -125,6 +125,7 @@ function RootNavigator() {
               <Stack.Screen name="(tabs)" />
               <Stack.Screen name="week" />
               <Stack.Screen name="settings" />
+              <Stack.Screen name="roll" />
               <Stack.Screen name="chat" />
               <Stack.Screen name="dev-lab" />
             </Stack.Protected>

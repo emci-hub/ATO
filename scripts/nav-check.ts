@@ -6,7 +6,7 @@
  * with edit-mode / More surfaces, and that the pool is an extensible registry.
  */
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 import {
@@ -224,28 +224,40 @@ assert.ok(
 );
 ok('hidden TabTriggers for un-slotted pool tabs stay inside TabList, so they remain registered routes');
 
-// Same rule for `(tabs)` routes that are never a bar/More destination and are
-// pushed from inside another tab (`/roll`, from Legends). `/roll` shipped with
-// NO trigger at all — only an `as Href` cast at the push site, which typecheck
-// does not enforce here (a deliberately bogus route string also compiles), so
-// nothing caught it. It must stay inside <TabList> for the same reason as the
-// More-parked triggers above, and must stay OUT of NAV_TABS or it becomes a
-// user-placeable bar slot and shows up in More and the edit pool.
+// Same rule for `(tabs)` routes that are never a bar/More destination (today: the
+// `/explore` redirect). Roll used to be one: it shipped with NO trigger at all —
+// only an `as Href` cast at the push site, which typecheck does not enforce here
+// (a deliberately bogus route string also compiles), so nothing caught it. A
+// hidden route must stay inside <TabList> for the same reason as the More-parked
+// triggers above, and must stay OUT of NAV_TABS or it becomes a user-placeable
+// bar slot and shows up in More and the edit pool.
 const hiddenRouteIdx = tabs.indexOf('HIDDEN_TAB_ROUTES.map');
 assert.notEqual(hiddenRouteIdx, -1, 'expected a HIDDEN_TAB_ROUTES trigger loop in app-tabs.tsx');
 assert.ok(
   hiddenRouteIdx > tabListOpen && hiddenRouteIdx < tabListClose,
   'HIDDEN_TAB_ROUTES triggers must render inside <TabList>, or expo-router/ui never registers those routes and pushes to them silently no-op (this is exactly how /roll shipped unreachable)'
 );
-assert.match(tabs, /\{ name: 'roll', href: '\/roll' \}/);
 // IA P5: the explore route file stays (it redirects to You), so its hidden trigger must stay registered inside TabList.
 assert.match(tabs, /\{ name: 'explore', href: '\/explore' \}/, 'hidden explore trigger kept so the redirect route stays navigable');
+// IA P6: Roll ("Your reveals") is a root Stack screen pushed from Legends, so it is
+// registered by the root Stack (inside the authed + hasMe group), not by a tab trigger.
+assert.ok(existsSync(resolve(root, 'src/app/roll.tsx')), 'roll is a root route: src/app/roll.tsx');
+assert.ok(!existsSync(resolve(root, 'src/app/(tabs)/roll.tsx')), 'roll is no longer a (tabs) route');
+const rootLayoutSrc = read('src/app/_layout.tsx');
+const authedGroup = rootLayoutSrc.slice(
+  rootLayoutSrc.indexOf('<Stack.Protected guard={isAuthed && hasMe}>'),
+  rootLayoutSrc.indexOf('</Stack.Protected>', rootLayoutSrc.indexOf('<Stack.Protected guard={isAuthed && hasMe}>')),
+);
+assert.match(authedGroup, /<Stack\.Screen name="roll" \/>/, 'roll is registered as a Stack screen inside the authed + hasMe group');
+assert.doesNotMatch(tabs, /name: 'roll'|href: '\/roll'/, 'app-tabs has no roll trigger');
 assert.ok(
   !(NAV_TAB_IDS as readonly string[]).includes('roll'),
   'roll must not be a NAV_TABS pool id — it is pushed from Legends, never a bar/More destination'
 );
+assert.match(read('src/app/(tabs)/legends.tsx'), /router\.push\('\/roll'\)/, 'Legends opens Your reveals');
 assert.doesNotMatch(read('src/app/(tabs)/legends.tsx'), /as Href/);
-ok('/roll is registered by a hidden TabList trigger, stays out of the nav pool, and needs no Href cast');
+assert.doesNotMatch(read('src/app/roll.tsx'), /as Href/);
+ok('/roll is a root Stack screen (authed group), app-tabs has no roll trigger, stays out of the nav pool, needs no Href cast');
 
 const overlay = read('src/components/nav-edit-overlay.tsx');
 assert.match(overlay, /Sortable\.Flex/);
