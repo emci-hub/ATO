@@ -9,9 +9,20 @@ State of the IA runner (`docs/ato-ia-runner.md`). The runner does ONLY the first
 - [x] P4 — Explore → You, part 1
 - [x] P5 — Explore → You, part 2 + remove Explore
 - [x] P6 — Roll = "Your reveals"
-- [ ] P7 — Cleanup
+- [x] P7 — Cleanup
 
 ## Log
+
+### P7 — Cleanup (2026-10-26, branch `ia/p7-cleanup`, stacked on `ia/p6-your-reveals`, draft PR, no merge, no OTA)
+Files: `src/components/token-chip.tsx` (new, read-only: `atoTokenBalanceOf(me)`, tap goes to `/you?section=tokens`, 44 pt, no animation),
+`src/app/(tabs)/insights.tsx` + `src/app/(tabs)/legends.tsx` (title + chip row in the header, clear of NavPixel); the md/txt content files moved
+with `git mv` to `src/content/` (`copy/library.md`, `legal/{privacy,terms,app-privacy-labels}.md`, `voice/voice-reference.txt`) with path-only updates in
+`scripts/sync-voice-content.mjs`, `src/lib/voice/content.generated.ts` (header), `src/components/legal-links.tsx` (comment), `.gitattributes`,
+`.cursor/rules/play-isolation.mdc`, `AGENTS.md`, and checks floor, circle-chat, library, jargon.
+- No real `/week` links existed in src (one comment in push-copy.ts mentioned the string and was reworded); the route and its Stack.Screen stay.
+- Lessons: (1) `jargon-check` pinned "sage.txt stays deleted" at the old folder, which no longer exists, so it would have passed trivially: it now
+  points at `src/content/voice/sage.txt`. (2) Doc prose (docs/MAP.md lines 52-53, docs/app-store-pack.md, docs/legal/*.DRAFT.md, PROJECT_CONTEXT.md) still
+  names the old `src/app/{copy,legal,voice}` paths; nothing reads them, update later. (3) Phone look: the chip on Insights and Legends opens You at tokens.
 
 ### P6 — Roll = "Your reveals" (2026-10-26, branch `ia/p6-your-reveals`, stacked on `ia/p5-explore-to-you-2`, draft PR, no merge, no OTA)
 Built by an Opus subagent (the runner says Opus builds P6). Files: `src/app/roll.tsx` (new, root Stack screen; the placeholder

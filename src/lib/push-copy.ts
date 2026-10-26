@@ -11,7 +11,7 @@ export const PUSH_PATHS = {
   morning: '/',
   evening: '/?focus=check',
   insight: '/you?section=categories',
-  // Was '/week' — that screen is a "Rebuilt" placeholder, so the weekly push
+  // Was the week screen — it is a "Rebuilt" placeholder, so the weekly push
   // landed on a dead end. Home until the week view is rebuilt (2026-10-01).
   sunday: '/',
 } as const;
