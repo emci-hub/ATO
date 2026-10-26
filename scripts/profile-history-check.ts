@@ -311,9 +311,17 @@ ok('the card: 8 real Divecore heroes by type, Departure Mono, 16 bars, strength/
   assert.equal(characterPublicLine({ attachment_avoidance: 0.1 }), null, 'only a private lean = nothing public');
   assert.ok(!/cuts both ways|TRY/.test(pub ?? ''), 'a public line never carries the weakness or step');
 
-  // wiring: shown after the 48 (not before), and not on top of the finished binder
+  // wiring (IA P2): the character left Questions and lives only on You, at the top, whenever tracks exist
   const fold = read('src/components/questions-fold.tsx');
-  assert.match(fold, /fullProfileLocked && !loading && progress && progress\.stage !== 'complete' \? <ProfileCharacter/, 'character shows after the 48, before set 25');
+  assert.doesNotMatch(fold, /ProfileCharacter|profile-character/, 'the character is no longer on Questions');
+  const youScreen = read('src/app/(tabs)/you.tsx');
+  assert.match(youScreen, /import \{ ProfileCharacter \} from '@\/components\/profile-character';/, 'You imports the character');
+  assert.match(youScreen, /tracksUserId === userId && tracks\.length > 0 \? \(\s*<ProfileCharacter tracks=\{tracks\} \/>/, 'You shows it whenever tracks exist, for the current account only');
+  assert.ok(youScreen.indexOf('<ProfileCharacter') < youScreen.indexOf('<IdentityCard'), 'the character sits above the identity card');
+  assert.match(youScreen, /fetchHomeBootstrap\(timeZone\)/, 'You loads tracks with the same one-RPC fetch as Home');
+  assert.match(youScreen, /requestIdRef/, 'You keeps the newest-request guard');
+  assert.match(youScreen, /loadedOnceRef/, 'You keeps the failed-refetch guard');
+  assert.match(youScreen, /useFocusEffect/, 'You refetches on focus');
   const comp = read('src/components/profile-character.tsx');
   assert.ok(!/import[^;]*characterPublicLine/.test(comp), 'the in-app component never uses the public line; a share surface must call characterPublicLine itself');
   assert.equal(early.name, 'Still forming', 'with any code axis unsettled the name is "Still forming", not a default-low type');  assert.match(comp, /<PixelFrame enter=\{!reduceMotion\}/, 'entrance skipped under Reduce Motion');
