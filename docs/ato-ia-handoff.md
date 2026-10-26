@@ -4,7 +4,7 @@ State of the IA runner (`docs/ato-ia-runner.md`). The runner does ONLY the first
 
 ## Checklist
 - [x] P1 — Settings screen
-- [ ] P2 — "This is you so far" on You
+- [x] P2 — "This is you so far" on You
 - [ ] P3 — New tab bar + one-time layout reset
 - [ ] P4 — Explore → You, part 1
 - [ ] P5 — Explore → You, part 2 + remove Explore
@@ -12,6 +12,15 @@ State of the IA runner (`docs/ato-ia-runner.md`). The runner does ONLY the first
 - [ ] P7 — Cleanup
 
 ## Log
+
+### P2 — "This is you so far" on You (2026-10-26, branch `ia/p2-you-so-far`, stacked on `ia/p1-settings`, draft PR, no merge, no OTA)
+Files: `src/app/(tabs)/you.tsx` (same `fetchHomeBootstrap` + `requestIdRef` / `loadedOnceRef` / `tracksUserId` guards as
+Home, refetch on focus, `<ProfileCharacter>` at the top when tracks exist), `src/components/questions-fold.tsx` (render +
+import removed), `scripts/profile-history-check.ts` (one pin replaced). `profile-character.tsx` untouched.
+- Lessons: (1) only ONE check pinned the old wiring (`profile-history-check`, "character shows after the 48"); it now pins
+  the reverse (gone from Questions) plus You's wiring, so nothing was dropped. (2) The card now shows any time tracks
+  exist, not only between the 48 and set 25; a brand-new account with no tracks shows nothing. (3) P2 branches from P1
+  because both rewrite `you.tsx`; merge P1 first (or merge them together). (4) No screenshots again (sign-in wall).
 
 ### P1 — Settings screen (2026-10-26, branch `ia/p1-settings`, draft PR, no merge, no OTA)
 Files: `src/app/settings.tsx` (new), `src/app/(tabs)/you.tsx`, `src/app/(tabs)/index.tsx`, `src/app/_layout.tsx`
