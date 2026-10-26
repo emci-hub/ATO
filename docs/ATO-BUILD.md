@@ -294,7 +294,7 @@ Accept: the redteam doc exists, the High findings are all fixed or marked ⚑ fo
 ⚑ STOP for emci's OK on the findings and edits before PHASE-01.
 
 ## PHASE-01 Settings screen
-**STATUS (R02, audit 2026-10-26): VERIFY-ONLY.** `settings.tsx` already has every section, and You and Home are already decluttered. Do: confirm each step below against the code, run the named checks (resolve names against `package.json` first, R05), confirm the 5-tap `/ai-lab` in RunningUpdateLine, fix gaps only. Don't rebuild.
+**STATUS (R02, audit 2026-10-26): VERIFY-ONLY.** `settings.tsx` already has every section, and You and Home are already decluttered. Do: confirm each step below against the code, run the named checks (resolve names against `package.json` first, R05), confirm the 5-tap shortcut in RunningUpdateLine (it opens `/dev-lab`, hub-gated; there is no `/ai-lab` route), fix gaps only. Don't rebuild.
 Deps: 00 · Model: Sonnet
 Goal: a new pushed `/settings` screen holding every settings control, so You and Home are decluttered.
 Files:
@@ -312,7 +312,7 @@ Steps:
    - **Privacy & AI:** AI_USE_DISCLOSURE (always shown) + AiConsentCard / On-Off, moved verbatim from You.
    - **Help & Legal:** HelplineRow, Send feedback (mailto including updateId), LegalLinks.
    - **Account:** Sign out (with clearLocalAccountData), Delete account + DeleteAccountSheet (hasAppleIdentity).
-   - **About:** RunningUpdateLine (keep the 5-tap /ai-lab).
+   - **About:** RunningUpdateLine (keep the 5-tap shortcut to /dev-lab).
    - **Developer:** DevUnlockRow under DEV_PIN_AVAILABLE, plus Home's Dev Tools Hub / Pixel lab rows under the same hubAccess/__DEV__ gates.
 2. you.tsx: remove those controls and the SETTINGS heading, and add a "Settings ›" row.
 3. index.tsx: remove devBox and add a header gear Pressable (44pt, label "Settings") clear of NavPixel (NAV_PIXEL_HEADER_INSET). Keep the AI disclosure and the first-time consent ask on Home.

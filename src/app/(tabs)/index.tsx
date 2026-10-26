@@ -271,9 +271,9 @@ export default function HomeScreen() {
     purpose, because that card disappears the moment the question is answered.
 
     The first-time ask stays here. The on/off switch that used to sit under it
-    after an answer is gone from Home (emci, 2026-10-04: it is already on You,
-    under "Sage's AI"): the server refuses every AI call while consent is off
-    (ai-generate), and You is where it is turned back on or off.
+    after an answer is gone from Home (emci, 2026-10-04: it now lives in
+    Settings > Privacy & AI): the server refuses every AI call while consent is off,
+    and Settings is where it is turned back on or off.
   */
   /*
     Today's Pick (emci, 2026-10-05) replaces the daily line card: one

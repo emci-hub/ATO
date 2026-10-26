@@ -202,7 +202,9 @@ Update: ${Updates.updateId ?? 'original build'}`);
                 />
               ) : (
                 <Pressable
-                  accessibilityRole="button"
+                  accessibilityRole="switch"
+                  accessibilityLabel="ATO's AI"
+                  accessibilityState={{ checked: consent === 'granted', busy: consentBusy }}
                   disabled={consentBusy || !me}
                   onPress={() => {
                     void saveAiConsent(consent !== 'granted');
@@ -227,6 +229,7 @@ Update: ${Updates.updateId ?? 'original build'}`);
           <HelplineRow />
           <Pressable
             accessibilityRole="link"
+            accessibilityLabel={SEND_FEEDBACK_LABEL}
             onPress={() => {
               void sendFeedback();
             }}
@@ -244,6 +247,9 @@ Update: ${Updates.updateId ?? 'original build'}`);
             Account
           </ThemedText>
           <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Sign out"
+            accessibilityState={{ disabled: signingOut, busy: signingOut }}
             onPress={handleSignOut}
             disabled={signingOut}
             style={({ pressed }) => [
@@ -282,6 +288,8 @@ Update: ${Updates.updateId ?? 'original build'}`);
               {canSeeHub ? (
                 <ThemedView type="backgroundElement" style={styles.boxCard}>
                   <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel="Dev Tools Hub"
                     onPress={() => router.push('/dev-lab')}
                     style={({ pressed }) => [styles.boxRow, pressed && styles.pressed]}>
                     <View style={styles.boxRowText}>
@@ -297,6 +305,8 @@ Update: ${Updates.updateId ?? 'original build'}`);
               {__DEV__ ? (
                 <ThemedView type="backgroundElement" style={styles.boxCard}>
                   <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel="Pixel lab"
                     onPress={() => router.push('/pixel-lab')}
                     style={({ pressed }) => [styles.boxRow, pressed && styles.pressed]}>
                     <View style={styles.boxRowText}>
