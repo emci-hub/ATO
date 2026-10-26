@@ -8,10 +8,22 @@ State of the IA runner (`docs/ato-ia-runner.md`). The runner does ONLY the first
 - [x] P3 — New tab bar + one-time layout reset
 - [x] P4 — Explore → You, part 1
 - [x] P5 — Explore → You, part 2 + remove Explore
-- [ ] P6 — Roll = "Your reveals"
+- [x] P6 — Roll = "Your reveals"
 - [ ] P7 — Cleanup
 
 ## Log
+
+### P6 — Roll = "Your reveals" (2026-10-26, branch `ia/p6-your-reveals`, stacked on `ia/p5-explore-to-you-2`, draft PR, no merge, no OTA)
+Built by an Opus subagent (the runner says Opus builds P6). Files: `src/app/roll.tsx` (new, root Stack screen; the placeholder
+`src/app/(tabs)/roll.tsx` was removed), `src/app/_layout.tsx` (`<Stack.Screen name="roll" />` in the authed + hasMe guard),
+`src/components/app-tabs.tsx` (roll trigger dropped; the `explore` redirect trigger stays), `src/app/(tabs)/legends.tsx` (a
+"Your reveals ›" link and a `hall` route param only; no copy constants touched), checks nav, rebuilt, no-auto-ai.
+- Screen (display only, no spend/claim/refund/save/model call): the Today panel (free reveal used, bonus open, extra reveal costs
+  `AI_TOKEN_PRICE` tokens + balance), one "Reveal in Legends ›" row per hall (opens that hall in Legends), and every legend met,
+  grouped by hall, each opening its saved story free via `LegendStoryCard`. Locked and zero-met cases have plain lines.
+- Nothing changed in prices, rewards or quotas; rerolls stay frozen. Lessons: (1) rebuilt-check pinned roll as a parked
+  RebuiltNotice screen; it now pins "real screen, no RebuiltNotice, no backend patterns" instead. (2) nav-check's "/roll is a hidden
+  TabList trigger" pin became "roll is a root Stack screen with no trigger and not a pool id".
 
 ### P5 — Explore → You, part 2 + remove Explore (2026-10-26, branch `ia/p5-explore-to-you-2`, stacked on `ia/p4-explore-to-you-1`, draft PR, no merge, no OTA)
 Files: `src/app/(tabs)/you.tsx` (CategoriesFold + CategoryDeepDiveCard with the same props/gates, FullProfileFold, `Legends ›` / `Circle ›`
