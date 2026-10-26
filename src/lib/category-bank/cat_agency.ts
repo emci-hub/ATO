@@ -29,12 +29,12 @@ export const CAT_AGENCY: BarCard = {
     mid: {
       summary: [
         'You change the parts you can and leave the rest, and which is which depends on the day.',
-        'When something goes wrong, you sometimes look for a fix and sometimes let the afternoon go.',
+        'When something goes wrong, you sometimes look for a fix and sometimes let it go.',
         'You try hard when you feel ready, and you hold back when you aren’t sure you can do it.',
       ],
       strength: [
         'You can tell a problem you can change from one that is already out of your hands.',
-        'You can name what you did well today and what you got wrong, in the same breath.',
+        'You can name what you did well and what you got wrong, in the same breath.',
         'You push on the day it matters and rest on the day it doesn’t.',
       ],
       watchOut: [
@@ -45,28 +45,28 @@ export const CAT_AGENCY: BarCard = {
       tryThis: [
         'Pick one thing you’ve accepted and try one small change, so you can see if it moves.',
         'Write down one setback and one thing you learned from it, so the miss has a use.',
-        'Say yes to one small challenge this week, so you add to what you can already do.',
+        'Say yes to one small challenge this week to build on what you can already do.',
       ],
     },
     low: {
       summary: [
-        'You let things arrive as they are, and you don’t push hard to change how they turn out.',
-        'When something goes wrong, you point at luck or timing more than at what you did.',
-        'You feel unsure about a hard new task, and you are content to stay with what you already know.',
+        'You accept how things turn out instead of pushing hard to change them.',
+        'When something goes wrong, you look to luck or timing more than at what you did.',
+        'You prefer sticking with what you know over taking on a hard new task.',
       ],
       strength: [
-        'You stay calm when the result is out of your hands and there is nothing left to redo.',
+        'You stay calm when the result is out of your hands.',
         'You don’t blame yourself for a result you couldn’t control.',
         'You can feel fine without trying to improve every part of the day.',
       ],
       watchOut: [
-        'Sometimes you accept a result you could have moved with one small step.',
+        'Sometimes you accept a result you could have changed with one small step.',
         'Sometimes you miss how much your own work mattered.',
         'Sometimes doubt stops you from trying a task you would have handled fine.',
       ],
       tryThis: [
-        'Pick one small problem and take one step on it today, so you can see what moves.',
-        'Write down one win and what you did to make it happen, so your part is on the page.',
+        'Pick one small problem and take one step on it today.',
+        'Write down one win and what you did to make it happen.',
         'Try one new skill for ten minutes, so you see how it feels after the start.',
       ],
     },

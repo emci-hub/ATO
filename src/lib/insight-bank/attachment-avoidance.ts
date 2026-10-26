@@ -218,11 +218,11 @@ export const ATTACHMENT_AVOIDANCE_IDEAS: readonly InsightIdea[] = [
     ],
     why: 'Needing space is normal, but a person who loves you may take your need to withdraw as a sign that something is wrong.',
     try: [
-      'Tell the person “I need an hour to myself, and then I’d love to hang out,” so they know it isn’t about them.',
+      'Tell someone close to you, “I need an hour to myself, and then I’d love to hang out,” so they know it isn’t about them.',
       'Plan your alone time before a long trip, so you can ask for it calmly.',
     ],
     watch: [
-      'Notice how the other person feels when you step away without saying why.',
+      'Notice how someone close to you reacts when you step away without saying why.',
       'Notice how long you need to feel like yourself again.',
     ],
   }),
@@ -232,7 +232,7 @@ export const ATTACHMENT_AVOIDANCE_IDEAS: readonly InsightIdea[] = [
       'You usually like knowing you’re missed, but you don’t always know how to respond.',
       'When a friend wants more contact than you do, you tend to pull back a little.',
     ],
-    why: 'Mixed feelings about closeness are common, but a friend who wants more may not know you feel warmly too.',
+    why: 'Mixed feelings about closeness are common, but a friend who wants more may not know you care too.',
     try: [
       'Reply to “I miss you” with one warm sentence, so they know you care even if you don’t say much.',
       'Set a regular time to talk to someone close, so contact doesn’t depend on a mood.',
@@ -251,7 +251,7 @@ export const ATTACHMENT_AVOIDANCE_IDEAS: readonly InsightIdea[] = [
     why: 'Practical help is real care, but some people also need to hear you say you’re there.',
     try: [
       'Add one sentence like “I’m here if you want to talk” when you offer help, so they hear it too.',
-      'Ask the person “do you want help or just company?” so you give the kind they need.',
+      'Ask a friend whether they want help or just company so you give the kind they need.',
     ],
     watch: [
       'Notice which kind of support you find easy to give.',
@@ -262,7 +262,7 @@ export const ATTACHMENT_AVOIDANCE_IDEAS: readonly InsightIdea[] = [
     focus: [
       'When you’re with someone new, you tend to take a long time to share personal things.',
       'You usually wait until you trust someone before you open up.',
-      'When a new friend asks about your family or past, you tend to give short answers.',
+      'When someone asks personal questions, you tend to keep your answers brief.',
     ],
     why: 'Taking time to trust protects you, but a friend may not realize you like them if you keep most things private.',
     try: [
@@ -293,13 +293,13 @@ export const ATTACHMENT_AVOIDANCE_IDEAS: readonly InsightIdea[] = [
   idea('ftw_attachment_avoidance_l_07', ['attachment_avoidance:low'], {
     focus: [
       'When you’re happy about something, you tend to want to tell someone right away.',
-      'You usually share good news with a friend or partner within minutes.',
-      'When something funny happens, you tend to text it to someone close.',
+      'You usually share good news with a friend or partner right away.',
+      'You tend to share funny moments with someone close as they happen.',
     ],
-    why: 'Sharing your day builds closeness, but someone with a busy day may not have the room to match your pace.',
+    why: 'Sharing your day builds closeness, but someone who is busy may not have the room to match your pace.',
     try: [
       'Keep a story for when a friend has time, so they can give it their full attention.',
-      'Ask a friend how their day is before you share yours, so you meet them where they are.',
+      'Ask a friend how their day went before you share yours.',
     ],
     watch: [
       'Notice how quickly a friend replies when you text during their workday.',
@@ -312,21 +312,21 @@ export const ATTACHMENT_AVOIDANCE_IDEAS: readonly InsightIdea[] = [
       'You usually feel a little hurt when someone close asks for space.',
       'When a friend needs a quiet weekend, you tend to take it a bit personally.',
     ],
-    why: 'Valuing closeness is a strength, but someone else’s need for space is usually about their own limits, not about you.',
+    why: 'Someone else’s need for space is usually about their own limits, not about you.',
     try: [
-      'Ask the person “is this just a recharge?” so you check instead of assume.',
-      'Plan something you enjoy while they have space, so the time apart has its own purpose.',
+      'Ask the person directly if they just need time to recharge.',
+      'Plan something you enjoy when someone close asks for space.',
     ],
     watch: [
       'Notice what you think when a friend says they need time alone.',
-      'Notice how the friend feels after the space.',
+      'Notice how your friend seems after taking time to themselves.',
     ],
   }),
   idea('ftw_attachment_avoidance_l_09', ['attachment_avoidance:low'], {
     focus: [
       'When you’re upset, you tend to reach for someone close rather than deal with it alone.',
       'You usually feel better after you talk to a partner, friend or family member.',
-      'When a hard day ends, you tend to want to debrief with someone you trust.',
+      'When a hard day ends, you tend to want to talk things through with someone you trust.',
     ],
     why: 'Talking things out helps you feel supported, but relying on one person can leave them feeling like the only listener.',
     try: [
@@ -357,7 +357,7 @@ export const ATTACHMENT_AVOIDANCE_IDEAS: readonly InsightIdea[] = [
   idea('ftw_attachment_avoidance_l_11', ['attachment_avoidance:low'], {
     focus: [
       'When you care about someone, you tend to want to know their whole life, not just the surface.',
-      'You usually ask personal questions and hope the other person asks you back.',
+      'You usually ask personal questions when getting to know someone.',
       'You tend to share a lot early on when you meet someone you like.',
     ],
     why: 'Opening up quickly makes people feel welcome, but some take longer to warm up and may feel rushed by you.',
