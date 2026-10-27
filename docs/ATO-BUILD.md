@@ -388,7 +388,7 @@ Accept:
 - nav-check and tab-rename-check are green.
 
 ## PHASE-05 Explore → You part 1
-**STATUS (R02, R03): PARTIAL.** Shape, traits and the `section` param are already on You. **Only step 1 (the constellation header + empty state) remains**, and it needs PHASE-03. Verify ShapeCard taps to /intake-sweep.
+**STATUS (R02, R03): DONE 2026-10-27.** Shape, traits and the `section` param were already on You; the constellation header (with its empty state, `Appear breathe`, a skeleton while loading) was added to `you.tsx` and pinned in `check:motion`. ShapeCard taps to /intake-sweep (verified). There is no `check:you` script; `you-restored`, `prod-you` and `profile-history` cover You.
 Deps: 03, 04 · Model: Sonnet
 Files: `src/app/(tabs)/you.tsx`, `src/app/(tabs)/explore.tsx`.
 Steps:
