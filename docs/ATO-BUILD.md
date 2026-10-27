@@ -381,7 +381,7 @@ Steps:
 2. DEFAULT slots: `['home','insights','you','play']`.
 3. `NAV_LAYOUT_VERSION=3` is stored inside the layout JSON. A missing or older version resets to the default once; later edits are kept. No DB schema change.
 4. The Play slot calls `router.push('/play')`.
-5. More shows Questions, Explore (until PHASE-06), Legends and Circle, plus "Open Divecore" only when Play isn't in the bar.
+5. More shows Questions, Legends and Circle, plus "Open Divecore" only when Play isn't in the bar. (Explore was removed from the pool in the IA pass; `/explore` redirects. Verified in PHASE-04.)
 Accept:
 - A fresh account gets the new bar.
 - An old custom layout resets once, and a re-edited layout persists.

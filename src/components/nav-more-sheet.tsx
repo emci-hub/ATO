@@ -16,9 +16,9 @@ import { controlBorderColor } from '@/lib/theme/chrome';
  * one navigates to it; long-press opens edit mode so it can be added to the
  * bar.
  *
- * Divecore (Play) is appended as a fixed module row in every build (emci
- * 2026-10-15: Divecore stays on) — it is a pushed room (root /play route), not
- * a pool tab, so it never appears in the bar or the edit pool.
+ * Divecore stays on in every build (emci 2026-10-15). Play is a pushed room
+ * (root /play route) that sits in the bar by default; its "Open Divecore" row is
+ * appended here only when Play is not on the bar (moreIds includes 'play').
  */
 // RN's default Modal `animationType="fade"` runs ~300ms on both platforms.
 const MODAL_FADE_MS = 300;
