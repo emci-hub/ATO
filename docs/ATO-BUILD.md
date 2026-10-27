@@ -323,7 +323,7 @@ Accept:
 - These checks are green: you-restored, prod-you, helpline-row, appearance, delete-account, dev-unlock, running-update, local-account-data, auth-password, polish.
 
 ## PHASE-02 "This is you so far" → You
-**STATUS (R02): VERIFY-ONLY.** Already on You (`you.tsx:154`) and removed from questions-fold. Confirm empty/failure render nothing and run the named checks.
+**STATUS (R02): VERIFY-ONLY.** Already on You (`you.tsx:154`) and removed from questions-fold. Confirm empty/failure render nothing and run the named checks. **DONE 2026-10-27: audited, no gaps, no code change.**
 Deps: 01 · Model: Sonnet
 Files: `src/app/(tabs)/you.tsx`, `src/components/questions-fold.tsx`, `src/app/(tabs)/index.tsx` (read the fetch and its guards). Don't edit `profile-character.tsx`.
 Steps:
