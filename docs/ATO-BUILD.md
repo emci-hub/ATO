@@ -445,6 +445,7 @@ Accept:
 
 ## PHASE-08 Home (G2)
 Deps: 03, 04 · Model: Sonnet (Opus if rest-day needs streak storage changes)
+**Status (2026-10-27): built.** No streak storage change was needed (rest day is derived on the phone). `check:home` / `check:check-in` do not exist; the gate is `check:home-path` (new) plus home-hydrate, polish, ai-tokens. Step 2's "+10 ✦" is the server-paid check-in amount (`+N ✦`; +10 only on the 7th day).
 Files:
 - `src/app/(tabs)/index.tsx`, `src/components/week-strip.tsx`, `src/components/daily-checkin-card.tsx`
 - new `src/components/{todays-path,streak-chip}.tsx`

@@ -23,11 +23,14 @@ export function Sheen({
   children,
   style,
   borderRadius = 0,
+  durationMs = SHEEN.durationMs,
   forceReduceMotion = false,
 }: {
   children: ReactNode;
   style?: StyleProp<ViewStyle>;
   borderRadius?: number;
+  /** One sweep, in ms. Defaults to the shared 2.6 s. */
+  durationMs?: number;
   forceReduceMotion?: boolean;
 }) {
   const { rm, style: breath } = useBreath(forceReduceMotion);
@@ -41,9 +44,9 @@ export function Sheen({
       sweep.value = 0;
       return;
     }
-    sweep.value = withRepeat(withTiming(1, { duration: SHEEN.durationMs, easing: Easing.linear }), -1, false);
+    sweep.value = withRepeat(withTiming(1, { duration: durationMs, easing: Easing.linear }), -1, false);
     return () => cancelAnimation(sweep);
-  }, [run, sweep]);
+  }, [run, durationMs, sweep]);
   const bandWidth = width * 0.45;
   const band = useAnimatedStyle(() => ({
     transform: [{ translateX: -bandWidth + sweep.value * (width + bandWidth) }],

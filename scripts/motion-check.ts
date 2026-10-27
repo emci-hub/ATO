@@ -215,6 +215,17 @@ assert.ok(
 );
 ok('You shows the header constellation once, above "This is you so far", after the tracks load');
 
+// ── Home carries the hero constellation (PHASE-08) ───────────────────────────
+const homeHero = read('src/components/home-hero.tsx');
+assert.match(
+  homeHero,
+  /<Appear breathe>[\s\S]*?<TraitConstellation tracks=\{tracks\} size=\{HOME_HERO_SIZE\} variant="hero"/,
+  'Home renders one hero constellation inside Appear breathe',
+);
+assert.equal((homeHero.match(/<TraitConstellation\b/g) ?? []).length, 1, 'one constellation on Home (35 nodes of the 60 cap)');
+assert.match(read('src/app/(tabs)/index.tsx'), /<HomeHero userId=\{me\.id\} tracks=\{tracks\} \/>/, 'Home mounts the hero');
+ok('Home shows the hero constellation once, inside Appear breathe');
+
 // ── Theme lab previews every primitive ───────────────────────────────────────
 const lab = read('src/app/theme-lab.tsx');
 for (const tag of ['PressPop', 'PlusPop', 'Sheen', 'LivingBg', 'GradientFill', 'TraitConstellation']) {
