@@ -401,7 +401,7 @@ Steps:
 Accept: the content shows on You. Checks green: explore, explore-refetch, trait-bands, trait-shape, you. VoiceOver labels are on the constellation.
 
 ## PHASE-06 Explore → You part 2 + redirect
-**STATUS (R02, R22): VERIFY-ONLY.** Categories, Full profile, Legends/Circle rows, Tokens anchor and the redirect exist. The one allowed `/explore'` hit is the hidden-route entry at `app-tabs.tsx:53`. Do: check empty states per section, add a deep-link fixture (unknown or flagged-off `section` is ignored, no error), run the named checks.
+**STATUS (R02, R22): DONE 2026-10-27 (verify-only).** Gaps fixed: pure `parseSection` in `src/lib/you-sections.ts` plus a deep-link fixture in `check:explore` (there is no `check:you`); stale "Explore" copy in `category-teaser.tsx` and `push.ts`. PHASE-23 adds `quests` to `SECTION_KEYS`. Original note: Categories, Full profile, Legends/Circle rows, Tokens anchor and the redirect exist. The one allowed `/explore'` hit is the hidden-route entry at `app-tabs.tsx:53`. Do: check empty states per section, add a deep-link fixture (unknown or flagged-off `section` is ignored, no error), run the named checks.
 Deps: 05 · Model: Sonnet
 Files:
 - `you.tsx`, `explore.tsx`, `nav-order.ts`, `app-tabs.tsx`, `nav-more-sheet.tsx`
