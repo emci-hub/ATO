@@ -8,7 +8,7 @@ Stage 0 Red team
 - [x] PHASE-00 Red team of this plan + repo (fixes applied to ATO-BUILD.md)  ⚑ OK
 Stage A Foundations
 - [x] PHASE-01 Settings screen
-- [ ] PHASE-02 "This is you so far" → You
+- [x] PHASE-02 "This is you so far" → You
 - [ ] PHASE-03 Motion base + constellation (G1)
 - [ ] PHASE-04 Tab bar + layout reset
 Stage B Profile & IA
@@ -48,5 +48,7 @@ Stage E Polish & release
 - 2026-10-26: emci OK'd the red-team findings/edits and R23 (plan wins for Quests art only; PixelLab pre-flight + one test clip + credit log kept). PHASE-00 ticked. Committed on `ato-build` (docs only, not pushed).
 - 2026-10-26 PHASE-01 (verify-only): audit found settings.tsx complete (8 sections, You/Home decluttered, gear 44pt, delete/AI-off 2 taps). Fixed gaps: a11y role/label/state on the AI toggle (now `switch`), Sign out, Send feedback, Dev Tools Hub, Pixel lab; stale "on You" comments (running-update-line.tsx, index.tsx); plan text (5-tap opens /dev-lab, no /ai-lab route). Files: src/app/settings.tsx, src/components/running-update-line.tsx, src/app/(tabs)/index.tsx, docs/ATO-BUILD.md, this file. Gate: typecheck + lint (0 errors) + 194 offline checks green. NOT run: live checks delete-account, auth-password. NOT verified: 430x932 / 375x667 screenshots, Dynamic Type XXL, swipe-back (need a phone).
 - Lessons: plan text can go stale vs code (ai-lab); the investigator audit before editing kept this phase tiny. No check:settings exists; you-restored + prod-you cover it.
+- 2026-10-27 PHASE-02 (verify-only): PR 97 squash-merged into ato-build first. Investigator audit found no gaps: you.tsx:84-139 mirrors Home's fetch guards (requestIdRef, loadedOnceRef, tracksUserId===userId, [userId] reset); you.tsx:154 renders ProfileCharacter only when `tracksOwned && tracks.length > 0` (nothing on empty/failure, no profile-done gate, above IdentityCard); questions-fold.tsx has no ProfileCharacter. No app code changed. Files: docs/ato-build-progress.md, docs/ATO-BUILD.md. Gate: typecheck + lint (0 errors) + 194 offline checks green (includes questions, paged-questions, full-profile-signal, no-auto-ai, profile-history, you-restored, prod-you). NOT verified: phone check that the card shows on You for a real account.
+- Lessons: check:profile-history already pins the card's position on You and its absence from Questions, so verify-only phases can lean on it. On failure You keeps old tracks silently (Home sets bootstrapFailed); left as is, it matches "render nothing".
 
 Blocked on: (none)
