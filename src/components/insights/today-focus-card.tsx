@@ -1,9 +1,11 @@
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import { SkeletonBar } from '@/components/motion';
 import { NotificationAskSheet } from '@/components/notification-ask-sheet';
+import { Sheen } from '@/components/sheen';
 import { ThemedPressable } from '@/components/themed-pressable';
+import { TypewriterText } from '@/components/typewriter-text';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { TraitTagRow } from '@/components/trait-tag-row';
@@ -57,6 +59,7 @@ export function TodayFocusCard({
   todayDay,
   showTryToday,
   early = false,
+  onInsightShown,
 }: {
   userId: string;
   tracks: readonly TraitTrack[];
@@ -65,6 +68,8 @@ export function TodayFocusCard({
   showTryToday: boolean;
   /** True after set 1 and before the full profile: shows the "Early read" line. */
   early?: boolean;
+  /** Told the title of the insight on screen (the collection counts it). */
+  onInsightShown?: (title: string) => void;
 }) {
   const theme = useTheme();
   const { insight: cachedInsight, reload: reloadInsight } = useDailyInsight(userId);
@@ -74,6 +79,12 @@ export function TodayFocusCard({
   const generatingForYmd = useRef<string | null>(null);
   const [state, setState] = useState<'idle' | 'loading' | 'unavailable' | 'save-failed'>('idle');
   const [askVisible, setAskVisible] = useState(false);
+  // The typewriter plays once, for an insight loaded by a tap on this screen.
+  const [typedTitle, setTypedTitle] = useState<string | null>(null);
+  const shownTitle = insight?.title ?? null;
+  useEffect(() => {
+    if (shownTitle) onInsightShown?.(shownTitle);
+  }, [shownTitle, onInsightShown]);
 
   // First insight just loaded: offer the one-time notification ask (never on web, never twice).
   const offerNotificationAsk = useCallback(async () => {
@@ -96,6 +107,7 @@ export function TodayFocusCard({
       // An old AI-written row for today is not shown; a fresh pick supersedes it.
       if (existing && isBankInsightTitle(existing.title)) {
         await saveCachedInsight(cachedFromInsight(existing, userId));
+        setTypedTitle(existing.title);
         await reloadInsight();
         setState('idle');
         void offerNotificationAsk();
@@ -127,6 +139,7 @@ export function TodayFocusCard({
         tryToday: draft.tryToday,
         watchFor: draft.watchFor,
       });
+      setTypedTitle(draft.title);
       await reloadInsight();
       setState('idle');
       void offerNotificationAsk();
@@ -140,6 +153,7 @@ export function TodayFocusCard({
   return (
     <>
       {insight ? (
+        <Sheen borderRadius={Spacing.four}>
         <ThemedView type="backgroundElement" style={styles.heroCard} testID="today-focus-card">
           <ThemedText type="code" themeColor="textSecondary">
             {homeSageLabel(theme.id)}
@@ -155,7 +169,7 @@ export function TodayFocusCard({
               {INSIGHT_EARLIER_DAY_COPY}
             </ThemedText>
           ) : null}
-          <ThemedText style={styles.heroRead}>{insight.title}</ThemedText>
+          <TypewriterText key={insight.title} text={insight.title} animate={typedTitle === insight.title} style={styles.heroRead} />
           <ThemedText themeColor="textSecondary" style={styles.reflectionText}>
             {insight.reflection}
           </ThemedText>
@@ -175,6 +189,7 @@ export function TodayFocusCard({
             <ThemedText style={styles.doText}>{insight.watchFor}</ThemedText>
           </View>
         </ThemedView>
+        </Sheen>
       ) : null}
 
       {insight?.ymd !== todayYmd ? (

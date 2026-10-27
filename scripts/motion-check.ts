@@ -37,6 +37,7 @@ const tokens = read('src/lib/motion-tokens.ts');
 for (const name of [
   'EASE_OUT', 'EASE_IN_OUT', 'EASE_BACK', 'UI_IN', 'UI_OUT', 'SPRING_POP', 'DUR', 'ENTER', 'PRESS',
   'PLUS_POP', 'SHEEN', 'LIVING_BG', 'BREATH', 'MOTION_GOLD', 'pixelSnap', 'haptic',
+  'FLIP', 'TYPEWRITER', 'BAR_FILL', // PHASE-09 (Insights)
 ]) {
   assert.match(tokens, new RegExp(`export (const|function) ${name}\\b`), `motion-tokens exports ${name}`);
 }

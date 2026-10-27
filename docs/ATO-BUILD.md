@@ -467,6 +467,7 @@ Accept: matches home-v2 if the mockup is available. Screenshots in 5 modes. A Re
 
 ## PHASE-09 Insights (G3)
 Deps: 03, 04 · Model: Sonnet
+**Status (2026-10-27): built.** Card files live in `components/insights/` and `components/daily-insights/`; the token chip already existed; the collection uses `ato.insights.collection.v1` (Home owns `ato.insights.seen.v1`); `check:insights` and `check:local-account-data` exist, plus the new `check:insights-g3`.
 Files:
 - `src/app/(tabs)/insights.tsx`
 - `src/components/{today-focus-card,superpower-card,conflict-style-card}.tsx`

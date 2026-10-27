@@ -205,13 +205,15 @@ function bar(id: CategoryId, value: number): CategoryReading {
 // --- 6. order, flags, widget -------------------------------------------------------
 {
   const screen = read('src/app/(tabs)/insights.tsx');
-  // The focus card is on the screen twice since A6: once in the locked branch (early read after set 1) and
-  // once in the unlocked list; the order below is the unlocked list (its last occurrence).
-  const order = ['<TryTodayCard', '<TodayFocusCard', '<InsightsStoryCard', '<SuperpowerCard', '<ConflictStyleCard'].map(
-    (tag) => (tag === '<TodayFocusCard' ? screen.lastIndexOf(tag) : screen.indexOf(tag)),
+  // PHASE-09: Today's focus (front) and Try this today (back) are one flip card. The focus card is still on the
+  // screen twice (the locked branch's early read, and the unlocked list), and Try is the flip card's back face.
+  const order = ['<FlipCard', '<InsightsStoryCard', '<SpectrumSection', '<SuperpowerCard', '<ConflictStyleCard', '<InsightCollection'].map(
+    (tag) => screen.lastIndexOf(tag),
   );
-  assert.ok(order.every((i) => i > 0), 'all five cards are on the screen');
-  assert.deepEqual([...order].sort((a, b) => a - b), order, 'Try → focus → Story → Superpower → How you argue');
+  assert.ok(order.every((i) => i > 0), 'every card is on the screen');
+  assert.deepEqual([...order].sort((a, b) => a - b), order, 'Flip (focus ⇄ try) → Story → Where you lean → Superpower → How you argue → Insights seen');
+  assert.match(screen, /front=\{focusCard\}[\s\S]*back=\{[\s\S]*?<TryTodayCard/, 'the flip card: focus in front, Try this today behind');
+  assert.ok(screen.lastIndexOf('{/* QUESTS_CARD_SLOT */}') >order[order.length - 1], 'the Quests slot closes the list');
   assert.equal(DAILY_INSIGHTS_SHOW_PROVISIONAL, false, 'Love / Independence / Structure stay behind the flag');
   // The widget gets the 🎯 line through the card-era keys.
   const widget = read('src/lib/insight/today-insight.ts');
@@ -222,7 +224,7 @@ function bar(id: CategoryId, value: number): CategoryReading {
   assert.match(write, /storage\.set\('hasCard', '1'\)/);
   assert.match(read('src/hooks/use-try-today.ts'), /writeWidgetTryToday\(next\.line\.text, today\)/);
   assert.match(read('src/app/(tabs)/index.tsx'), /useTryToday\(/, 'Home feeds the widget even if Insights is never opened');
-  ok('order is Try → focus → Story → Superpower → How you argue; provisional off; widget uses the old keys');
+  ok('order is flip(focus ⇄ try) → Story → Where you lean → Superpower → How you argue → Insights seen; provisional off; widget uses the old keys');
 }
 
 // --- 7. Story is template-only -------------------------------------------------------
