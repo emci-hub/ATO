@@ -6,7 +6,7 @@ import type { Href } from 'expo-router';
  * The last button is always "More" — fixed, not draggable, never reorderable.
  * The layout always contains Home and Insights exactly once each, in
  * user-draggable positions; the remaining POOL_SLOTS entries hold pool tabs. The pool is the whole
- * `NAV_TABS` registry (Explore / You / Questions / Around / Legends / Circle),
+ * `NAV_TABS` registry (You / Questions / Around / Legends / Circle / Play),
  * so a future tab is added with one registry entry — the slot/drag/edit logic
  * is generic over the registry and never hardcoded to today's set.
  */
@@ -169,11 +169,13 @@ export interface NavLayout {
 /*
  * 2026-10-14 (emci): Insights replaces the parked Sage tab and sits on the bar
  * next to Home. The bar keeps five buttons, so the default pool is Questions +
- * Explore; You moves to More.
+ * Explore; You moves to More. (History: superseded by the 2026-10-26 block below;
+ * Explore is no longer a tab.)
  */
 /*
  * 2026-10-26 (IA phase P3): the default bar is Home · Insights · You · Play · More.
- * Questions, Explore, Legends and Circle live in More.
+ * Questions, Legends and Circle live in More (Explore is gone: /explore redirects
+ * to /you?section=categories).
  */
 export const DEFAULT_NAV_LAYOUT: NavLayout = {
   slots: ['home', 'insights', 'you', 'play'],
@@ -237,7 +239,7 @@ export function normalizeNavLayout(raw: unknown, opts: { resetShort?: boolean } 
   }
 
   // No valid incoming slots (null / unset / empty / all-invalid) → the default
-  // layout, exactly as specified (Home / Insights / Questions / Explore).
+  // layout, exactly as specified (Home / Insights / You / Play).
   if (ordered.length === 0) {
     return { slots: [...DEFAULT_NAV_LAYOUT.slots], version: NAV_LAYOUT_VERSION };
   }
