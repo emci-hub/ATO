@@ -6,6 +6,7 @@ import Animated, {
   useReducedMotion,
   useSharedValue,
   withSequence,
+  withSpring,
   withTiming,
 } from 'react-native-reanimated';
 
@@ -15,6 +16,7 @@ import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import type { TryTodayPick } from '@/lib/daily-insights';
 import { controlBorderColor } from '@/lib/theme/chrome';
+import { SPRING_POP, haptic } from '@/lib/motion-tokens';
 import { useAppearance } from '@/lib/theme/context';
 
 import { ContextLine, ScriptLines } from './script-parts';
@@ -48,7 +50,12 @@ export function TryTodayCard({
   const pressing = useRef(false);
   const scale = useSharedValue(1);
   const fade = useSharedValue(1);
-  const animated = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }], opacity: fade.value }));
+  // The check pop once the day is marked (PHASE-09): 0.6 → 1 with SPRING_POP.
+  const checkPop = useSharedValue(1);
+  const animated = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value * checkPop.value }],
+    opacity: fade.value,
+  }));
 
   const modeLabel = pick.line.mode === 'stretch' ? 'Stretch' : 'Strength';
   const whyText = pick.whyLine.replace(/^This is your /, '');
@@ -67,6 +74,11 @@ export function TryTodayCard({
     const next = await onDone();
     pressing.current = false;
     if (next == null) return; // not marked (new day loading, or a save error)
+    haptic.success();
+    if (!reduceMotion) {
+      checkPop.value = 0.6;
+      checkPop.value = withSpring(1, SPRING_POP);
+    }
     AccessibilityInfo.announceForAccessibility(
       next > 0 ? `Marked done. Streak ${daysLabel(next)}.` : 'Marked done.',
     );

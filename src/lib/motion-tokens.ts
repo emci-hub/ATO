@@ -51,6 +51,32 @@ export const SHEEN = {
   opacity: 0.35,
 } as const;
 
+/** Insights flip card (PHASE-09): out to 90°, swap faces, back to 0° (700 ms total, under BLOCKING_MAX_MS). */
+export const FLIP = {
+  totalMs: 700,
+  perspective: 900,
+  /** Reduce Motion: the faces cross-fade instead (each half). */
+  reducedFadeMs: 125,
+} as const;
+
+/** Insights typewriter: 28 steps over 1400 ms after a 400 ms delay; key words glow on a 3 s loop. */
+export const TYPEWRITER = {
+  steps: 28,
+  totalMs: 1400,
+  delayMs: 400,
+  glowMs: 3000,
+} as const;
+
+/** Bars (spectrum fill, collection) fill over 1 s; tiles and sliders stagger. */
+export const BAR_FILL = {
+  durationMs: 1000,
+  sliderStaggerMs: 150,
+  tileStaggerMs: 120,
+  iconPopMs: 350,
+  /** The knob overshoots, then settles. */
+  knobSpring: { damping: 9, stiffness: 160 },
+} as const;
+
 export const LIVING_BG = {
   blobAMs: 9000,
   blobBMs: 11000,

@@ -37,6 +37,15 @@ export const INSIGHTS_FILES = [
   'src/components/daily-insights/conflict-style-card.tsx',
   'src/components/daily-insights/script-parts.tsx',
   'src/hooks/use-try-today.ts',
+  'src/components/flip-card.tsx',
+  'src/components/typewriter-text.tsx',
+  'src/components/spectrum-slider.tsx',
+  'src/components/insight-collection.tsx',
+  'src/components/icon-pop.tsx',
+  'src/lib/insights-spectrum.ts',
+  'src/lib/insights-typewriter.ts',
+  'src/lib/insight-collection-store.ts',
+  'src/lib/insight-collection.ts',
 ] as const;
 
 /** Any of these anywhere in the graph means an AI client is reachable. */
