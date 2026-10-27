@@ -35,12 +35,18 @@ export function DailyCheckinCard({
   todayYmd,
   tokens,
   onEarned,
+  onStatus,
 }: {
   /** The person's local YYYY-MM-DD (the server checks its own clock too). */
   todayYmd: string;
   tokens: number;
   /** Refresh the balance after a check-in. */
   onEarned: () => void;
+  /**
+   * Tells Home (Today's path) whether today is checked in, and the tokens the
+   * server just paid (`earned`, only right after a successful check-in).
+   */
+  onStatus?: (status: { checkedIn: boolean; earned: number | null }) => void;
 }) {
   const theme = useTheme();
   const epoch = useAccountDataEpoch();
@@ -55,11 +61,12 @@ export function DailyCheckinCard({
       if (!live || !status) return;
       setCheckedIn(status.checkedIn);
       setTotal(status.total);
+      onStatus?.({ checkedIn: status.checkedIn, earned: null });
     });
     return () => {
       live = false;
     };
-  }, [todayYmd, epoch]);
+  }, [todayYmd, epoch, onStatus]);
 
   const checkIn = useCallback(async () => {
     if (busy || checkedIn) return;
@@ -71,8 +78,10 @@ export function DailyCheckinCard({
       if (result.ok) {
         setTotal((n) => n + 1);
         setNote(`+${result.delta} tokens.`);
+        onStatus?.({ checkedIn: true, earned: result.delta });
         onEarned();
       } else {
+        onStatus?.({ checkedIn: true, earned: null });
         // Already checked in (another phone): read the real count.
         const status = await fetchCheckinStatus(todayYmd);
         if (status) setTotal(status.total);
@@ -82,7 +91,7 @@ export function DailyCheckinCard({
     } finally {
       setBusy(false);
     }
-  }, [busy, checkedIn, onEarned, todayYmd]);
+  }, [busy, checkedIn, onEarned, onStatus, todayYmd]);
 
   // This week's check-ins so far (a missed day never resets the count).
   const weekCount = checkedIn ? ((total - 1) % 7) + 1 : total % 7;

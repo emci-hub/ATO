@@ -1,11 +1,13 @@
 import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
-import { Pressable, StyleSheet } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 
+import { Sheen } from '@/components/sheen';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
 import { identityTitle, identityView, nextLockedPoles } from '@/lib/legends64/identity';
+import { MOTION_GOLD, SHEEN } from '@/lib/motion-tokens';
 import { loadIdentityState, type IdentityState } from '@/lib/legends64/identity-store';
 import { controlBorderColor } from '@/lib/theme/chrome';
 import type { TraitTrack } from '@/lib/trait-stability';
@@ -56,6 +58,9 @@ export function IdentityTitleChip({
   );
   if (!stored || view.lockedCount === 0) return null;
   const title = identityTitle(view, stored.skin);
+  const words = title.split(' ');
+  const keyWord = words.pop() ?? title;
+  const lead = words.join(' ');
 
   return (
     <Pressable
@@ -67,9 +72,16 @@ export function IdentityTitleChip({
         <ThemedText type="code" themeColor="textSecondary">
           {IDENTITY_CHIP_KICKER}
         </ThemedText>
-        <ThemedText type="subtitle" numberOfLines={2} adjustsFontSizeToFit minimumFontScale={0.75}>
-          {title}
-        </ThemedText>
+        {/* One key word (the last) is a gold pill with a slow sheen (PHASE-08);
+            under Reduce Motion Sheen drops the band and breathes instead. */}
+        <View style={styles.titleRow}>
+          {lead ? <ThemedText type="subtitle">{lead}</ThemedText> : null}
+          <Sheen borderRadius={8} durationMs={SHEEN.heroMs} style={styles.keyWord}>
+            <ThemedText type="subtitle" style={styles.keyWordText}>
+              {keyWord}
+            </ThemedText>
+          </Sheen>
+        </View>
       </ThemedView>
     </Pressable>
   );
@@ -85,4 +97,17 @@ const styles = StyleSheet.create({
   pressed: {
     opacity: 0.8,
   },
+  titleRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    alignItems: 'center',
+    columnGap: Spacing.two,
+  },
+  keyWord: {
+    backgroundColor: MOTION_GOLD,
+    borderRadius: 8,
+    paddingHorizontal: Spacing.two,
+  },
+  // Dark on gold, so the word reads in every appearance mode.
+  keyWordText: { color: '#05070D' },
 });

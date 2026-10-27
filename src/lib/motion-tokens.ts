@@ -46,6 +46,8 @@ export const PLUS_POP = {
 
 export const SHEEN = {
   durationMs: 2600,
+  /** The hero's gold key word sweeps slower (PHASE-08). */
+  heroMs: 3000,
   opacity: 0.35,
 } as const;
 
