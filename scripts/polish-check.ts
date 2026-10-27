@@ -95,10 +95,11 @@ for (const rel of [
   const src = read(rel);
   assert.match(src, /reduceMotion/, `${rel} must read Reduce Motion`);
 }
-assert.match(read('src/components/motion.tsx'), /if \(reduceMotion\) return <View style=\{style\}>\{children\}<\/View>;/);
+// PHASE-03: Reduce Motion is a cross-fade (gentle, never still), no longer a bare View.
+assert.match(read('src/components/motion.tsx'), /if \(reduceMotion\) return <ReducedAppear style=\{style\} breathe=\{breathe\}>\{children\}<\/ReducedAppear>;/);
 assert.match(read('src/components/set-done-moment.tsx'), /\{reduceMotion \? null : <Confetti \/>\}/);
 assert.match(read('src/components/today-pick-card.tsx'), /animated=\{!reduceMotion\}/);
-ok('every new animation honours Reduce Motion (things simply appear)');
+ok('every new animation honours Reduce Motion (a short cross-fade, never a slide or a pulse)');
 
 // ── The coin only when the server paid ───────────────────────────────────────
 const fold = read('src/components/questions-fold.tsx');

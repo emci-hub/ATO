@@ -4,6 +4,7 @@ import { Modal, StyleSheet, useWindowDimensions, View } from 'react-native';
 import Animated, {
   Easing,
   useAnimatedStyle,
+  useReducedMotion,
   useSharedValue,
   withDelay,
   withRepeat,
@@ -58,7 +59,9 @@ export function SetDoneMoment({
   onClose: () => void;
 }) {
   const theme = useTheme();
-  const { reduceMotion } = useAppearance();
+  const systemReduce = useReducedMotion();
+  const { reduceMotion: appReduce } = useAppearance();
+  const reduceMotion = systemReduce || appReduce;
   const recipe = useMemo(() => recipeForAccount(me.id, me.recipe), [me]);
   const tapMoodRef = useRef<((mood: TapMood) => void) | null>(null);
   const copy = moment ? SET_DONE_COPY[moment.kind] : null;
@@ -136,7 +139,9 @@ export function SetDoneMoment({
 
 /** The +21: a gold coin that springs in. Only shown when the server paid it. */
 function CoinPop({ amount }: { amount: number }) {
-  const { reduceMotion } = useAppearance();
+  const systemReduce = useReducedMotion();
+  const { reduceMotion: appReduce } = useAppearance();
+  const reduceMotion = systemReduce || appReduce;
   const scale = useSharedValue(reduceMotion ? 1 : 0.3);
   useEffect(() => {
     if (reduceMotion) return;

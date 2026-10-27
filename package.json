@@ -263,6 +263,7 @@
     "check:explore-refetch": "tsx ./scripts/explore-refetch-check.ts",
     "check:trait-shape": "tsx ./scripts/trait-shape-check.ts",
     "check:polish": "tsx ./scripts/polish-check.ts",
+    "check:motion": "tsx ./scripts/motion-check.ts",
     "check:copy-flags": "tsx ./scripts/copy-flags-check.ts",
     "check:daily-pick": "tsx ./scripts/daily-pick-check.ts",
     "check:daily-insights-bank": "tsx ./scripts/daily-insights-bank-check.ts",
