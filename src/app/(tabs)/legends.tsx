@@ -461,7 +461,7 @@ export default function LegendsScreen() {
               onPress={() => router.push('/roll')}
               accessibilityRole="button"
               accessibilityLabel="Your reveals"
-              style={({ pressed }) => [styles.link, pressed && styles.pressed]}>
+              style={({ pressed }) => [styles.revealsLink, pressed && styles.pressed]}>
               <ThemedText type="linkPrimary">Your reveals ›</ThemedText>
             </Pressable>
           ) : null}
@@ -682,6 +682,7 @@ const styles = StyleSheet.create({
   heading: { marginTop: Spacing.two },
   panel: { borderWidth: 1, borderRadius: 14, padding: Spacing.three, gap: Spacing.two },
   link: { paddingVertical: 4 },
+  revealsLink: { minHeight: 44, justifyContent: 'center', alignSelf: 'flex-start' },
   pressed: { opacity: 0.7 },
   flex: { flex: 1 },
   tiles: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },

@@ -420,7 +420,7 @@ Steps:
 Accept: a push deep link lands on You › categories. Checks green: explore, nav, push, tab-rename, category-*. Empty states are in place for each new section.
 
 ## PHASE-07 Roll = "Your reveals"
-**STATUS (R02): VERIFY-ONLY (Sonnet is enough).** `src/app/roll.tsx`, its Stack.Screen and the Legends row exist. Do: confirm there is no spend call and no RebuiltNotice, test 0 legends and several, run the named checks.
+**STATUS (R02): VERIFY-ONLY (Sonnet is enough). DONE 2026-10-27:** screen, Stack.Screen, Legends row and the 'roll' removal from HIDDEN_TAB_ROUTES were already on master; PHASE-07 fixed 44pt targets, hall-row wrap, header roles, loading skeleton and a load-error + retry state (a failed load no longer reads as "No legends met yet"). Do: confirm there is no spend call and no RebuiltNotice, test 0 legends and several, run the named checks.
 Deps: 04 · Model: Opus
 Files:
 - `src/app/(tabs)/roll.tsx` → move to `src/app/roll.tsx`
