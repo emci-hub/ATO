@@ -200,6 +200,21 @@ assert.match(sky, /accessibilityLabel=\{model\.label\}/);
 assert.doesNotMatch(sky, /useAnimatedProps[\s\S]*runOnJS/, 'no runOnJS in the frame path');
 ok('constellation motion matches the spec: draw 1400/300, twinkle 4 s, halos, brighten 1600, morph 1200, Reduce Motion fade');
 
+// ── You carries the header constellation (PHASE-05) ──────────────────────────
+const you = read('src/app/(tabs)/you.tsx');
+assert.match(
+  you,
+  /<Appear breathe>[\s\S]*?<TraitConstellation tracks=\{tracks\} size=\{CONSTELLATION_SIZE\} variant="header" \/>/,
+  'You renders one header constellation inside Appear breathe',
+);
+assert.equal((you.match(/<TraitConstellation\b/g) ?? []).length, 1, 'one constellation on You (35 nodes of the 60 cap)');
+assert.match(you, /tracksReady && tracksOwned \?\s*\(\s*<Appear breathe>/, 'only once this account\'s tracks have loaded');
+assert.ok(
+  you.indexOf('<TraitConstellation') < you.indexOf('<ProfileCharacter'),
+  'the constellation sits above "This is you so far"',
+);
+ok('You shows the header constellation once, above "This is you so far", after the tracks load');
+
 // ── Theme lab previews every primitive ───────────────────────────────────────
 const lab = read('src/app/theme-lab.tsx');
 for (const tag of ['PressPop', 'PlusPop', 'Sheen', 'LivingBg', 'GradientFill', 'TraitConstellation']) {

@@ -15,6 +15,7 @@ import { ProfileCharacter } from '@/components/profile-character';
 import { ProfileFillFold } from '@/components/profile-fill-fold';
 import { ShapeCard } from '@/components/shape-card';
 import { TraitBandsFold } from '@/components/trait-bands-fold';
+import { TraitConstellation } from '@/components/trait-constellation';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { YourWeekCard } from '@/components/your-week-card';
@@ -34,6 +35,9 @@ import { settledAxisLabel, type TraitTrack } from '@/lib/trait-stability';
 /** `?section=` targets that scroll You to a block. */
 const SECTION_KEYS = ['shape', 'traits', 'categories', 'profile', 'tokens'] as const;
 type SectionKey = (typeof SECTION_KEYS)[number];
+
+/** Side of the square constellation header at the top of You. */
+const CONSTELLATION_SIZE = 220;
 
 /**
  * You — who you are, your tokens, and your week. Every settings control (look,
@@ -149,6 +153,23 @@ export default function YouScreen() {
           <View style={styles.header}>
             <ThemedText type="subtitle">You</ThemedText>
           </View>
+
+          {/* Constellation header (PHASE-05): the same tracks as a field of stars. Its own
+              empty state ("light your first stars") shows when there are none; a skeleton
+              until the first load lands. */}
+          {me ? (
+            tracksReady && tracksOwned ? (
+              <Appear breathe>
+                <View style={styles.constellation}>
+                  <TraitConstellation tracks={tracks} size={CONSTELLATION_SIZE} variant="header" />
+                </View>
+              </Appear>
+            ) : (
+              <View style={styles.constellationLoading}>
+                <SkeletonCard lines={2} />
+              </View>
+            )
+          ) : null}
 
           {/* "This is you so far": shown whenever tracks exist, also after the profile is done. */}
           {tracksOwned && tracks.length > 0 ? <ProfileCharacter tracks={tracks} /> : null}
@@ -281,6 +302,14 @@ const styles = StyleSheet.create({
   },
   header: {
     paddingRight: NAV_PIXEL_HEADER_INSET,
+  },
+  constellation: {
+    alignItems: 'center',
+  },
+  // Loading keeps the final size, so nothing below jumps when the stars land.
+  constellationLoading: {
+    height: CONSTELLATION_SIZE,
+    justifyContent: 'center',
   },
   traitsBlock: {
     gap: Spacing.three,
