@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { StyleSheet, type StyleProp, type ViewStyle } from 'react-native';
 import Animated, {
   useAnimatedStyle,
+  useReducedMotion,
   useSharedValue,
   withDelay,
   withTiming,
@@ -32,7 +33,7 @@ const FADE_MS = 700;
 export function MilestoneToast({
   title,
   body,
-  reduceMotion,
+  reduceMotion: reduceMotionProp,
   onDone,
   style,
 }: {
@@ -44,6 +45,8 @@ export function MilestoneToast({
   style?: StyleProp<ViewStyle>;
 }) {
   const theme = useTheme();
+  const systemReduce = useReducedMotion();
+  const reduceMotion = reduceMotionProp || systemReduce;
   const opacity = useSharedValue(1);
 
   useEffect(() => {

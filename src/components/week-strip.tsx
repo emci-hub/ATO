@@ -3,6 +3,7 @@ import { StyleSheet, View } from 'react-native';
 import Animated, {
   cancelAnimation,
   useAnimatedStyle,
+  useReducedMotion,
   useSharedValue,
   withRepeat,
   withTiming,
@@ -77,7 +78,9 @@ export function WeekStrip({
 
 function Dot({ dot }: { dot: WeekDot }) {
   const theme = useTheme();
-  const { reduceMotion } = useAppearance();
+  const systemReduce = useReducedMotion();
+  const { reduceMotion: appReduce } = useAppearance();
+  const reduceMotion = systemReduce || appReduce;
   const glow = useSharedValue(1);
   useEffect(() => {
     if (!dot.isToday || reduceMotion) {

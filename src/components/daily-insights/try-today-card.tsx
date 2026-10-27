@@ -1,7 +1,13 @@
 import * as Haptics from 'expo-haptics';
 import { useRef } from 'react';
 import { AccessibilityInfo, Pressable, StyleSheet, View } from 'react-native';
-import Animated, { useAnimatedStyle, useSharedValue, withSequence, withTiming } from 'react-native-reanimated';
+import Animated, {
+  useAnimatedStyle,
+  useReducedMotion,
+  useSharedValue,
+  withSequence,
+  withTiming,
+} from 'react-native-reanimated';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -36,7 +42,9 @@ export function TryTodayCard({
   onDone: () => Promise<number | null>;
 }) {
   const theme = useTheme();
-  const { reduceMotion } = useAppearance();
+  const systemReduce = useReducedMotion();
+  const { reduceMotion: appReduce } = useAppearance();
+  const reduceMotion = systemReduce || appReduce;
   const pressing = useRef(false);
   const scale = useSharedValue(1);
   const fade = useSharedValue(1);
