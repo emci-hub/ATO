@@ -29,12 +29,9 @@ import { aiConsentFor } from '@/lib/me';
 import { useMeContext } from '@/lib/me-context';
 import { isTabUnlocked } from '@/lib/nav/nav-order';
 import { SETTINGS_TITLE } from '@/lib/polish-copy';
+import { parseSection, type SectionKey } from '@/lib/you-sections';
 import { NO_PINCH_ZOOM } from '@/lib/theme/chrome';
 import { settledAxisLabel, type TraitTrack } from '@/lib/trait-stability';
-
-/** `?section=` targets that scroll You to a block. */
-const SECTION_KEYS = ['shape', 'traits', 'categories', 'profile', 'tokens'] as const;
-type SectionKey = (typeof SECTION_KEYS)[number];
 
 /** Side of the square constellation header at the top of You. */
 const CONSTELLATION_SIZE = 220;
@@ -115,11 +112,9 @@ export default function YouScreen() {
     setTracksReady(false);
   }, [userId]);
 
-  // `?section=shape|traits` scrolls to that block once the tracks have landed
-  // (the blocks lay out after the skeleton is replaced).
-  const wantedSection = (SECTION_KEYS as readonly string[]).includes(params.section ?? '')
-    ? (params.section as SectionKey)
-    : null;
+  // `?section=` (see lib/you-sections) scrolls to that block once the tracks have
+  // landed (the blocks lay out after the skeleton is replaced). Unknown: ignored.
+  const wantedSection = parseSection(params.section);
   const scrollToSection = useCallback(() => {
     if (!wantedSection || !tracksReady) return;
     const y = sectionY.current[wantedSection];
