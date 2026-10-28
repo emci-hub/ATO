@@ -3,30 +3,25 @@
  *
  * The phone's copy (state.ts) is what Home paints from, so the line is instant
  * and works offline. The database is the shared record: it is what survives a
- * reinstall, what a second phone reads, and where new authored lines and this
- * account's AI lines arrive from. Same split as the insight: a local paint-fast
+ * reinstall, what a second phone reads, and where new authored lines arrive from. Same split as the insight: a local paint-fast
  * copy in front of a server source of truth.
  *
  * Everything here is best-effort. A failed or slow call (offline, or wave77 not
  * applied yet) leaves the phone working from its own copy.
  */
-import AsyncStorage from '@react-native-async-storage/async-storage';
-
 import { addDaysYmd } from '@/lib/local-date';
 import { withTimeout } from '@/lib/timeout';
 import type { TraitTrack } from '@/lib/trait-stability';
 
-import { dailyLineById, leanTag, lineId, lineRuleViolation, type LineKey } from './bank';
+import { dailyLineById } from './bank';
 import { NO_REPEAT_DAYS, type LineReaction } from './pick';
 import {
-  addToLinePool,
   fetchPoolRows,
   fetchRemoteDays,
   reactDailyLineRemote,
   recordDailyLineRemote,
 } from './pool-store';
 import {
-  appendPoolCache,
   dailyLineGeneration,
   loadDailyLineState,
   mergeRemoteDays,
@@ -130,71 +125,4 @@ export async function reactToLineSynced(
     console.log('[daily-line] reaction sync skipped:', err);
   });
   return saved;
-}
-
-// --- AI top-up ------------------------------------------------------------------
-// The questions take from the bank first and let the model write the rest. Lines
-// do the same: the written bank is the base, and each loaded insight brings a
-// few lines written for this one account, saved as rows only it can read.
-
-export const DAILY_LINE_AI_LOG_KEY = 'ato.daily-line-ai-log.v1';
-
-export interface AiLineLog {
-  userId: string;
-  at: string;
-  kept: { tag: string; text: string }[];
-  dropped: { text: string; reason: string }[];
-}
-
-export interface AiLineCandidate {
-  keys: readonly LineKey[];
-  text: string;
-}
-
-/**
- * Runs each model-written line through the same rules as a written one, saves
- * the survivors to the pool and the phone, and logs what happened so the Dev
- * Tools Hub can show exactly what the model returned and what was thrown out.
- */
-export async function keepAiLines(userId: string, candidates: readonly AiLineCandidate[]): Promise<AiLineLog> {
-  const kept: AiLineLog['kept'] = [];
-  const dropped: AiLineLog['dropped'] = [];
-  const seen = new Set<string>();
-  for (const candidate of candidates) {
-    const text = candidate.text.trim();
-    const reason =
-      lineRuleViolation(text) ??
-      (candidate.keys.length === 0 ? 'no trait to key it to' : null) ??
-      (dailyLineById(lineId(text)) || seen.has(text) ? 'already have it' : null);
-    if (reason) {
-      dropped.push({ text, reason });
-      continue;
-    }
-    seen.add(text);
-    kept.push({ tag: leanTag(candidate.keys), text });
-  }
-
-  if (kept.length > 0) {
-    await appendPoolCache(
-      userId,
-      kept.map((row) => ({ ...row, source: 'ai' as const })),
-    );
-    await addToLinePool(kept).catch((err) => {
-      console.log('[daily-line] ai lines not saved to the pool:', err);
-    });
-  }
-
-  const log: AiLineLog = { userId, at: new Date().toISOString(), kept, dropped };
-  await AsyncStorage.setItem(DAILY_LINE_AI_LOG_KEY, JSON.stringify(log)).catch(() => {});
-  return log;
-}
-
-export async function loadAiLineLog(userId: string): Promise<AiLineLog | null> {
-  try {
-    const raw = await AsyncStorage.getItem(DAILY_LINE_AI_LOG_KEY);
-    const parsed = raw ? (JSON.parse(raw) as AiLineLog) : null;
-    return parsed && parsed.userId === userId ? parsed : null;
-  } catch {
-    return null;
-  }
 }

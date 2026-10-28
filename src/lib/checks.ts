@@ -104,7 +104,7 @@ function messageForCheckError(error: { message?: string; code?: string }): strin
  * in `daily_insights` with its own lifecycle (it can be superseded without
  * touching the Check), so copying it here would duplicate state that can drift.
  * The columns stay on the table and stay readable — Checks logged before
- * 2026-09-14 still carry their text, and /week and Circle still render it —
+ * 2026-09-14 still carry their text, and the parked week screen and Circle still render it —
  * but every new row takes the no-text path. There is deliberately no branch
  * left that writes them; this is the only write path for a Check.
  */

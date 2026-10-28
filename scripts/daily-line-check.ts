@@ -381,11 +381,14 @@ assert.match(wave, /values \(v_key, v_line, 'ai', uid\)/);
 ok('wave77: the pool accepts every line the app allows, and AI rows are stamped with their owner');
 
 // The AI insight call was removed (2026-10-14) and its file, with the line parser, in roadmap A5: no AI lines
-// arrive any more. The rule gate in sync.ts stays for any line already in the pool.
+// arrive any more. PHASE-11 removed the dead write path (keepAiLines, the AI log, addToLinePool, appendPoolCache);
+// registerPoolLines still gates any 'ai' row already in a pool.
 assert.ok(!existsSync(resolve(__dirname, '..', 'src/lib/insight/generate-insight.ts')), 'the AI insight writer stays deleted');
 const sync = read('src/lib/daily-line/sync.ts');
-assert.match(sync, /lineRuleViolation\(text\) \?\?/);
-ok('no AI insight call is left; any stored line still passes the line rules before it is kept');
+assert.doesNotMatch(sync, /keepAiLines|AI_LOG_KEY|addToLinePool|appendPoolCache|loadAiLineLog/);
+assert.doesNotMatch(read('src/lib/daily-line/pool-store.ts'), /addToLinePool/);
+assert.doesNotMatch(read('src/lib/daily-line/state.ts'), /appendPoolCache/);
+ok('no AI insight call or AI write path is left; stored lines still pass the line rules in registerPoolLines');
 
 // 2026-10-05: Today's Pick replaced the line card on Home. Its share image
 // carries the question only (never the answer, never an AI line).
