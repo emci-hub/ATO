@@ -20,6 +20,15 @@ Stage C Gamify screens
 - [x] PHASE-09 Insights (G3)
 - [x] PHASE-10 Legends (G4)
 - [ ] PHASE-11 Cleanup
+Stage C2 Almanac
+- [ ] PHASE-11a Almanac engine core
+- [ ] PHASE-11b Calendar, locale, ramp, arcs
+- [ ] PHASE-11c Almanac content pipeline + MVP bank  ⚑ copy OK
+- [ ] PHASE-11d Pick 368 + community counter  ⚑ wave117
+- [ ] PHASE-11e Almanac surfaces: Home, Insights, You
+- [ ] PHASE-11f Seasonal settings + morning push copy
+- [ ] PHASE-11g Art: Almanac decor, stickers, badges (PixelLab)  ⚑ art OK
+- [ ] PHASE-11h Theming integration
 Stage D Quests
 - [ ] PHASE-12 Quests content model + validator
 - [ ] PHASE-13 Scoring + sims
@@ -66,5 +75,7 @@ Stage E Polish & release
 - Lessons: the plan's "Try → focus" order is now a flip card, so `check:insights` pins the flip (focus in front, Try behind) instead. Reviewer PASS; fixed its Medium (focus card remounted when the Try pick arrived late: one stable FlipCard wrapper with an optional back) and Lows (flip announces the new face, slider read once, key on the typewriter, token-derived asserts). Left: Sheen and FlipCard both breathe under Reduce Motion (stacked opacity, harmless), and the Reduce Motion cross-fade is fade-out then fade-in.
 - 2026-10-27 PHASE-10 (real build): PR 105 was merged into ato-build; branch `phase-10-legends` cut from it. Investigator audit: token chip and "Your reveals ›" already existed; no rings, binder, holo or stamp; `reveal-card.tsx` is Home's card and `progress-ring.tsx` is static (both left alone); legend leans live in `lib/legend-figures`, not `lib/ai-library`. New: `components/{hall-rings,holo-card}.tsx`, `lib/legend-figures/view-math.ts` (ring maths, `matchPercent`, `matchedTracks`, `frameState`), `scripts/legends-g4-check.ts` + `check:legends-g4`. Edited: `(tabs)/legends.tsx` (overall ring, ring per hall tile, `HoloCard` around the story card, `freshId`/`holoRef` lock, frame state from `frameState`, one guard term in `reveal()`), `legend-figure-card.tsx` (`LegendFrame` rises 80 ms apart, "?" glyph, Sheen shimmer 2200 ms when ready), `motion-tokens.ts` (HALL_RING, SHIMMER, HOLO, STAMP), `package.json`. Gate: typecheck + lint (0 errors) + 198 offline checks green (incl. legends-g4, legends, legend-roster, ato-tokens, reroll, motion, nav, ai-library, no-auto-ai, milestones). NOT verified: on-screen look, 60 fps, 430x932 / 375x667 screenshots in 5 modes, Reduce Motion recording, VoiceOver, Dynamic Type XXL, 0 vs all met on a real account (need a phone).
 - Lessons: holo is 1000 ms, over BLOCKING_MAX_MS 900 (emci OK'd 2026-10-27): it locks only the revealing frames, with a 2500 ms failsafe. The lock ends at `onDone` (end of the turn), not the stamp. Reviewer PASS; fixed its Medium (card keyed by legend id AND chapter, so a second reveal of the same legend replays) and the ring's Reduce Motion fade. Left (Low): the cover is 220 pt, so content below jumps once at the swap; the stamp sits over the mini constellation; `Sheen` wrapping a ready frame remounts its Pressable on each ready/spent flip (VoiceOver focus); round cap can draw a dot at 0 met; under Reduce Motion the open story card breathes (Sheen). Carry-over from PHASE-09 (glow `textShadowRadius`, Sheen + FlipCard stacked breathing) still needs a device. `check:legends` has no pins on these files; `legend-roster-check` pins `reveal()` text, so only the guard line was changed.
+- 2026-10-27 Almanac addendum (docs only): Step 1 red team wrote `docs/almanac-redteam.md` (6 High: wave116 clash → wave117; Pick rotation needs 16×K → 368; cutover so old bundles' answers aren't rejected; ramp needs one meaning + slew limit; Home hero is the constellation, not a pixel scene; outfit heroes are off-style dungeon-legends). emci OK'd it and D1–D7 (all recommended). Step 2 merged Stage C2 PHASE-11a–11h into `docs/ATO-BUILD.md` (§1.10 shared rules + decisions, CHANGELOG, §0.1, PHASE-11 step 3, PHASE-26 deps/screens, PHASE-27 rows) and this checklist; all done ticks kept. Branch `almanac-plan` from ato-build @ d74e26a8. No app code; no checks run (docs only).
+- Lessons: the addendum's baseline was stale (Today's path and Insights flip already shipped, mockups folder missing, wave116 taken); auditing the code first changed 6 of its 9 phases.
 
 Blocked on: (none)

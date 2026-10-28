@@ -2,6 +2,7 @@
 
 ## CHANGELOG
 - **2026-10-26 · PHASE-00 red team** (findings in `docs/ato-build-redteam.md`): R01 wave115→**wave116** (wave115 is taken); R02–R05 phases 01, 02, 04, 05, 06, 07, 11 are mostly shipped on master, so they are **verify-only** (05: only the constellation header remains); R06 Quests ignores the `quest` appearance mode; R07–R12 and R25 PHASE-17 hardening (idempotent Apply, bounded Undo, server-enforced 7/30-day rules, `_trait_write` has no weight parameter, SECURITY DEFINER rules, delete-account wipe); R13–R15 validator and save fixes; R17–R22 animation, a11y, atlas and streak fixes; R23 ⚑ Quests art vs `CLAUDE.md` art rules; R24 no new dev dependency for the atlas builder; R26 merge master before release.
+- **2026-10-27 · Almanac merged** (red team `docs/almanac-redteam.md`, emci OK on findings + D1–D7): new **Stage C2, PHASE-11a–11h** after PHASE-11 (engine, calendar/ramp, content, Pick 368 + wave117, surfaces, settings + push copy, art, theming). Shared rules + decisions in §1.10. The addendum's outfit phase is dropped (D3), so its 09h/09i become one integration phase (11h). PHASE-11 gains step 3 (daily-line AI leftovers, L4). PHASE-27 gains Almanac rows. Almanac's migration is **wave117** (wave116 stays Quests).
 Covers IA + Settings, gamify (Home, Insights, Legends, motion), and Quests (code, content and PixelLab art). The repo copy lives at `docs/ATO-BUILD.md`. Everything is self-contained, and every decision in it is final.
 
 ## 0 RUNNER (read every session)
@@ -23,9 +24,9 @@ Covers IA + Settings, gamify (Home, Insights, Legends, motion), and Quests (code
    - open ONE draft PR titled `PHASE-NN <name>`;
    - STOP.
 9. Loop guard: if the same check fails 3 times, stop, write the blocker under `Blocked on:` and in the Log, then STOP.
-10. Art phases: use the PixelLab MCP tools under the §1.9 quality-first policy. There is no generation or credit limit (R23 resolved: see §1.9; the pre-flight and one-test-clip OK still apply). Save every source PNG with a `params.json` (tool, prompt, seed, strength, critique score). Log the credits used per batch in `art-src/quests/credits.md` (`get_balance` before and after). This is for visibility only and never a reason to stop. Atlas only the assets that pass critique.
+10. Quests art phases (PHASE-15, -21; §1.9). Almanac art (PHASE-11g) follows its own rules in that section, not this step. Quests: use the PixelLab MCP tools under the §1.9 quality-first policy. There is no generation or credit limit (R23 resolved: see §1.9; the pre-flight and one-test-clip OK still apply). Save every source PNG with a `params.json` (tool, prompt, seed, strength, critique score). Log the credits used per batch in `art-src/quests/credits.md` (`get_balance` before and after). This is for visibility only and never a reason to stop. Atlas only the assets that pass critique.
 11. **emci actions are marked ⚑.** When a phase needs one, finish everything you can, set `Blocked on: ⚑ …`, and STOP.
-12. Art and Quests phases (PHASE-12 to -23, -25, APPENDIX-A) start with a **mini red-team**: a self-check of 5 lines or fewer against `docs/ato-build-redteam.md` (relevant findings, fixes to apply in this phase, new risks). Put it in the plan.
+12. Art and Quests phases (PHASE-11g, -12 to -23, -25, APPENDIX-A) start with a **mini red-team**: a self-check of 5 lines or fewer against `docs/ato-build-redteam.md` (11g: `docs/almanac-redteam.md`) (relevant findings, fixes to apply in this phase, new risks). Put it in the plan.
 
 ### 0.1 Checklist (copy it into the progress file)
 ```
@@ -45,6 +46,15 @@ Stage C Gamify screens
 - [ ] PHASE-09 Insights (G3)
 - [ ] PHASE-10 Legends (G4)
 - [ ] PHASE-11 Cleanup
+Stage C2 Almanac
+- [ ] PHASE-11a Almanac engine core
+- [ ] PHASE-11b Calendar, locale, ramp, arcs
+- [ ] PHASE-11c Almanac content pipeline + MVP bank  ⚑ copy OK
+- [ ] PHASE-11d Pick 368 + community counter  ⚑ wave117
+- [ ] PHASE-11e Almanac surfaces: Home, Insights, You
+- [ ] PHASE-11f Seasonal settings + morning push copy
+- [ ] PHASE-11g Art: Almanac decor, stickers, badges (PixelLab)  ⚑ art OK
+- [ ] PHASE-11h Theming integration
 Stage D Quests
 - [ ] PHASE-12 Quests content model + validator
 - [ ] PHASE-13 Scoring + sims
@@ -64,7 +74,7 @@ Stage E Polish & release
 - [ ] PHASE-26 Whole-app a11y + states
 - [ ] PHASE-27 Regression QA + release  ⚑ wording, flags, OTA
 ```
-After PHASE-00, phases that can run in parallel (open them as separate sessions or branches): PHASE-03, -12, -13, -14 and -15 add new files only and can start early.
+After PHASE-00, phases that can run in parallel (open them as separate sessions or branches): PHASE-03, -12, -13, -14 and -15 add new files only and can start early. PHASE-11a and -11b are new-files-only pure libraries and can also run in parallel with Stage D.
 
 ## 1 GLOBAL RULES + SHARED SPEC
 ### 1.1 Rules (every phase)
@@ -248,11 +258,34 @@ PHASE-03 fixes `components/motion.tsx`, which currently renders children static.
   7. Style match to the references. For animations: no boiling, stable volume, foot contact.
 
   A fail gets up to 2 fix rounds. If it still fails, log it, keep a placeholder, and move on.
+- **§1.9 is for Quests art only.** Almanac art (PHASE-11g) follows `CLAUDE.md` + `docs/art/PIXELLAB_GUIDE.md` in full (§1.10 D4).
 - **Atlas size budget (engineering constraint, `check:quest-atlas`).** If quality needs more, first split into more atlases or compress (pngquant-style palette PNG, trimming, sharing frames). If it still doesn't fit, raise the limit in the check with a `// raised: <reason>` note and log it in the progress file. Defaults:
   - 1 atlas per campaign plus 1 shared, each 2048² or smaller;
   - 12 or fewer new files in total under `assets/quests/` (PNG + JSON);
   - 4 MB or less in total;
   - no loose PNGs.
+
+### 1.10 Almanac (Stage C2: PHASE-11a–11h)
+Source: `docs/ATO-ADDENDUM-almanac.md` (design + background), corrected by `docs/almanac-redteam.md` (H1–H6, C1–C8, M1–M15, L1–L5). **Where they disagree, this file wins, then the red team, then the addendum.**
+emci decisions 2026-10-27 (all recommended options):
+- **D1** Today's path keeps its 3 shipped steps; the Almanac only feeds content into existing cards.
+- **D2** Home hero stays the constellation; seasons theme it (tint, accent, light decor, particles). No pixel hero scene.
+- **D3** Hero outfits are deferred to a later release (not built in this build).
+- **D4** Almanac art uses the normal art library (`art:import` → `art:pack` → registry → skeleton slot → `art:sync`) and the repo camera. No R23-style exemption, no `assets/almanac` side atlas.
+- **D5** MVP bank ≈ 800 cards now; more packs later.
+- **D6** No "people like you" bar.
+- **D7** Hemisphere: auto from the timezone once, Settings override North / South / Tropics.
+
+Shared rules (every 11x phase):
+- Pure, deterministic, offline. No network except the existing Pick RPCs and the wave117 counter. No runtime AI.
+- Card ids are stable slugs `alm_<kind>_<event|axis|arc>_<nn>`, never reused or renamed; a retired card keeps its id. fnv1a(text) is only a duplicate check.
+- Dates: always `localYmd(…, me.timezone)` (same key as check-window and home-path, R21); before `me` loads, the device zone; the cached pick wins.
+- AsyncStorage keys `ato.almanac.<name>.v1`, each cleared in `clearLocalAccountData` (`check:local-account-data`).
+- Cosmetic only: no tokens, prices or rewards (§1.6). Seasonal badges and deck cards are approved as cosmetic.
+- Voice: Picks, lines, teasers and pushes use the moment voice; try-today and reflect use the clear voice; checks use `framework-fence` + length + slots, judged by meaning, no word bans (core content policy).
+- Gentle days (Mother's/Father's Day, Valentine's, Christmas): never assume family, partner, faith or celebration; every Pick has an "it's just a day for me" style option.
+- Migrations are written for emci to apply himself: Almanac is **wave117** (wave116 is Quests).
+- Never touch `src/play/**`.
 
 ## PHASE-00 RED TEAM
 Deps: — · Model: Opus plans + Opus runs · No app code changes. The only output is docs plus edits to this file. A docs-only draft PR is opened only if emci asks.
@@ -513,7 +546,116 @@ Files: any file linking `/week`, plus `src/app/copy/library.md`, `src/app/legal/
 Steps:
 1. Remove links to `/week` (the route stays).
 2. Move the md/txt files to `src/content/` and update every importer and script path.
-Accept: `rg "'/week'"` is clean, and all touched checks are green.
+3. **(Almanac L4)** Daily-line AI leftovers: `LineSource 'ai'`, `keepAiLines`, `DAILY_LINE_AI_LOG_KEY` (`src/lib/daily-line/{bank,sync}.ts`, `src/hooks/use-today-line.ts`, `src/lib/local-account-data.ts`). Confirm no live caller feeds AI lines, then remove the dead path (keep authored lines and their ids). Keep clearing the old AI-log key on sign-out so existing phones are cleaned. If a live caller exists, log it and stop for emci.
+Accept: `rg "'/week'"` is clean; `check:daily-line`, `check:local-account-data`, `check:no-auto-ai` and all touched checks are green.
+
+## PHASE-11a Almanac engine core
+Deps: 11 · Model: Opus plans (selection, weights, seed), Sonnet builds
+Files: new `src/lib/almanac/{types,seed,select,slots,seen-store,cache,index}.ts`, `scripts/almanac-check.ts`, `src/lib/local-account-data.ts` (clear the new keys), `package.json` (script line). Read only: `src/lib/daily-line/*`, `src/lib/daily-pick/bank.ts`, `src/lib/insight-bank/*`, `src/lib/daily-insights/*`, `src/lib/traits.ts`, `src/lib/local-date.ts`, `src/lib/home-path.ts`, `src/lib/voice/framework-fence.ts`.
+Steps:
+1. **Card type:** `{id, kind:'pick'|'line'|'try'|'reflect'|'fact'|'contrast'|'week'|'month'|'year'|'callback'|'afterglow'|'teaser', axes?, minDataDays?, event?, phase?:'teaser'|'lead'|'build'|'peak'|'fade', arc?, weekday?, text, alt?, weight?, reviewed:boolean, variant?}`. Ids per the shared rules (M2).
+2. **Seed:** personal = FNV-1a of `userId|ymd|surface`. The base Pick stays the existing global rotation by ymd (no region seed, M5).
+3. **select(surface, ctx):** filter (reviewed, phase/arc/weekday, minDataDays, not seen) → score (+3 strong band, +2 tension pair, +1 axis unseen 7 d) × weight × layer weight (11b) → seeded weighted pick from the top 8.
+   - Seen-set per surface sized to the pool, cap 400, versioned (M3).
+   - Today's result is cached under `{userId, ymd, surface, bankVersion}` so reopening or a mid-day OTA never swaps the card (M4).
+4. **Slots:** `{name} {axis} {axisPct} {pairAxis} {pairPct} {peerFrac} {streak} {pickShare} {lastPick} {eventName} {daysInto}`. `{streak}` reads `streakWithRest` (no new streak, C3). A missing slot uses `alt`; a card without one is dropped. Framework fence + 120-char check after the fill.
+5. **API:** `almanac.today(surface)` for `home.pick`, `home.line`, `insights.deck`, `insights.try`, `push`, `you.week`, `you.month`, `you.year`. Pure functions only.
+6. **`check:almanac`:** determinism (same input → same card), no repeat within min(pool, 90) days over a 400-day sim for 3 sample profiles, slot fallbacks, cache key includes bankVersion.
+Accept: `check:almanac` green, typecheck/lint/ota-gate green, no new deps. Runs on a small fixture bank until 11c lands.
+
+## PHASE-11b Calendar, locale, ramp, arcs
+Deps: 11a · Model: Opus plans (calendar rules, ramp curves, priority), Sonnet builds
+Files: new `src/lib/almanac/{events,calendar,ramp,resolve,arcs,locale}.ts`, `scripts/almanac-calendar-check.ts`, `docs/almanac-calendar.md`, `src/lib/local-account-data.ts` (clear `ato.almanac.locale.v1`), `package.json` (script line).
+Steps:
+1. **Rules** (`calendar.ts`): `fixed`, `nthWeekday`, `easter` (Anonymous Gregorian computus), `table` (Lunar NY, Diwali, Eid al-Fitr, full moons, solstices/equinoxes 2026–2035), `personal` (birthday from `me.born_on`; Feb 29 → Feb 28 in non-leap years; ATO join date), `regionTable` (Mother's Day: US/CA/AU/NZ 2nd Sun May, UK/IE Easter−21; Father's Day: AU/NZ 1st Sun Sep, else 3rd Sun Jun). Outside its table a region gets no event (never a guessed date). Eid uses a 2-day peak window (±1 day by country). Exam season is a month theme, not an event (M8).
+2. **Events:** new_year, lunar_new_year, valentines, easter, mothers_day, fathers_day, summer_solstice, summer, back_to_school, thanksgiving_ca, thanksgiving_us, halloween, diwali, eid_al_fitr, winter_solstice, christmas, year_end, birthday, ato_anniversary. `cultural:true` for lunar_new_year, diwali, eid_al_fitr, easter (opt-in outside default regions).
+3. **Locale** (`locale.ts`, M7): region from `Intl.DateTimeFormat().resolvedOptions().locale`; use `expo-localization` only after confirming it is linked in the shipped binary (no native change, no 1.3). Hemisphere `north|south|tropics` computed **once** from the IANA zone and stored (`ato.almanac.locale.v1`), so travel never flips seasons; Settings override (11f). Tropics: named seasons stay, snow/leaf micro-events and hemisphere flips are off.
+4. **Ramp** (`ramp.ts`, H4): each event has ONE set of numbers, **durations in days counted back from peak start**: `{teaser, lead, build, peak, fade}` (defaults christmas 14/7/5/2/5, halloween 10/5/3/1/4, new_year 5/2/2/1/7, valentines 5/2/2/1/4, lunar_new_year 7/3/2/7/4, personal 3/1/2/1/4; minimum build 2, fade 4). Target intensity: teaser 0.1–0.2, lead 0.2–0.4, build 0.4–0.8, peak 1.0, fade 1→0, smoothstep inside each phase. The addendum's offsets and `windows {leadDays…}` are not used.
+5. **Resolver** (`resolve.ts`): priority personal > regional peak > global peak > lead/fade > micro > month > season > week > base. At most one event above 0.4. The **displayed** intensity is the target passed through a slew limit `|Δ| ≤ 0.3/day`, derived by walking back ≤ 30 days (pure, no storage); a losing event slews down, never snaps.
+6. **Arcs** (`arcs.ts`): 4 named seasons (Sparks, Bloom, Tides, Embers; shifted 6 months for south), 12 month themes (Clean slate, Soft spots, Curiosity, Small risks, Roots, Halfway, Play, Slow days, Fresh pages, Masks, Gratitude & boundaries, Looking back; exam season folds into its month), weekly trait theme = absolute Monday weeks from the Pick epoch `% 16` (L1), micro-events (full moon, first snow, Friday 13th, payday Friday, clock change, equinox, 100th Pick, 30-day glow, half-year, one year ago) at intensity ≤ 0.4, 1 day, at least one every ≤ 10 quiet days.
+7. **Layer blend** for 11a weights: intensity ≥ 0.9 → line + deck seasonal (the shared Pick comes from 11d's override); ≥ 0.4 → try slot seasonal; teaser → one teaser card only. Otherwise the week theme sets the try slot and the month theme sets the line 1 day in 3. Afterglow card on fade day 1; the callback is keyed `eventId+year`.
+8. **`check:almanac-calendar`:** sim 2026-01-01 … 2035-12-31 × 3 regions (US, GB, AU) × 3 hemispheres: every day has a theme; displayed intensity never moves more than 0.3/day; ≤ 1 event above 0.4 after resolve (real clashes: 2026 LNY/Valentine's, Diwali 2027-10-29/Halloween, Eid 2026-03-20/equinox, LNY covering Feb 14 in 2029/2032/2035). Golden dates: Easter 2027-03-28, Lunar NY 2027-02-06, CA Thanksgiving 2026-10-12, Mothering Sunday 2027-03-07. Timezone fixtures: UTC+14, UTC−12, DST both ways, date-line travel.
+Accept: both checks green; the ramp/arc table is printed to `docs/almanac-calendar.md`.
+
+## PHASE-11c Almanac content pipeline + MVP bank
+Deps: 11a, 11b · Model: Sonnet (Opus reviews voice and balance only)
+Files: new `docs/almanac-review.md`, `scripts/load-almanac.ts`, `scripts/almanac-bank-check.ts`, `src/lib/almanac/bank.generated.ts`, `package.json` (script lines). Copy the tested daily-line pipeline (`docs/daily-line-review.md` → `load:daily-line` → generated TS).
+Steps:
+1. Draft checkbox lines in `docs/almanac-review.md`, grouped by kind/event/arc, ≤ 120 chars, voice per the shared rules. **MVP volume (D5), ≈ 800:**
+   - Picks: 304 new base Picks, 19 per trait (bank to 368 = 16 × 23; written here, appended in 11d);
+   - Events (next 12 months only): ≈ 14 events × 10 (3 peak Picks as yearly variants — global events only, see 11d; regional events get lines instead — 1 teaser, 2 lead/build, 1 afterglow, 1 callback, 1 deck card, 1 push) ≈ 140;
+   - Arcs: 4 seasons × 6 + 12 months × 4 = 72;
+   - Micro-events: 20;
+   - Base: 160 try-today, 60 reflect;
+   - Recap: 40 week/month/year templates + 32 year archetype names (16 axes × high/low).
+2. Gentle mode per the shared rules.
+3. **`load:almanac`** turns ticked lines into `bank.generated.ts` (`reviewed:true` only; ids assigned once and kept). **`check:almanac-bank`**: length, slots, duplicates (fnv1a), coverage (≥ 15 cards per strong band for line/try, every MVP event has teaser/lead/peak/fade cards, every arc has a card), ids never reused.
+4. ⚑ **copy OK:** emci ticks the cards. Set `Blocked on: ⚑ almanac copy`. 11e/11f continue on the drafts behind `ALMANAC_COPY_REVIEWED = false`.
+Accept: loader and checks green; only ticked cards ship.
+
+## PHASE-11d Pick 368 + community counter (server)
+Deps: 11c · Model: Opus plans (migration + RLS), Sonnet builds
+Files: `src/lib/daily-pick/bank.ts` (append only; ids forever), `scripts/gen-wave82-picks.ts`, `scripts/daily-pick-check.ts`, new `supabase/migrations/wave117_almanac.sql` (**NOT applied**; wave116 is Quests, H1).
+Steps:
+1. **368 picks (H2):** append the ticked Picks (23 per trait). Generalise the index to `(n%16)*K + floor(n/16)`, K = count/16, so the same trait never comes two days running.
+2. **Cutover (H3):** `ALMANAC_PICK_CUTOVER` = a date ≥ 14 days after the planned OTA (emci confirms it at PHASE-27). Before it, the 64 formula; from it, the 368 formula. In TS and SQL.
+3. **wave117:**
+   - insert the new `daily_pick_pool` rows;
+   - `daily_pick_position(date)` with the cutover branch; during the 14-day overlap `answer_daily_pick` accepts the old OR new position for that ymd (old bundles keep working);
+   - `daily_pick_event_override(ymd, pick_id)`: seasonal peak Picks (`ev-<event>-<v>`, outside the rotation); the position check also accepts the override row. **Global events only** (new_year, valentines, halloween, christmas, year_end, solstices…): the shared Pick is the same for everyone, so a regional event (mothers_day, fathers_day, thanksgiving_us/ca, cultural events) never overrides it and gets seasonal lines/deck cards instead (red team M5);
+   - `daily_pick_event_total(p_event_id, p_year)`: security definer, `search_path = public, pg_temp`, rejects null `auth.uid()`, authenticated only, returns the answer count for the event's override picks, no per-user rows (copies `daily_pick_split`'s pattern). No "people like you" (D6).
+4. **`check:daily-pick`:** compares the TS index with the SQL text (both formulas, both sides of the cutover), no trait twice running, overlap accepts both.
+5. ⚑ **emci applies wave117 himself** (after 115 and 116). Set `Blocked on: ⚑ apply wave117`. The client hides the community bar until the RPC answers.
+Accept: `check:daily-pick` green; the SQL is shown in the plan; the counter returns totals only.
+
+## PHASE-11e Almanac surfaces: Home, Insights, You
+Deps: 11a, 11b, 11c, 08, 09 · Model: Sonnet. **Not on 11d on purpose:** the seasonal Pick and community card read 11d's RPCs and hide themselves until wave117 is applied, so this phase doesn't wait on that ⚑.
+Files: `src/components/almanac/{week-recap,month-shift,year-recap,afterglow-card,teaser-line,community-goal}.tsx`; Home: `src/app/(tabs)/index.tsx` and the existing Daily Pick card component (find it with `rg "daily-pick" src/components`); Insights: `src/app/(tabs)/insights.tsx` (FlipCard callers only), `src/lib/insight-collection*.ts`; `src/lib/today-slot.ts`, `src/components/your-week-card.tsx`, `src/app/(tabs)/you.tsx` (new sections only); `src/lib/badges.ts`, `src/components/{share-card,share-poster}.tsx`; `src/app/dev-lab.tsx` (year-recap preview inside the `tools` branch only, or `check:release-mode` fails); `src/lib/local-account-data.ts` (new keys). Show rendered samples to emci before building each surface (no mockups exist, M1).
+Steps:
+1. **Home (D1):** Today's path keeps its 3 steps (`check:home-path` unchanged). The Almanac feeds the existing Pick card (seasonal Pick on peak days via 11d's override, pick result line "you're in the N%" from `daily_pick_split`) and a one-line teaser under the hero when event intensity is 0.1–0.4.
+2. **Insights (C2):** the FlipCard's try side and a deck card come from `almanac.today('insights.*')`. "Insights seen" moves to `ato.insights.collection.v2` with a migration that keeps every v1 seen id; insight-bank `ftw_*` ids stay in the count; per-event decks ("Halloween 3/5"); missed cards return next year.
+3. **You:** Sunday "Your week in you" (existing Today slot / week card), monthly "What shifted" (trait-history delta mini chart in react-native-svg + a then-and-now callback), "Your year in you" (8 swipe cards, date-gated from Dec 1, preview from the dev Hub only under `DEV_TOOLS_AVAILABLE`, L2). Share card from templates via `share-card.tsx`/`share-poster.tsx`, shareable leans only (`isShareableLean`).
+4. **Seasonal badges** (L3): a small local "earned in window" store `ato.almanac.badges.v1` feeding `lib/badges.ts`; cosmetic.
+5. **Community goal card** on build/peak days, only if `daily_pick_event_total` answers; offline or missing → hidden, no error.
+6. Reduce Motion gentle, never still (§1.4): flips cross-fade, bars at 0.5 speed.
+Accept: rendered samples OK'd by emci; no empty states; `check:almanac`, `check:home-path`, `check:insights`, `check:insights-g3`, `check:local-account-data`, ota-gate green.
+
+## PHASE-11f Seasonal settings + morning push copy
+Deps: 11e · Model: Sonnet
+Files: `src/app/settings.tsx` (new fold only), new `src/components/seasonal-prefs-fold.tsx`, `src/lib/push-copy.ts`, `src/lib/push.ts` (copy source only), `src/lib/local-account-data.ts` (clear `ato.almanac.prefs.v1`).
+Steps:
+1. **"Seasonal content" fold:** master toggle; hemisphere override North / South / Tropics (D7); per-event toggles for `cultural:true` events; "Use my birthday" (only when `me.born_on` exists). Stored locally in `ato.almanac.prefs.v1`.
+2. **Push (M14):** no new push. The existing morning push takes its copy from `almanac.today('push')`; the Sunday push is unchanged. Seasonal off → base copy.
+Accept: toggles persist; seasonal off → only arcs and base cards; `check:push` green.
+
+## PHASE-11g Art: Almanac decor, stickers, badges (PixelLab)
+Deps: 15, 11b · Model: Sonnet + PixelLab MCP
+Files: `art-src/almanac/**` (sources, `params.json`, `critique.md`, `credits.md`) and the art library outputs of `art:import` / `art:pack` / `art:sync` only. No app code. Start with the §0 step 12 mini red-team against `docs/almanac-redteam.md` §3.
+Rules (D4; CLAUDE.md art rules apply in full, not §1.9):
+- Pre-flight: read `docs/art/PIXELLAB_GUIDE.md` + `PIXELLAB_ANIMATION.md`, `search_help` each tool (real MCP names, L5), `get_balance` before/after, ONE test asset for emci's OK, credits per batch in `art-src/almanac/credits.md`. Ask before a batch over ~20 generations or any Pro call.
+- Library first: search `assets/art/registry.json` before generating (snow/leaf/heart/lantern FX, icons).
+- Camera: stickers, badges, deck emblems and UI decor are flat and camera-neutral; any world object follows td-3q-low. No side view.
+- Sizes on the 32 px ladder: icons/badges/stickers 16 or 32, decor props 32, edge sprigs 64, ambient FX 64. Nothing is pre-scaled.
+- Palette: streetwear-night base + per-season/event accents via `target_palette` (mid tones extended first), then `reduce_colors` + `score`.
+- Critique: guide rubric ≥ 22/28 with no zero + `pixelart_workbench score ≥ 90`; fix by `inpaint_image`, 3 tries then change one param; log every fallback. World objects get a scale sheet against the grown hero (H ≈ 106 px).
+- No cultural garments; Diwali/Eid/LNY use objects only (M12). No outfits (D3).
+Steps:
+1. Style card `art-src/almanac/STYLE.md`: one accent swatch per season (4) and per MVP event, each 8–12 colours sharing the 4 UI neutrals; one test asset; freeze.
+2. Decor for the constellation theming (D2): small props (wreath, pumpkin, heart, lantern, diya, crescent, egg, leaf, snowflake, petal, star, firework) at 32; one 64 edge sprig per MVP event (intensity 0.1–0.4).
+3. Ambient loops at 64 (snow, leaf, petal, firework, lantern sway, candle flicker), even frame counts; Reduce Motion uses frames 1/3 at quarter speed in code.
+4. Stickers 32 (micro-events + 12 month glyphs), badges 32 (one per MVP event + 4 seasons), deck emblems 32, 3 deck card frames via `create_ui_asset`.
+5. Import, pack, register (skeleton slots), `art:sync`; contact sheets at 2x for emci.
+Accept: every asset ≥ 22/28 and registered; `check:art-registry --fresh` green. ⚑ **art OK:** emci approves the sheets. Set `Blocked on: ⚑ art OK almanac`.
+
+## PHASE-11h Theming integration
+Deps: 11e, 11g · Model: Sonnet
+Files: `src/components/almanac/{season-theme,decor-layer,edge-sprigs}.tsx`, `src/components/home-hero.tsx` (wrap only), theme tokens, `scripts/almanac-art-check.ts`, `package.json`. Art is named through the skeletons / `findArt` (CLAUDE.md art rule 8), never a typed id or path.
+Steps:
+1. **Constellation theming (D2):** season tint on the constellation, accent lerp between season and event palette by displayed intensity (pure JS colour lerp, 300 ms tween), decor ring count `round(maxDecor × intensity)`, edge sprigs at 0.1–0.4, one micro-event sticker for its day.
+2. **Perf (M13):** all particles in ONE sprite layer on the screen's single frame callback; ≤ 12 animated decor nodes; pauses when unfocused. Home stays within 60 nodes.
+3. Reduce Motion gentle, never still: half the particles, quarter speed, frames 1/3, BREATH on the hero.
+4. **`check:almanac-art`:** every art key in the bank/calendar resolves through `findArt`; Almanac art total size logged and ≤ 3 MB; nothing unused.
+Accept: checks and ota-gate green; rendered samples: off-season (Embers), Christmas lead-in (0.3), peak, fade day 3, in 5 modes.
 
 ## PHASE-12 Quests content model + validator
 Deps: — · Model: Sonnet
@@ -942,9 +1084,9 @@ Accept: every row is ✅ or explicitly deferred by emci.
 ⚑ emci runs the playtest. Fix the notes in this same phase (re-open it if needed).
 
 ## PHASE-26 Whole-app a11y + states
-Deps: 11, 24, 25 · Model: Sonnet
+Deps: 11, 11f, 11h, 24, 25 · Model: Sonnet
 Files: only failing files, plus `docs/qa-a11y-report.md`.
-Steps: for every new or changed screen (Settings, You, tab bar/More, Your reveals, Home, Insights, Legends, Quests):
+Steps: for every new or changed screen (Settings incl. the Seasonal fold, You incl. week/month/year recaps, tab bar/More, Your reveals, Home incl. seasonal theming, Insights incl. the deck, Legends, Quests):
 - VoiceOver labels and order;
 - Dynamic Type XXL;
 - 375×667;
@@ -956,7 +1098,7 @@ Fix only what fails, and write the report.
 Accept: the report shows every row ✅ or deferred by emci.
 
 ## PHASE-27 Regression QA + release
-Deps: 26 · Model: Opus plans, Sonnet builds
+Deps: 11d, 26 · Model: Opus plans, Sonnet builds
 Files: failing files only, plus `docs/{release-notes,quests-launch}.md` and `src/content/legal/privacy.md` (diff only).
 Steps:
 0. **(R26)** Merge the latest master into `ato-build` first, then run the final gate. **(R12)** Also diff `src/content/legal/app-privacy-labels.md`, labelling each change mandatory / recommended / optional per the compliance rule.
@@ -971,7 +1113,8 @@ Steps:
    - Divecore via Play;
    - Legends reveals and Your reveals;
    - Insights;
-   - Quests end to end, including Apply, Undo, offline and the kill switch.
+   - Quests end to end, including Apply, Undo, offline and the kill switch;
+   - **Almanac:** `check:almanac`, `check:almanac-calendar`, `check:almanac-bank`, `check:almanac-art`, `check:daily-pick` green; timezone fixtures (UTC+14, UTC−12, DST, date-line travel); Pick cutover dry-run with an old bundle and a new one (both answers accepted in the overlap); emci confirms `ALMANAC_PICK_CUTOVER` against the OTA date; seasonal off → base + arcs only; Tropics setting; year recap date gate (dev Hub preview); wave117 missing → community card hidden, no error; `clearLocalAccountData` clears `ato.almanac.*`; Almanac art size delta; `ALMANAC_COPY_REVIEWED` matches emci's review; privacy diff (expected: none).
 5. Docs:
    - `quests-launch.md`:
      - Store wording: "A story game; your choices can add a small hint to your profile if you choose. Not a psychological test.";
