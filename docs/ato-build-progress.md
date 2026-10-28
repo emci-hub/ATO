@@ -19,7 +19,7 @@ Stage C Gamify screens
 - [x] PHASE-08 Home (G2)
 - [x] PHASE-09 Insights (G3)
 - [x] PHASE-10 Legends (G4)
-- [ ] PHASE-11 Cleanup
+- [x] PHASE-11 Cleanup
 Stage C2 Almanac
 - [ ] PHASE-11a Almanac engine core
 - [ ] PHASE-11b Calendar, locale, ramp, arcs
@@ -77,5 +77,7 @@ Stage E Polish & release
 - Lessons: holo is 1000 ms, over BLOCKING_MAX_MS 900 (emci OK'd 2026-10-27): it locks only the revealing frames, with a 2500 ms failsafe. The lock ends at `onDone` (end of the turn), not the stamp. Reviewer PASS; fixed its Medium (card keyed by legend id AND chapter, so a second reveal of the same legend replays) and the ring's Reduce Motion fade. Left (Low): the cover is 220 pt, so content below jumps once at the swap; the stamp sits over the mini constellation; `Sheen` wrapping a ready frame remounts its Pressable on each ready/spent flip (VoiceOver focus); round cap can draw a dot at 0 met; under Reduce Motion the open story card breathes (Sheen). Carry-over from PHASE-09 (glow `textShadowRadius`, Sheen + FlipCard stacked breathing) still needs a device. `check:legends` has no pins on these files; `legend-roster-check` pins `reveal()` text, so only the guard line was changed.
 - 2026-10-27 Almanac addendum (docs only): Step 1 red team wrote `docs/almanac-redteam.md` (6 High: wave116 clash → wave117; Pick rotation needs 16×K → 368; cutover so old bundles' answers aren't rejected; ramp needs one meaning + slew limit; Home hero is the constellation, not a pixel scene; outfit heroes are off-style dungeon-legends). emci OK'd it and D1–D7 (all recommended). Step 2 merged Stage C2 PHASE-11a–11h into `docs/ATO-BUILD.md` (§1.10 shared rules + decisions, CHANGELOG, §0.1, PHASE-11 step 3, PHASE-26 deps/screens, PHASE-27 rows) and this checklist; all done ticks kept. Branch `almanac-plan` from ato-build @ d74e26a8. No app code; no checks run (docs only).
 - Lessons: the addendum's baseline was stale (Today's path and Insights flip already shipped, mockups folder missing, wave116 taken); auditing the code first changed 6 of its 9 phases.
+- 2026-10-27 PHASE-11 (small build): PR 107 (Almanac plan) squash-merged into ato-build; branch `phase-11-cleanup` cut from it. Investigator audit: steps 1 and 2 already done (no `/week` link in `src`, content is in `src/content/{copy,legal,voice}`, no importer on the old paths); step 3 had NO live caller (`keepAiLines` had zero callers; only the Dev panel read the log). Removed the dead AI top-up path: `keepAiLines`, `DAILY_LINE_AI_LOG_KEY`, `AiLineLog`, `loadAiLineLog` (sync.ts), `addToLinePool` (pool-store.ts), `appendPoolCache` (state.ts) and the "Last AI top-up" block in `daily-line-dev.tsx`. Kept: `LineSource 'ai'` (existing server rows still load), `registerPoolLines` rule gate, authored lines and ids, wave77 SQL. The old key `ato.daily-line-ai-log.v1` is wiped on sign-out by the deny-by-default rule; now pinned in `local-account-data-check.ts`. `daily-line-check.ts` assertion repointed to stricter `doesNotMatch`. Reworded the `/week` comment in `checks.ts`. Gate: typecheck + lint (0 errors) + 198 offline checks green. NOT verified: the Dev Tools Hub panel on a phone.
+- Lessons: the plan text was stale for steps 1 and 2 again; the audit first kept this tiny. The `use-today-line.ts` and `local-account-data.ts` files named in step 3 needed no change.
 
 Blocked on: (none)

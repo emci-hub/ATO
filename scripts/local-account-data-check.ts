@@ -90,6 +90,7 @@ function wouldWipe(key: string): boolean {
 // The keys that actually leaked must be wiped...
 for (const wiped of [
   'ato.today-insight.v1',
+  'ato.daily-line-ai-log.v1', // PHASE-11: writer removed; phones that already hold it are cleaned on sign-out
   'ato.questions.answeredOption.full-profile:abc.v1',
   'ato.questions.categoryPage.full-profile:abc.v1',
   'ato.profile.fullUnlock.seen.abc.v1',

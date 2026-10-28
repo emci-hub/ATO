@@ -72,16 +72,6 @@ export async function reactDailyLineRemote(ymd: string, reaction: LineReaction |
   return data === true;
 }
 
-/** Saves AI-written lines as rows only this account can read. Returns how many were new. */
-export async function addToLinePool(items: readonly { tag: string; text: string }[]): Promise<number> {
-  if (items.length === 0) return 0;
-  const { data, error } = await supabase.rpc('insert_daily_line_pool_items', {
-    p_items: items.map((item) => ({ lean_key: item.tag, line: item.text })),
-  });
-  if (error) throw error;
-  return typeof data === 'number' ? data : 0;
-}
-
 /** Dev reset: removes this account's own recorded days. */
 export async function clearMyDailyLinesRemote(): Promise<number> {
   const { data, error } = await supabase.rpc('clear_my_daily_lines');

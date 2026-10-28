@@ -8,7 +8,7 @@ import { BANK_IS_LOADED, DAILY_LINES, allLines, dailyLineById } from '@/lib/dail
 import { clearLeans, eligibleLines, pickDailyLine, type LineDay } from '@/lib/daily-line/pick';
 import { clearMyDailyLinesRemote } from '@/lib/daily-line/pool-store';
 import { clearDailyLineState, loadDailyLineState } from '@/lib/daily-line/state';
-import { loadAiLineLog, pullDailyLines, type AiLineLog } from '@/lib/daily-line/sync';
+import { pullDailyLines } from '@/lib/daily-line/sync';
 import { PRE_LAUNCH_DEV } from '@/lib/dev-mode';
 import { addDaysYmd, localYmd } from '@/lib/local-date';
 import { controlBorderColor } from '@/lib/theme/chrome';
@@ -27,16 +27,13 @@ interface Preview {
 
 /**
  * Dev Tools Hub: see what the daily line picker will do for this account
- * without waiting a week, and see exactly what the model wrote the last time
- * an insight was loaded — which lines were kept and which were thrown out, and
- * why. The preview is read-only. "Clear" wipes this account's line history on
+ * without waiting a week. The preview is read-only. "Clear" wipes this account's line history on
  * this phone and in the database (own rows only) and takes two taps.
  */
 export function DailyLineDev({ userId, timeZone }: { userId: string; timeZone: string }) {
   const theme = useTheme();
   const [rows, setRows] = useState<Preview[] | null>(null);
   const [summary, setSummary] = useState('');
-  const [aiLog, setAiLog] = useState<AiLineLog | null>(null);
   const [armed, setArmed] = useState(false);
   const [note, setNote] = useState<string | null>(null);
 
@@ -48,11 +45,7 @@ export function DailyLineDev({ userId, timeZone }: { userId: string; timeZone: s
         () => true,
         () => false,
       );
-      const [tracks, state, log] = await Promise.all([
-        fetchTraitTracks(userId),
-        loadDailyLineState(userId),
-        loadAiLineLog(userId),
-      ]);
+      const [tracks, state] = await Promise.all([fetchTraitTracks(userId), loadDailyLineState(userId)]);
       const leans = clearLeans(tracks);
       const history: LineDay[] = [
         ...state.days,
@@ -76,7 +69,6 @@ export function DailyLineDev({ userId, timeZone }: { userId: string; timeZone: s
       }
       const all = allLines();
       setRows(out);
-      setAiLog(log);
       setSummary(
         [
           BANK_IS_LOADED ? `${DAILY_LINES.length} picked lines shipped` : `${DAILY_LINES.length} first-draft lines shipped (no winners loaded yet)`,
@@ -114,29 +106,6 @@ export function DailyLineDev({ userId, timeZone }: { userId: string; timeZone: s
           <ThemedText type="small">{row.text}</ThemedText>
         </View>
       ))}
-
-      <ThemedText type="smallBold">Last AI top-up</ThemedText>
-      {aiLog ? (
-        <View style={styles.row}>
-          <ThemedText type="code" themeColor="textSecondary">
-            {aiLog.at.slice(0, 16).replace('T', ' ')} · kept {aiLog.kept.length} · dropped {aiLog.dropped.length}
-          </ThemedText>
-          {aiLog.kept.map((line) => (
-            <ThemedText key={line.text} type="small">
-              ✓ {line.text} ({line.tag})
-            </ThemedText>
-          ))}
-          {aiLog.dropped.map((line) => (
-            <ThemedText key={line.text} type="small" themeColor="textSecondary">
-              ✗ {line.text} — {line.reason}
-            </ThemedText>
-          ))}
-        </View>
-      ) : (
-        <ThemedText type="small" themeColor="textSecondary">
-          None yet. Load an insight on Home; the same AI call writes a few lines for this account.
-        </ThemedText>
-      )}
 
       {/* "Make him say something" moved to the Hub's Mini guy panel (2026-10-03). */}
       <Pressable
