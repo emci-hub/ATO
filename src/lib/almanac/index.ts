@@ -1,0 +1,140 @@
+/**
+ * Almanac engine (ATO-BUILD PHASE-11a): one daily card per surface, chosen on
+ * the phone from hand-written copy. No network, no model call.
+ *
+ *   almanac.today(surface, ctx, { bank, seen })   pure: same input → same card
+ *   almanac.loadToday(surface, ctx, store)        today's cached card, else today() + save
+ *
+ * Surfaces: home.pick, home.line, insights.deck, insights.try, push, you.week,
+ * you.month, you.year. Nothing calls this yet: PHASE-11e wires the surfaces and
+ * PHASE-11c replaces the empty bank with the reviewed one.
+ */
+import {
+  cacheKey,
+  loadTodayCache,
+  readCached,
+  saveTodayCache,
+  writeCached,
+  type CachedResult,
+} from './cache';
+import { addSeen, loadSeen, saveSeen, seenFor } from './seen-store';
+import { basePickIndex, sharedSeed } from './seed';
+import { candidatesFor, drawFromTop, selectCard } from './select';
+import type {
+  AlmanacCard,
+  AlmanacContext,
+  AlmanacResult,
+  AlmanacSurface,
+  KeyValueStore,
+  SeenEntry,
+} from './types';
+
+export * from './types';
+export { almanacYmd, basePickIndex, personalSeed } from './seed';
+export { ALMANAC_MAX_CHARS, ALMANAC_SLOTS, fillCard } from './slots';
+export { ALMANAC_SEEN_CAP, ALMANAC_SEEN_KEY } from './seen-store';
+export { ALMANAC_TODAY_KEY, cacheKey } from './cache';
+
+/** Bump whenever the bank's cards change (PHASE-11c's loader writes it). */
+export const ALMANAC_BANK_VERSION = 0;
+/** Empty until PHASE-11c lands the reviewed bank. */
+export const ALMANAC_BANK: readonly AlmanacCard[] = [];
+
+export interface TodayOptions {
+  bank?: readonly AlmanacCard[];
+  /** Seen entries for this surface. */
+  seen?: readonly SeenEntry[];
+}
+
+/**
+ * Today's card for a surface, or null when nothing fits.
+ * `home.pick` is the existing global rotation unless a reviewed event Pick is
+ * live today; event Picks use a shared seed so everyone gets the same one.
+ * PLACEHOLDER for event Picks: PHASE-11d replaces this draw with the server's
+ * event-override lookup (ymd → pick_id, red team H3/M5), because the server's
+ * `answer_daily_pick` checks that row. Event Pick cards must not carry axes or
+ * minDataDays (that would split readers), and the card type gains Pick options there.
+ */
+export function today(surface: AlmanacSurface, ctx: AlmanacContext, opts: TodayOptions = {}): AlmanacResult | null {
+  const bank = opts.bank ?? ALMANAC_BANK;
+  if (surface === 'home.pick') {
+    const eventPicks = candidatesFor('home.pick', ctx, bank).filter((c) => !!c.card.event);
+    const ranked = eventPicks
+      .map((candidate) => ({ candidate, score: 1 }))
+      .sort((a, b) => (a.candidate.card.id < b.candidate.card.id ? -1 : 1));
+    const chosen = drawFromTop(ranked, sharedSeed(ctx.ymd, surface));
+    if (chosen) {
+      return { surface, source: 'card', card: chosen.card, text: chosen.filled.text, usedAlt: chosen.filled.usedAlt };
+    }
+    return { surface, source: 'rotation', pickIndex: basePickIndex(ctx.ymd) };
+  }
+  const chosen = selectCard(surface, ctx, bank, opts.seen ?? []);
+  if (!chosen) return null;
+  return { surface, source: 'card', card: chosen.card, text: chosen.filled.text, usedAlt: chosen.filled.usedAlt };
+}
+
+function toCached(result: AlmanacResult): CachedResult {
+  return result.source === 'card'
+    ? { source: 'card', cardId: result.card.id, text: result.text, usedAlt: result.usedAlt }
+    : { source: 'rotation', pickIndex: result.pickIndex };
+}
+
+function fromCached(
+  surface: AlmanacSurface,
+  cached: CachedResult,
+  bank: readonly AlmanacCard[],
+): AlmanacResult | null {
+  if (cached.source === 'rotation') {
+    return surface === 'home.pick' ? { surface, source: 'rotation', pickIndex: cached.pickIndex } : null;
+  }
+  const card = bank.find((c) => c.id === cached.cardId);
+  return card ? { surface, source: 'card', card, text: cached.text, usedAlt: cached.usedAlt } : null;
+}
+
+// Reads and writes run one at a time, so two surfaces loading together never
+// drop each other's seen entry.
+let queue: Promise<unknown> = Promise.resolve();
+function inQueue<T>(work: () => Promise<T>): Promise<T> {
+  const next = queue.then(work, work);
+  queue = next.catch(() => undefined);
+  return next;
+}
+
+export interface LoadTodayOptions {
+  bank?: readonly AlmanacCard[];
+  bankVersion?: number;
+}
+
+/**
+ * Today's card, from the cache when present; otherwise chosen now and saved.
+ * A card counts as seen when chosen (11e/11f decide if "shown" should count instead).
+ * An OTA that bumps bankVersion mid-day misses the cache by design, so that
+ * day's card may change once; the same bankVersion never swaps it.
+ */
+export function loadToday(
+  surface: AlmanacSurface,
+  ctx: AlmanacContext,
+  store: KeyValueStore,
+  opts: LoadTodayOptions = {},
+): Promise<AlmanacResult | null> {
+  const bank = opts.bank ?? ALMANAC_BANK;
+  const bankVersion = opts.bankVersion ?? ALMANAC_BANK_VERSION;
+  return inQueue(async () => {
+    const cache = await loadTodayCache(store, ctx.userId);
+    const hit = readCached(cache, ctx.ymd, surface, bankVersion);
+    if (hit) {
+      const result = fromCached(surface, hit, bank);
+      if (result) return result;
+    }
+    const seenState = await loadSeen(store, ctx.userId);
+    const result = today(surface, ctx, { bank, seen: seenFor(seenState, surface) });
+    if (!result) return null;
+    await saveTodayCache(store, writeCached(cache, { ymd: ctx.ymd, surface, bankVersion, result: toCached(result) }));
+    if (result.source === 'card' && surface !== 'home.pick') {
+      await saveSeen(store, addSeen(seenState, surface, { id: result.card.id, ymd: ctx.ymd }));
+    }
+    return result;
+  });
+}
+
+export const almanac = { today, loadToday, cacheKey } as const;

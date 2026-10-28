@@ -265,6 +265,7 @@
     "check:polish": "tsx ./scripts/polish-check.ts",
     "check:motion": "tsx ./scripts/motion-check.ts",
     "check:home-path": "tsx ./scripts/home-path-check.ts",
+    "check:almanac": "tsx ./scripts/almanac-check.ts",
     "check:insights-g3": "tsx ./scripts/insights-g3-check.ts",
     "check:copy-flags": "tsx ./scripts/copy-flags-check.ts",
     "check:daily-pick": "tsx ./scripts/daily-pick-check.ts",

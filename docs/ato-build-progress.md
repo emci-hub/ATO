@@ -21,7 +21,7 @@ Stage C Gamify screens
 - [x] PHASE-10 Legends (G4)
 - [x] PHASE-11 Cleanup
 Stage C2 Almanac
-- [ ] PHASE-11a Almanac engine core
+- [x] PHASE-11a Almanac engine core
 - [ ] PHASE-11b Calendar, locale, ramp, arcs
 - [ ] PHASE-11c Almanac content pipeline + MVP bank  ⚑ copy OK
 - [ ] PHASE-11d Pick 368 + community counter  ⚑ wave117
@@ -79,5 +79,10 @@ Stage E Polish & release
 - Lessons: the addendum's baseline was stale (Today's path and Insights flip already shipped, mockups folder missing, wave116 taken); auditing the code first changed 6 of its 9 phases.
 - 2026-10-27 PHASE-11 (small build): PR 107 (Almanac plan) squash-merged into ato-build; branch `phase-11-cleanup` cut from it. Investigator audit: steps 1 and 2 already done (no `/week` link in `src`, content is in `src/content/{copy,legal,voice}`, no importer on the old paths); step 3 had NO live caller (`keepAiLines` had zero callers; only the Dev panel read the log). Removed the dead AI top-up path: `keepAiLines`, `DAILY_LINE_AI_LOG_KEY`, `AiLineLog`, `loadAiLineLog` (sync.ts), `addToLinePool` (pool-store.ts), `appendPoolCache` (state.ts) and the "Last AI top-up" block in `daily-line-dev.tsx`. Kept: `LineSource 'ai'` (existing server rows still load), `registerPoolLines` rule gate, authored lines and ids, wave77 SQL. The old key `ato.daily-line-ai-log.v1` is wiped on sign-out by the deny-by-default rule; now pinned in `local-account-data-check.ts`. `daily-line-check.ts` assertion repointed to stricter `doesNotMatch`. Reworded the `/week` comment in `checks.ts`. Gate: typecheck + lint (0 errors) + 198 offline checks green. NOT verified: the Dev Tools Hub panel on a phone.
 - Lessons: the plan text was stale for steps 1 and 2 again; the audit first kept this tiny. The `use-today-line.ts` and `local-account-data.ts` files named in step 3 needed no change.
+- 2026-10-27 PHASE-11a (real build): PR 108 was already merged; branch `phase-11a-almanac-engine` cut from ato-build @ ef677229. New: `src/lib/almanac/{types,seed,select,slots,seen-store,cache,index}.ts` (pure; reuses `fnv1a`/`lineKey` from daily-line, `clearLeans` leans, `pickIndexForYmd`, `streakWithRest`, `AXIS_POLE_NAME`, `matchingFrameworkTerms`), `scripts/almanac-check.ts` + `check:almanac`. Edited: `package.json`, `scripts/local-account-data-check.ts` (2 sample keys). Gate: typecheck + lint (0 errors) + 199 offline checks green. NOT verified: nothing on screen (no surface calls it until 11e).
+- Deviations: `local-account-data.ts` not edited (deny-by-default already wipes `ato.almanac.*`); storage is injected (`KeyValueStore`), so the lib imports no AsyncStorage and holds no in-memory cache; the shipped bank is empty (`ALMANAC_BANK_VERSION = 0`), the fixture bank lives in the check.
+- Selection: score 1 +3 strong lean (strength ≥ 0.2) +2 pair +1 axis unseen 7 d, × weight × layerWeight; zero scores dropped, then repeat window = min(pool, 90) − 1 days (least recently seen fallback), top 8 with seeded ties, draw u^(1/score).
+- Reviewer PASS; fixed its Mediums (window sized after zero-score removal; ties by seed, not id) and documented the third: event Picks are a placeholder that 11d replaces with the server override lookup (and adds Pick options to the card type).
+- For later: bankVersion bump mid-day swaps that day's card once (by design); a card counts as seen when chosen (11e/11f pick the policy); `push` and `home.line` share kinds with separate seen-sets, so 11f may want to avoid the same text twice in a day.
 
 Blocked on: (none)
