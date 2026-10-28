@@ -93,6 +93,7 @@ for (const wiped of [
   'ato.daily-line-ai-log.v1', // PHASE-11: writer removed; phones that already hold it are cleaned on sign-out
   'ato.almanac.seen.v1', // PHASE-11a: Almanac seen-set (per account)
   'ato.almanac.today.v1', // PHASE-11a: today's Almanac card per surface (per account)
+  'ato.almanac.locale.v1', // PHASE-11b: stored hemisphere (wiped on sign-out, worked out again for the next account)
   'ato.questions.answeredOption.full-profile:abc.v1',
   'ato.questions.categoryPage.full-profile:abc.v1',
   'ato.profile.fullUnlock.seen.abc.v1',
