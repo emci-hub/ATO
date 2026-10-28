@@ -62,6 +62,7 @@ export function TraitConstellation({
   changedAxes,
   ghostTracks,
   forceReduceMotion = false,
+  accent,
 }: {
   tracks: readonly TraitTrack[];
   size: number;
@@ -71,6 +72,8 @@ export function TraitConstellation({
   /** Last week's tracks: the figure morphs from these to `tracks`. */
   ghostTracks?: readonly TraitTrack[];
   forceReduceMotion?: boolean;
+  /** Replaces the mode's accent (the Almanac's season tint on Home). */
+  accent?: string;
 }) {
   const model = useMemo(() => constellationModel(tracks, size, variant), [tracks, size, variant]);
   if (model.count === 0) {
@@ -85,6 +88,7 @@ export function TraitConstellation({
       changedAxes={changedAxes}
       ghostTracks={ghostTracks}
       forceReduceMotion={forceReduceMotion}
+      accent={accent}
     />
   );
 }
@@ -114,6 +118,7 @@ function Sky({
   changedAxes,
   ghostTracks,
   forceReduceMotion,
+  accent: accentOverride,
 }: {
   model: ConstellationModel;
   size: number;
@@ -121,8 +126,10 @@ function Sky({
   changedAxes?: readonly TraitAxis[];
   ghostTracks?: readonly TraitTrack[];
   forceReduceMotion: boolean;
+  accent?: string;
 }) {
   const theme = useTheme();
+  const accent = accentOverride ?? theme.accent;
   const { rm, style: breath } = useBreath(forceReduceMotion);
   const active = useMotionActive();
   const motion = VARIANT_MOTION[variant];
@@ -218,7 +225,7 @@ function Sky({
               <AnimatedPath
                 animatedProps={lineProps}
                 fill="none"
-                stroke={theme.accent}
+                stroke={accent}
                 strokeOpacity={0.55}
                 strokeWidth={variant === 'mini' ? 1 : 1.5}
                 strokeLinejoin="round"
@@ -241,7 +248,7 @@ function Sky({
                   halo={motion.halos && anim}
                   bright={motion.live && changed.has(star.axis)}
                   active={active}
-                  accent={theme.accent}
+                  accent={accent}
                 />
               );
             })}

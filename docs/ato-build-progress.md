@@ -27,8 +27,8 @@ Stage C2 Almanac
 - [x] PHASE-11d Pick 368 + community counter  ⚑ wave117 (built; emci applies wave117)
 - [x] PHASE-11e Almanac surfaces: Home, Insights, You
 - [x] PHASE-11f Seasonal settings + morning push copy
-- [ ] PHASE-11g Art: Almanac decor, stickers, badges (PixelLab)  ⚑ art OK
-- [ ] PHASE-11h Theming integration
+- [x] PHASE-11g Art: Almanac decor, stickers, badges (PixelLab)  ⚑ art OK
+- [x] PHASE-11h Theming integration
 Stage D Quests
 - [ ] PHASE-12 Quests content model + validator
 - [ ] PHASE-13 Scoring + sims
@@ -110,4 +110,7 @@ Stage E Polish & release
 
 - 2026-10-28 emci decided: the hemisphere picker stays live when the Seasonal-content master switch is off (`seasonal-prefs-fold.tsx`: only the event and birthday rows grey out). Typecheck + lint green; no check pinned the old behaviour. Not seen on a phone.
 
-Blocked on: nothing for 11g (the snow and firework loops were redone chunky on emci's call: 95.3 and 97.5; the rubric 22/28 is still my estimate by eye)
+- 2026-10-28 PHASE-11h (Almanac theming on Home), same branch, local commit, NOT pushed, no OTA. Mini red-team vs `almanac-redteam.md` §2 (§4 is only the phase table): (1) H5/D2: Home's hero is the 260 pt SVG constellation, so it gets a tint + decor + one sticker, no pixel backdrop; (2) H4: intensity is always `theme.display.intensity` (already slewed), no second ramp; (3) M13: ONE sprite-sheet layer on ONE `useFrameCallback`, 1 animated node (cap 12), Home 33 + 3 + 1 = 37 of 60; (4) C5/M12/M15: art through `ART.*` and `art:sync` only, objects only for Diwali/Eid/LNY, no new local key; (5) risk: `motion-check` pins `home-hero.tsx` and the `<HomeHero …>` line, so its Home pin changed with the new `day` prop. Built: `lib/almanac/look.ts` (pure: palettes, event to decor/sprig/loop map, `lookOf`, `lerpColor`, ring `round(12 × intensity)`, sprigs at 0.1 to 0.4, micro sticker else the month glyph), `components/almanac/{season-theme,decor-layer,edge-sprigs}.tsx`, `home-hero.tsx` (wrap only; `day` prop; decorates only a real sky and only this account's day), `trait-constellation.tsx` (optional `accent` prop), `index.tsx` (passes `almanacDay`), `scripts/almanac-art-check.ts` + `check:almanac-art`. Reduce Motion: half the ring, a half-strength layer at a quarter of the speed on every 3rd frame, the hero still breathes (`Appear breathe`). Art: `art:sync` flipped 51 Almanac assets to in-use (74.6 KB for all 87, cap 3 MB). Gate: typecheck + lint + 202 offline checks green. Reviewer FAIL then fixed once: the new-user empty card was boxed in a 260 pt square under the month sticker; the particle loop restarted on every render; the constellation remounted when the day arrived; iOS accessibility hide pinned; a day from another account is ignored. Samples: contact sheet of the real art + `look.ts` maths (stand-in dots for the constellation, not the app render), 4 days x 5 modes, normal and Reduce Motion, in the session scratchpad. NOT seen on a phone or in the app.
+- Open for emci (11h): (a) 36 Almanac assets stay unused on purpose (21 badges, 12 deck emblems, 3 card frames: they belong to the You / Insights surfaces, not Home theming), so "nothing unused" in `check:almanac-art` allows exactly those three sets; (b) with the Seasonal master switch off Home still shows the season tint and a faint month glyph (events and micro stickers go away): keep or drop; (c) season/event colours are fixed hex in every mode (not mode tokens): look at yellows in Soft and Zen; (d) `sticker.one-year-ago` is a plain heart and reads like Valentine's on its day.
+
+Blocked on: nothing for 11h (needs emci's look at the samples and a phone check)

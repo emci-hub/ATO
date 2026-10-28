@@ -412,7 +412,7 @@ export default function HomeScreen() {
           {/* The hero (PHASE-08): the constellation, once THIS account's tracks have
               loaded, like You. No tracks = the constellation's own empty card. */}
           {me && bootstrapReady && !bootstrapFailed && tracksUserId === me.id ? (
-            <HomeHero userId={me.id} tracks={tracks} />
+            <HomeHero userId={me.id} tracks={tracks} day={almanacDay} />
           ) : null}
 
           {almanacDay ? <TeaserLine day={almanacDay} /> : null}

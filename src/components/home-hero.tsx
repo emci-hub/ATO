@@ -2,10 +2,12 @@ import { useFocusEffect } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
+import { SeasonTheme } from '@/components/almanac/season-theme';
 import { Appear } from '@/components/motion';
 import { ThemedText } from '@/components/themed-text';
 import { TraitConstellation } from '@/components/trait-constellation';
 import { Spacing } from '@/constants/theme';
+import type { AlmanacDay } from '@/hooks/use-almanac-day';
 import { axisDiff, brightenedLine, type AxisValues } from '@/lib/home-path';
 import { loadLastSeen, saveLastSeen } from '@/lib/home-path-store';
 import type { TraitTrack } from '@/lib/trait-stability';
@@ -21,7 +23,16 @@ export const HOME_HERO_SIZE = 260;
  * constellation's own "light your first stars" card. Reads and writes only
  * the phone's storage; no model call.
  */
-export function HomeHero({ userId, tracks }: { userId: string; tracks: readonly TraitTrack[] }) {
+export function HomeHero({
+  userId,
+  tracks,
+  day = null,
+}: {
+  userId: string;
+  tracks: readonly TraitTrack[];
+  /** Today's Almanac day (PHASE-11h): tints the constellation and adds the decor. */
+  day?: AlmanacDay | null;
+}) {
   // undefined = still loading, null = no previous visit.
   const [baseline, setBaseline] = useState<AxisValues | null | undefined>(undefined);
   const latest = useRef(tracks);
@@ -46,11 +57,18 @@ export function HomeHero({ userId, tracks }: { userId: string; tracks: readonly 
 
   const changed = useMemo(() => (baseline ? axisDiff(baseline, tracks) : []), [baseline, tracks]);
   const line = brightenedLine(changed);
+  // Decorate only a real sky, and only with THIS account's day (no tracks = the small
+  // "light your first stars" card, which keeps its own size).
+  const decorate = tracks.length > 0 && day?.ctx.userId === userId;
 
   return (
     <Appear breathe>
       <View style={styles.wrap}>
-        <TraitConstellation tracks={tracks} size={HOME_HERO_SIZE} variant="hero" changedAxes={changed} />
+        <SeasonTheme day={decorate ? day : null} size={HOME_HERO_SIZE}>
+          {(accent) => (
+            <TraitConstellation tracks={tracks} size={HOME_HERO_SIZE} variant="hero" changedAxes={changed} accent={accent} />
+          )}
+        </SeasonTheme>
         {line ? (
           <ThemedText type="smallBold" accessibilityLiveRegion="polite" style={styles.line}>
             {line}

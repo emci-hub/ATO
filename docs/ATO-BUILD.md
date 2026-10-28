@@ -53,8 +53,8 @@ Stage C2 Almanac
 - [x] PHASE-11d Pick 368 + community counter  ⚑ wave117 (built; emci applies wave117)
 - [x] PHASE-11e Almanac surfaces: Home, Insights, You
 - [x] PHASE-11f Seasonal settings + morning push copy
-- [ ] PHASE-11g Art: Almanac decor, stickers, badges (PixelLab)  ⚑ art OK
-- [ ] PHASE-11h Theming integration
+- [x] PHASE-11g Art: Almanac decor, stickers, badges (PixelLab)  ⚑ art OK
+- [x] PHASE-11h Theming integration
 Stage D Quests
 - [ ] PHASE-12 Quests content model + validator
 - [ ] PHASE-13 Scoring + sims

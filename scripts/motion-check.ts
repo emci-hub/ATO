@@ -224,7 +224,7 @@ assert.match(
   'Home renders one hero constellation inside Appear breathe',
 );
 assert.equal((homeHero.match(/<TraitConstellation\b/g) ?? []).length, 1, 'one constellation on Home (35 nodes of the 60 cap)');
-assert.match(read('src/app/(tabs)/index.tsx'), /<HomeHero userId=\{me\.id\} tracks=\{tracks\} \/>/, 'Home mounts the hero');
+assert.match(read('src/app/(tabs)/index.tsx'), /<HomeHero userId=\{me\.id\} tracks=\{tracks\} day=\{almanacDay\} \/>/, 'Home mounts the hero (with today\'s Almanac day, PHASE-11h)');
 ok('Home shows the hero constellation once, inside Appear breathe');
 
 // ── Theme lab previews every primitive ───────────────────────────────────────
