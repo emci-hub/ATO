@@ -77,6 +77,41 @@ export const BAR_FILL = {
   knobSpring: { damping: 9, stiffness: 160 },
 } as const;
 
+/** Legends hall rings (PHASE-10): the stroke draws over 1.2 s, rings stagger by 120 ms. */
+export const HALL_RING = {
+  drawMs: 1200,
+  staggerMs: 120,
+} as const;
+
+/** Legends locked frames: a grey shimmer sweeps every 2.2 s, linear. */
+export const SHIMMER = {
+  durationMs: 2200,
+} as const;
+
+/**
+ * Legends holo reveal (PHASE-10): the card turns 0→90°, swaps to the art, →0°
+ * and grows to 1.04 over 1 s. That is over BLOCKING_MAX_MS (emci OK'd 2026-10-27):
+ * it only locks the revealing frames, never the screen or the tab bar.
+ */
+export const HOLO = {
+  totalMs: 1000,
+  perspective: 900,
+  scaleTo: 1.04,
+  /** Reduce Motion: a cross-fade (out, then in), 300 ms in total. */
+  reducedFadeMs: 300,
+} as const;
+
+/** The "MET ✦" stamp lands 1 s after the reveal starts. */
+export const STAMP = {
+  durationMs: 450,
+  delayMs: 1000,
+  scaleFrom: 2.2,
+  rotateFrom: -14,
+  rotateTo: -8,
+  /** Reduce Motion: the stamp only fades in. */
+  reducedFadeMs: 200,
+} as const;
+
 export const LIVING_BG = {
   blobAMs: 9000,
   blobBMs: 11000,
