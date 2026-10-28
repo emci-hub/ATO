@@ -16,10 +16,14 @@ import { AXIS_POLE_NAME } from '../src/lib/axis-poles';
 import { ALL_IDEAS } from '../src/lib/insight-bank';
 import {
   INSIGHT_COLLECTION_KEY,
+  INSIGHT_COLLECTION_KEY_V1,
   INSIGHT_COLLECTION_TOTAL,
   addToCollection,
+  addToDeck,
   collectionPercent,
+  deckKey,
   parseCollection,
+  parseCollectionState,
 } from '../src/lib/insight-collection';
 import { BAND_MAX_HALF, BAND_MIN_HALF, SPECTRUM_COUNT, bandHalfWidth, spectrumRows } from '../src/lib/insights-spectrum';
 import { TYPEWRITER_STEPS, keyWordRange, revealCount, splitAtKeyWord } from '../src/lib/insights-typewriter';
@@ -99,7 +103,8 @@ assert.equal(keyWordRange('Go on, be you'), null, 'no word of 5+ letters: no glo
 ok('typewriter: 28 whole-character steps, never past the end; the longest word is the glowing key word');
 
 // ── Insights seen ────────────────────────────────────────────────────────────
-assert.equal(INSIGHT_COLLECTION_KEY, 'ato.insights.collection.v1');
+assert.equal(INSIGHT_COLLECTION_KEY, 'ato.insights.collection.v2');
+assert.equal(INSIGHT_COLLECTION_KEY_V1, 'ato.insights.collection.v1', 'v1 is read once for the migration');
 assert.notEqual(INSIGHT_COLLECTION_KEY, 'ato.insights.seen.v1', 'Home keeps its own key');
 assert.ok(INSIGHT_COLLECTION_KEY.startsWith('ato.'), 'wiped by clearLocalAccountData (deny-by-default)');
 assert.equal(INSIGHT_COLLECTION_TOTAL, ALL_IDEAS.length);
@@ -117,6 +122,26 @@ assert.equal(collectionPercent(0, 448), 0);
 assert.equal(collectionPercent(224, 448), 50);
 assert.equal(collectionPercent(9999, 448), 100);
 assert.equal(collectionPercent(1, 0), 0, 'no total: 0, not NaN');
+// PHASE-11e: v2 keeps every v1 id (the v1 shape reads as the same ids), and adds per-event decks.
+const v1Raw = JSON.stringify({ userId: 'u', ids: ['ftw_openness_h_01', 'ftw_extraversion_l_03'] });
+assert.deepEqual(parseCollectionState(v1Raw, 'u'), { ids: ['ftw_openness_h_01', 'ftw_extraversion_l_03'], decks: {} }, 'v1 ids survive the migration');
+const v2Raw = JSON.stringify({ v: 2, userId: 'u', ids: ['ftw_a'], decks: { 'halloween:2026': ['alm_fact_halloween_01', 3, 'alm_fact_halloween_01'] } });
+assert.deepEqual(parseCollectionState(v2Raw, 'u'), { ids: ['ftw_a'], decks: { 'halloween:2026': ['alm_fact_halloween_01'] } }, 'decks dedupe and drop non-strings');
+assert.deepEqual(parseCollectionState(v2Raw, 'other'), { ids: [], decks: {} }, "another account's decks are never read");
+assert.deepEqual(parseCollectionState(JSON.stringify({ v: 2, userId: 'u', ids: [], decks: [1] }), 'u').decks, {}, 'a non-object decks value is ignored');
+assert.equal(deckKey('halloween', 2026), 'halloween:2026');
+{
+  const first = addToDeck({}, deckKey('halloween', 2026), 'c1');
+  assert.deepEqual(first, { decks: { 'halloween:2026': ['c1'] }, added: true });
+  assert.equal(addToDeck(first.decks, 'halloween:2026', 'c1').added, false, 'a deck card counts once');
+  const nextYear = addToDeck(first.decks, deckKey('halloween', 2027), 'c1');
+  assert.equal(nextYear.added, true, 'a missed or seen card returns next year: a new year is a new deck');
+}
+{
+  const store = read('src/lib/insight-collection-store.ts');
+  assert.match(store, /INSIGHT_COLLECTION_KEY_V1/, 'the store reads v1 once');
+  assert.doesNotMatch(store, /setItem\(INSIGHT_COLLECTION_KEY_V1/, 'v1 is never written again');
+}
 const homeStore = read('src/lib/home-path-store.ts');
 assert.match(homeStore, /INSIGHTS_SEEN_KEY = 'ato\.insights\.seen\.v1'/);
 assert.match(homeStore, /readJson<\{ userId: string; ymd: string \}>\(INSIGHTS_SEEN_KEY\)/, "Home's seen shape is unchanged");

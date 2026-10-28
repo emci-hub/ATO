@@ -3,6 +3,10 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { MonthShift } from '@/components/almanac/month-shift';
+import { SeasonalBadges } from '@/components/almanac/seasonal-badges';
+import { WeekRecap } from '@/components/almanac/week-recap';
+import { YearRecap } from '@/components/almanac/year-recap';
 import { AtoTokenCard } from '@/components/ato-token-card';
 import { CategoriesFold } from '@/components/categories-fold';
 import { CategoryDeepDiveCard } from '@/components/category-deep-dive-card';
@@ -21,7 +25,10 @@ import { ThemedView } from '@/components/themed-view';
 import { YourWeekCard } from '@/components/your-week-card';
 import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
 import { useSession } from '@/hooks/use-session';
+import { almanacYmd } from '@/lib/almanac';
+import { useAlmanacDay } from '@/hooks/use-almanac-day';
 import { useCircleContext } from '@/lib/circle-context';
+import { loadDailyLineState } from '@/lib/daily-line/state';
 import { atoTokenBalanceOf } from '@/lib/ato-tokens';
 import { isFullProfileDone } from '@/lib/full-profile-gate';
 import { fetchHomeBootstrap } from '@/lib/home-bootstrap';
@@ -128,6 +135,28 @@ export default function YouScreen() {
     scrollToSection();
   };
   const tracksOwned = !!userId && tracksUserId === userId;
+
+  // The Almanac's day (PHASE-11e): the Sunday recap, the monthly shift, the year recap.
+  const [lineDays, setLineDays] = useState(0);
+  useFocusEffect(
+    useCallback(() => {
+      if (!userId) return;
+      let live = true;
+      void loadDailyLineState(userId)
+        .then((state) => live && setLineDays(state.days.length))
+        .catch(() => undefined);
+      return () => {
+        live = false;
+      };
+    }, [userId]),
+  );
+  const almanacDay = useAlmanacDay({
+    userId,
+    me,
+    ymd: me ? almanacYmd(new Date(), timeZone) : undefined,
+    tracks: tracksOwned ? tracks : [],
+    dataDays: lineDays,
+  });
 
   // Refetch on FOCUS: tabs stay mounted, so answering questions elsewhere would
   // otherwise leave this card stale until the app restarted.
@@ -237,6 +266,16 @@ export default function YouScreen() {
             <View onLayout={markSection('tokens')}>
               <AtoTokenCard me={me} />
             </View>
+          ) : null}
+
+          {/* Almanac recaps: Sundays, monthly, and from December 1 the year. Each hides when it has nothing. */}
+          {me && tracksOwned ? (
+            <>
+              <WeekRecap day={almanacDay} me={me} />
+              <MonthShift day={almanacDay} me={me} />
+              <YearRecap day={almanacDay} me={me} />
+              <SeasonalBadges userId={me.id} />
+            </>
           ) : null}
 
           {/* The last seven days in three counts. Local + one read, no AI. */}

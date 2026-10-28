@@ -19,8 +19,10 @@ import {
 } from './cache';
 import { GENERATED_BANK_VERSION, GENERATED_CARDS } from './bank.generated';
 import { addSeen, loadSeen, saveSeen, seenFor } from './seen-store';
-import { basePickIndex, sharedSeed } from './seed';
-import { candidatesFor, drawFromTop, selectCard } from './select';
+import { eventPickForYmd } from '@/lib/daily-pick/bank';
+
+import { basePickIndex } from './seed';
+import { selectCard } from './select';
 import type {
   AlmanacCard,
   AlmanacContext,
@@ -64,14 +66,12 @@ export interface TodayOptions {
 export function today(surface: AlmanacSurface, ctx: AlmanacContext, opts: TodayOptions = {}): AlmanacResult | null {
   const bank = opts.bank ?? ALMANAC_BANK;
   if (surface === 'home.pick') {
-    const eventPicks = candidatesFor('home.pick', ctx, bank).filter((c) => !!c.card.event);
-    const ranked = eventPicks
-      .map((candidate) => ({ candidate, score: 1 }))
-      .sort((a, b) => (a.candidate.card.id < b.candidate.card.id ? -1 : 1));
-    const chosen = drawFromTop(ranked, sharedSeed(ctx.ymd, surface));
-    if (chosen) {
-      return { surface, source: 'card', card: chosen.card, text: chosen.filled.text, usedAlt: chosen.filled.usedAlt };
-    }
+    // PHASE-11e: a peak day names its Pick in the override table (daily-pick/bank,
+    // the same rows as wave117), so the phone and the server agree on which one.
+    // The card only shows it once the server confirms (today-pick-card).
+    const event = eventPickForYmd(ctx.ymd);
+    const card = event ? bank.find((c) => c.id === event.cardId && c.kind === 'pick') : undefined;
+    if (event && card) return { surface, source: 'card', card, text: event.prompt, usedAlt: false };
     return { surface, source: 'rotation', pickIndex: basePickIndex(ctx.ymd) };
   }
   const chosen = selectCard(surface, ctx, bank, opts.seen ?? []);
