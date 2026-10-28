@@ -122,7 +122,7 @@ export function SeasonalPrefsFold() {
         onPress={() => void update({ seasonal: !on })}
       />
 
-      <View style={!on ? styles.greyed : undefined}>
+      <View>
         <View style={styles.row}>
           <View style={styles.rowText}>
             <ThemedText type="smallBold">Hemisphere</ThemedText>
@@ -139,8 +139,7 @@ export function SeasonalPrefsFold() {
                 key={option.value}
                 accessibilityRole="radio"
                 accessibilityLabel={option.label}
-                accessibilityState={{ selected, disabled: !on }}
-                disabled={!on}
+                accessibilityState={{ selected }}
                 onPress={() => {
                   setHemisphere(option.value);
                   void setAlmanacHemisphere(AsyncStorage, option.value, zone).then(() => {
@@ -158,6 +157,7 @@ export function SeasonalPrefsFold() {
           })}
         </View>
 
+        <View style={!on ? styles.greyed : undefined}>
         {CULTURAL.filter((def) => !def.onlyRegions || (region && def.onlyRegions.includes(region))).map((def) => (
           <SwitchRow
             key={def.id}
@@ -182,6 +182,7 @@ export function SeasonalPrefsFold() {
             onPress={() => void update({ birthday: !shown.birthday })}
           />
         ) : null}
+        </View>
       </View>
     </SettingsFold>
   );
