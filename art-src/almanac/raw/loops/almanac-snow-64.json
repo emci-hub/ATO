@@ -1,7 +1,7 @@
 {
  "frames": [
   {
-   "filename": "almanac-snow-64 0.png",
+   "filename": "almanac-snow-64-chunky-v2 0.png",
    "frame": {
     "x": 0,
     "y": 0,
@@ -21,13 +21,13 @@
     "h": 64
    },
    "pivot": {
-    "x": 0.796875,
-    "y": 0.796875
+    "x": 1.5625,
+    "y": 1.515625
    },
    "duration": 83
   },
   {
-   "filename": "almanac-snow-64 1.png",
+   "filename": "almanac-snow-64-chunky-v2 1.png",
    "frame": {
     "x": 64,
     "y": 0,
@@ -47,13 +47,13 @@
     "h": 64
    },
    "pivot": {
-    "x": 0.796875,
-    "y": 0.796875
+    "x": 1.5625,
+    "y": 1.515625
    },
    "duration": 83
   },
   {
-   "filename": "almanac-snow-64 2.png",
+   "filename": "almanac-snow-64-chunky-v2 2.png",
    "frame": {
     "x": 128,
     "y": 0,
@@ -73,13 +73,13 @@
     "h": 64
    },
    "pivot": {
-    "x": 0.796875,
-    "y": 0.796875
+    "x": 1.5625,
+    "y": 1.515625
    },
    "duration": 83
   },
   {
-   "filename": "almanac-snow-64 3.png",
+   "filename": "almanac-snow-64-chunky-v2 3.png",
    "frame": {
     "x": 192,
     "y": 0,
@@ -99,13 +99,13 @@
     "h": 64
    },
    "pivot": {
-    "x": 0.796875,
-    "y": 0.796875
+    "x": 1.5625,
+    "y": 1.515625
    },
    "duration": 83
   },
   {
-   "filename": "almanac-snow-64 4.png",
+   "filename": "almanac-snow-64-chunky-v2 4.png",
    "frame": {
     "x": 0,
     "y": 64,
@@ -125,13 +125,13 @@
     "h": 64
    },
    "pivot": {
-    "x": 0.796875,
-    "y": 0.796875
+    "x": 1.5625,
+    "y": 1.515625
    },
    "duration": 83
   },
   {
-   "filename": "almanac-snow-64 5.png",
+   "filename": "almanac-snow-64-chunky-v2 5.png",
    "frame": {
     "x": 64,
     "y": 64,
@@ -151,13 +151,13 @@
     "h": 64
    },
    "pivot": {
-    "x": 0.796875,
-    "y": 0.796875
+    "x": 1.5625,
+    "y": 1.515625
    },
    "duration": 83
   },
   {
-   "filename": "almanac-snow-64 6.png",
+   "filename": "almanac-snow-64-chunky-v2 6.png",
    "frame": {
     "x": 128,
     "y": 64,
@@ -177,13 +177,13 @@
     "h": 64
    },
    "pivot": {
-    "x": 0.796875,
-    "y": 0.796875
+    "x": 1.5625,
+    "y": 1.515625
    },
    "duration": 83
   },
   {
-   "filename": "almanac-snow-64 7.png",
+   "filename": "almanac-snow-64-chunky-v2 7.png",
    "frame": {
     "x": 192,
     "y": 64,
@@ -203,13 +203,13 @@
     "h": 64
    },
    "pivot": {
-    "x": 0.796875,
-    "y": 0.796875
+    "x": 1.5625,
+    "y": 1.515625
    },
    "duration": 83
   },
   {
-   "filename": "almanac-snow-64 8.png",
+   "filename": "almanac-snow-64-chunky-v2 8.png",
    "frame": {
     "x": 0,
     "y": 128,
@@ -229,13 +229,13 @@
     "h": 64
    },
    "pivot": {
-    "x": 0.796875,
-    "y": 0.796875
+    "x": 1.5625,
+    "y": 1.515625
    },
    "duration": 83
   },
   {
-   "filename": "almanac-snow-64 9.png",
+   "filename": "almanac-snow-64-chunky-v2 9.png",
    "frame": {
     "x": 64,
     "y": 128,
@@ -255,13 +255,13 @@
     "h": 64
    },
    "pivot": {
-    "x": 0.796875,
-    "y": 0.796875
+    "x": 1.5625,
+    "y": 1.515625
    },
    "duration": 83
   },
   {
-   "filename": "almanac-snow-64 10.png",
+   "filename": "almanac-snow-64-chunky-v2 10.png",
    "frame": {
     "x": 128,
     "y": 128,
@@ -281,13 +281,13 @@
     "h": 64
    },
    "pivot": {
-    "x": 0.796875,
-    "y": 0.796875
+    "x": 1.5625,
+    "y": 1.515625
    },
    "duration": 83
   },
   {
-   "filename": "almanac-snow-64 11.png",
+   "filename": "almanac-snow-64-chunky-v2 11.png",
    "frame": {
     "x": 192,
     "y": 128,
@@ -307,13 +307,13 @@
     "h": 64
    },
    "pivot": {
-    "x": 0.796875,
-    "y": 0.796875
+    "x": 1.5625,
+    "y": 1.515625
    },
    "duration": 83
   },
   {
-   "filename": "almanac-snow-64 12.png",
+   "filename": "almanac-snow-64-chunky-v2 12.png",
    "frame": {
     "x": 0,
     "y": 192,
@@ -333,13 +333,13 @@
     "h": 64
    },
    "pivot": {
-    "x": 0.796875,
-    "y": 0.796875
+    "x": 1.5625,
+    "y": 1.515625
    },
    "duration": 83
   },
   {
-   "filename": "almanac-snow-64 13.png",
+   "filename": "almanac-snow-64-chunky-v2 13.png",
    "frame": {
     "x": 64,
     "y": 192,
@@ -359,13 +359,13 @@
     "h": 64
    },
    "pivot": {
-    "x": 0.796875,
-    "y": 0.796875
+    "x": 1.5625,
+    "y": 1.515625
    },
    "duration": 83
   },
   {
-   "filename": "almanac-snow-64 14.png",
+   "filename": "almanac-snow-64-chunky-v2 14.png",
    "frame": {
     "x": 128,
     "y": 192,
@@ -385,13 +385,13 @@
     "h": 64
    },
    "pivot": {
-    "x": 0.796875,
-    "y": 0.796875
+    "x": 1.5625,
+    "y": 1.515625
    },
    "duration": 83
   },
   {
-   "filename": "almanac-snow-64 15.png",
+   "filename": "almanac-snow-64-chunky-v2 15.png",
    "frame": {
     "x": 192,
     "y": 192,
@@ -411,15 +411,15 @@
     "h": 64
    },
    "pivot": {
-    "x": 0.796875,
-    "y": 0.796875
+    "x": 1.5625,
+    "y": 1.515625
    },
    "duration": 83
   }
  ],
  "meta": {
   "app": "PixelLab VFX Creator",
-  "image": "almanac-snow-64.png",
+  "image": "almanac-snow-64-chunky-v2.png",
   "format": "RGBA8888",
   "size": {
    "w": 256,
@@ -428,12 +428,12 @@
   "scale": "1",
   "anchor": {
    "kind": "origin",
-   "x": 51,
-   "y": 51
+   "x": 100,
+   "y": 97
   },
   "frameTags": [
    {
-    "name": "almanac-snow-64",
+    "name": "almanac-snow-64-chunky-v2",
     "from": 0,
     "to": 15,
     "direction": "forward"

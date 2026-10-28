@@ -3,9 +3,9 @@
 ## Gates
 | Gate | Result |
 |---|---|
-| Workbench `score` >= 90 | **85/87 pass.** Exceptions: `fx.almanac-snow.snow-64` 88.0 and `fx.almanac-firework.firework-64` 80.5. Both are particle loops: the score penalises single-pixel specks ("singletons"), which is what snow and sparks are. Left as is and flagged for emci (exempt, or redo as chunkier flakes). |
-| Lowest scores otherwise | fx.almanac-firework.firework-64 80.5, fx.almanac-snow.snow-64 88.0, icon.almanac-stickers.month05 90.4, icon.almanac-decor.firework 91.0, icon.almanac-sprigs.eid-al-fitr 91.2, icon.almanac-emblems.lunar-new-year 91.9 |
-| Pixel-art rubric >= 22/28, no zero | Assessed per group by eye on the 2x/5x sheets, not 14 numbers per asset: **decor, stickers, badges, emblems, sprigs, frames: pass (est. 23-26/28)**. No zero on any item: silhouette reads at 1x, <= 12 colours, forced palette, no text, consistent top-left light and dark outline. Weakest by eye: sprig.summer (busy), sticker.one-year-ago (now a heart, the photo frame was lost in the regen), loops snow/firework (particles only). These are my estimates, not a second reviewer's. |
+| Workbench `score` >= 90 | **87/87 pass.** The snow and firework loops first scored 88.0 and 80.5 (single-pixel particles); redone 2026-10-28 with my own chunky particle sprites (3x3 / 4x4 flakes, 4x4 and 2x2 sparks), now 95.3 and 97.5. |
+| Lowest scores | icon.almanac-stickers.month05 90.4, icon.almanac-decor.firework 91.0, icon.almanac-sprigs.eid-al-fitr 91.2, icon.almanac-emblems.lunar-new-year 91.9, icon.almanac-badges.spring 92.0 |
+| Pixel-art rubric >= 22/28, no zero | Assessed per group by eye on the 2x/5x sheets, not 14 numbers per asset: **decor, stickers, badges, emblems, sprigs, frames: pass (est. 23-26/28)**. No zero on any item: silhouette reads at 1x, <= 12 colours, forced palette, no text, consistent top-left light and dark outline. Weakest by eye: sprig.summer (busy), sticker.one-year-ago (now a heart, the photo frame was lost in the regen), the loops (particles only). These are my estimates, not a second reviewer's. |
 | Size ladder | 32 (decor/stickers/badges/emblems), 64 (sprigs; loop frames), 192x256 (UI frames). Nothing pre-scaled. |
 | Palette | Per-asset forced palette: 4 neutrals (#0a0a1c #221c3d #6e6e7e #f0f0f0) + season/event accent from palette-streetwear-night.png. All <= 16 colours, no semi-transparent pixels (script check). |
 | Camera / text / garments | Flat, camera-neutral. No text seen. Objects only (no cultural garments). |
@@ -98,11 +98,11 @@
 | `ui.almanac-frames.plain` | 96.0 |
 | `ui.almanac-frames.event` | 96.0 |
 | `ui.almanac-frames.complete` | 96.0 |
-| `fx.almanac-snow.snow-64` | 88.0 |
+| `fx.almanac-snow.snow-64` | 95.3 |
 | `fx.almanac-leaf.leaf-64` | 98.7 |
 | `fx.almanac-petal.petal-64` | 98.7 |
 | `fx.almanac-candle.candle-64` | 100 |
-| `fx.almanac-firework.firework-64` | 80.5 |
+| `fx.almanac-firework.firework-64` | 97.5 |
 | `fx.almanac-lantern-glow.lantern-glow-64` | 96.0 |
 
 ## Deviations

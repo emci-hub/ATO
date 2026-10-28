@@ -1,7 +1,7 @@
 {
  "frames": [
   {
-   "filename": "almanac-firework-64 0.png",
+   "filename": "almanac-firework-64-chunky 0.png",
    "frame": {
     "x": 0,
     "y": 0,
@@ -27,7 +27,7 @@
    "duration": 71
   },
   {
-   "filename": "almanac-firework-64 1.png",
+   "filename": "almanac-firework-64-chunky 1.png",
    "frame": {
     "x": 64,
     "y": 0,
@@ -53,7 +53,7 @@
    "duration": 71
   },
   {
-   "filename": "almanac-firework-64 2.png",
+   "filename": "almanac-firework-64-chunky 2.png",
    "frame": {
     "x": 128,
     "y": 0,
@@ -79,7 +79,7 @@
    "duration": 71
   },
   {
-   "filename": "almanac-firework-64 3.png",
+   "filename": "almanac-firework-64-chunky 3.png",
    "frame": {
     "x": 192,
     "y": 0,
@@ -105,7 +105,7 @@
    "duration": 71
   },
   {
-   "filename": "almanac-firework-64 4.png",
+   "filename": "almanac-firework-64-chunky 4.png",
    "frame": {
     "x": 0,
     "y": 64,
@@ -131,7 +131,7 @@
    "duration": 71
   },
   {
-   "filename": "almanac-firework-64 5.png",
+   "filename": "almanac-firework-64-chunky 5.png",
    "frame": {
     "x": 64,
     "y": 64,
@@ -157,7 +157,7 @@
    "duration": 71
   },
   {
-   "filename": "almanac-firework-64 6.png",
+   "filename": "almanac-firework-64-chunky 6.png",
    "frame": {
     "x": 128,
     "y": 64,
@@ -183,7 +183,7 @@
    "duration": 71
   },
   {
-   "filename": "almanac-firework-64 7.png",
+   "filename": "almanac-firework-64-chunky 7.png",
    "frame": {
     "x": 192,
     "y": 64,
@@ -209,7 +209,7 @@
    "duration": 71
   },
   {
-   "filename": "almanac-firework-64 8.png",
+   "filename": "almanac-firework-64-chunky 8.png",
    "frame": {
     "x": 0,
     "y": 128,
@@ -235,7 +235,7 @@
    "duration": 71
   },
   {
-   "filename": "almanac-firework-64 9.png",
+   "filename": "almanac-firework-64-chunky 9.png",
    "frame": {
     "x": 64,
     "y": 128,
@@ -261,7 +261,7 @@
    "duration": 71
   },
   {
-   "filename": "almanac-firework-64 10.png",
+   "filename": "almanac-firework-64-chunky 10.png",
    "frame": {
     "x": 128,
     "y": 128,
@@ -287,7 +287,7 @@
    "duration": 71
   },
   {
-   "filename": "almanac-firework-64 11.png",
+   "filename": "almanac-firework-64-chunky 11.png",
    "frame": {
     "x": 192,
     "y": 128,
@@ -313,7 +313,7 @@
    "duration": 71
   },
   {
-   "filename": "almanac-firework-64 12.png",
+   "filename": "almanac-firework-64-chunky 12.png",
    "frame": {
     "x": 0,
     "y": 192,
@@ -339,7 +339,7 @@
    "duration": 71
   },
   {
-   "filename": "almanac-firework-64 13.png",
+   "filename": "almanac-firework-64-chunky 13.png",
    "frame": {
     "x": 64,
     "y": 192,
@@ -365,7 +365,7 @@
    "duration": 71
   },
   {
-   "filename": "almanac-firework-64 14.png",
+   "filename": "almanac-firework-64-chunky 14.png",
    "frame": {
     "x": 128,
     "y": 192,
@@ -391,7 +391,7 @@
    "duration": 71
   },
   {
-   "filename": "almanac-firework-64 15.png",
+   "filename": "almanac-firework-64-chunky 15.png",
    "frame": {
     "x": 192,
     "y": 192,
@@ -419,7 +419,7 @@
  ],
  "meta": {
   "app": "PixelLab VFX Creator",
-  "image": "almanac-firework-64.png",
+  "image": "almanac-firework-64-chunky.png",
   "format": "RGBA8888",
   "size": {
    "w": 256,
@@ -433,7 +433,7 @@
   },
   "frameTags": [
    {
-    "name": "almanac-firework-64",
+    "name": "almanac-firework-64-chunky",
     "from": 0,
     "to": 15,
     "direction": "forward"

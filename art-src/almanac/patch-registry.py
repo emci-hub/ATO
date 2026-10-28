@@ -6,8 +6,8 @@ S={
 'icon.almanac-emblems':{'new-year':100,'lunar-new-year':91.9,'valentines':100,'easter':99.1,'summer':100,'thanksgiving':97.9,'halloween':94.1,'diwali':100,'eid-al-fitr':98.9,'winter-solstice':94.2,'christmas':99.7,'mothers-day':99.8},
 'icon.almanac-sprigs':{'new-year':98.8,'lunar-new-year':92.8,'valentines':96.1,'easter':96.6,'summer':99.5,'thanksgiving':97.7,'halloween':98.7,'diwali':100,'eid-al-fitr':91.2,'winter-solstice':94.3,'christmas':92.2,'mothers-day':100},
 'ui.almanac-frames':{'plain':96.0,'event':96.0,'complete':96.0},
-'fx.almanac-snow':{'snow-64':88.0},'fx.almanac-leaf':{'leaf-64':98.7},'fx.almanac-petal':{'petal-64':98.7},
-'fx.almanac-candle':{'candle-64':100},'fx.almanac-firework':{'firework-64':80.5},'fx.almanac-lantern-glow':{'lantern-glow-64':96.0},
+'fx.almanac-snow':{'snow-64':95.3},'fx.almanac-leaf':{'leaf-64':98.7},'fx.almanac-petal':{'petal-64':98.7},
+'fx.almanac-candle':{'candle-64':100},'fx.almanac-firework':{'firework-64':97.5},'fx.almanac-lantern-glow':{'lantern-glow-64':96.0},
 }
 LOOP={'snow':(16,83),'leaf':(16,100),'petal':(16,100),'candle':(8,100),'firework':(16,71),'lantern-glow':(12,83)}
 gens=1
