@@ -48,6 +48,10 @@ const NOT_LIVE = new Set([
   // Roadmap v2 S3 (2026-10-22, NOT applied): a trigger on me (show_up / talk_style chips only); no
   // client-callable function. Pinned by scripts/circle-safety-check.ts.
   'wave110_public_card_fields_guard.sql',
+  // PHASE-11d (2026-10-28, NOT applied): restates answer_daily_pick (wave101's copy + the cutover
+  // overlap / event override) and adds daily_pick_event_total; both start with require_adult(),
+  // pinned by scripts/daily-pick-check.ts.
+  'wave117_almanac.sql',
 ]);
 
 /** Apply order of the migrations that existed when wave101 was written (git history order). */

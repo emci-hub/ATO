@@ -20,7 +20,7 @@ import path from 'node:path';
 import { ALMANAC_BANK, ALMANAC_BANK_VERSION, ALMANAC_COPY_REVIEWED } from '../src/lib/almanac';
 import { GENERATED_BANK_VERSION, GENERATED_CARDS } from '../src/lib/almanac/bank.generated';
 import { EVENT_IDS, MICRO_IDS } from '../src/lib/almanac/events';
-import { DAILY_PICKS } from '../src/lib/daily-pick/bank';
+import { DAILY_PICKS, LEGACY_PICK_COUNT } from '../src/lib/daily-pick/bank';
 import { TRAIT_AXES } from '../src/lib/traits';
 import {
   ARC_IDS,
@@ -132,7 +132,8 @@ const draft = planLoad(doc.rows, { all: true });
 assert.deepEqual(draft.problems, [], `rows with problems:\n  ${draft.problems.slice(0, 20).join('\n  ')}`);
 ok('every non-retired row passes the rules, ticked or not, and has an id that matches its heading');
 
-const shippedPicks = DAILY_PICKS.map((p) => p.prompt);
+// The 64 wave82 Picks only: the 304 appended by PHASE-11d ARE this doc's base Pick rows.
+const shippedPicks = DAILY_PICKS.slice(0, LEGACY_PICK_COUNT).map((p) => p.prompt);
 const dupes = duplicateProblems(draft.entries, shippedPicks);
 assert.deepEqual(dupes, [], `duplicates:\n  ${dupes.slice(0, 20).join('\n  ')}`);
 ok(`no duplicate text across the doc and the ${shippedPicks.length} shipped Picks`);

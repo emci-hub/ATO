@@ -24,7 +24,7 @@ Stage C2 Almanac
 - [x] PHASE-11a Almanac engine core
 - [x] PHASE-11b Calendar, locale, ramp, arcs
 - [x] PHASE-11c Almanac content pipeline + MVP bank  ⚑ copy OK (built; emci's ticks still to come)
-- [ ] PHASE-11d Pick 368 + community counter  ⚑ wave117
+- [x] PHASE-11d Pick 368 + community counter  ⚑ wave117 (built; emci applies wave117)
 - [ ] PHASE-11e Almanac surfaces: Home, Insights, You
 - [ ] PHASE-11f Seasonal settings + morning push copy
 - [ ] PHASE-11g Art: Almanac decor, stickers, badges (PixelLab)  ⚑ art OK
@@ -93,5 +93,8 @@ Stage E Polish & release
 - Lessons: the tip rule's verb list is closed (no Show, Tidy, Message, Stretch…), so 17 tries were reworded; the loader does not check duplicates, the bank check does. Event Picks: only the 4 global events have them (regional ones get lines). Easter is lines only.
 - Reviewer FAIL on copy, all fixed: Valentine's Pick said "tomorrow" on the day; birthday/anniversary lead said "tomorrow" (lead is 3 days out); Christmas/New Year peak Picks timed like the run-up; Thanksgiving lines assumed a meal; 13 tries could not be done today, alone; 3 advice lines; north-only month lines; uneven poles ("The Co-Pilot" is now "The Team Player"). Also: `release-mode-check` now refuses a DRAFT MODE bank, `almanac-check` no longer breaks on the first tick, more fail cases in the bank check. Left: `copy-flags-check` still pins `ALMANAC_COPY_REVIEWED` false (flipping it is emci's call and needs that line updated).
 - For emci: tick `[x]` in `docs/almanac-review.md`, then `npm run load:almanac` and commit; the first ticked set flips nothing until `ALMANAC_COPY_REVIEWED` is flipped. Judgement calls to check: the 32 archetype names, the low-end tries, and the gentle-day lines.
+- 2026-10-28 PHASE-11d (Pick 368 + community counter): on `phase-11c-almanac-content`, local commit, not pushed. `src/lib/daily-pick/bank.ts`: 304 approved base Picks appended as p66…p369 (TRAIT_AXES order, 19 per trait; first 64 untouched); rotation slot = (n%16)*K + floor(n/16), mapped to the append-only list by `positionForSlot`; `ALMANAC_PICK_CUTOVER = '2027-02-01'` (PLACEHOLDER, emci confirms at PHASE-27), 64 rotation before it, 368 from it; 12 seasonal peak Picks `ev-<event>-<v>` (new_year, valentines, halloween, christmas only) + override rows 2026–2035 (variants take turns by year). New `supabase/migrations/wave117_almanac.sql` (NOT applied): pool rows, id/axis checks relaxed for event Picks, `daily_pick_event_override` (RLS read-only, global events only), `daily_pick_legacy_position`, `daily_pick_position` with the cutover branch, `answer_daily_pick` = wave101's copy + overlap (old pick accepted 14 days from cutover) + override + event Picks move no trait, `daily_pick_event_total` (definer, `public, pg_temp`, 18+, null uid rejected, one total, null under 20). `check:daily-pick` runs the SQL formula against the TS on ±800 days around the cutover. Also: `under18-server-check` lists wave117 as not live; `almanac-bank-check` dup check vs the first 64 only. Gate: typecheck + 201 offline checks green; reviewer PASS.
+- Decisions: appended Picks keep the Almanac's 40-char answer limit (shipped 64 keep 28; rows wrap); the old "you are" keyword rule is waived for 21 approved scene-setters ("You’re stuck in a traffic jam."). Counter is an exact total from 20 (not rounded).
+- For emci / PHASE-27: wave117 MUST be applied before the cutover (new bundles ask for p66+ from 2027-02-01); the date is written twice in the SQL, so moving it after applying needs a new migration. The cutover lands at n=28 of the cycle, so the first new Pick appears ~2027-03-09. 11e wires `eventPickForYmd` to the card (nothing calls it yet).
 
-Blocked on: ⚑ almanac copy
+Blocked on: ⚑ apply wave117
