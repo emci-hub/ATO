@@ -40,6 +40,8 @@ export interface EventPrefs {
   seasonal?: boolean;
   /** Per-event choice for `cultural` events. Missing = on only in the default regions. */
   cultural?: Readonly<Partial<Record<string, boolean>>>;
+  /** "Use my birthday". Missing = on. The master switch still wins. */
+  birthday?: boolean;
 }
 
 const pad = (n: number) => String(n).padStart(2, '0');
@@ -185,8 +187,9 @@ export function peakStartsFor(rule: DateRule, year: number, env: RuleEnv): strin
 
 /** Is this event on for this reader? */
 export function eventEnabled(def: EventDef, env: RuleEnv, prefs: EventPrefs = {}): boolean {
-  if (def.personal) return true;
+  // Master off turns every event off, personal ones too (emci 2026-10-28).
   if (prefs.seasonal === false) return false;
+  if (def.personal) return def.id !== 'birthday' || prefs.birthday !== false;
   if (def.onlyRegions && !(env.region && def.onlyRegions.includes(env.region))) return false;
   if (def.cultural) {
     const chosen = prefs.cultural?.[def.id];

@@ -28,6 +28,16 @@ export interface PushPayload {
 export const MORNING_PUSH_TITLE = 'ATO';
 export const MORNING_PUSH_FALLBACK = 'Today’s line is ready.';
 
+/**
+ * The morning body: today's Almanac push card when there is one (seasonal on),
+ * else the base copy (the day's Pick prompt). A card that reads as fake urgency is
+ * dropped, same as everywhere else in this file.
+ */
+export function morningCopy(almanacText: string | null | undefined, base: string): string {
+  const text = (almanacText ?? '').trim();
+  return text.length > 0 && !copyHasFakeUrgency(text) ? text : base;
+}
+
 export function morningPush(read: string): PushPayload {
   const body = read.trim();
   return {

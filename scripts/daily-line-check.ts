@@ -399,7 +399,8 @@ ok('the Today’s Pick share image carries the question only');
 
 const push = read('src/lib/push.ts');
 assert.match(push, /const pick = pickForYmd\(addDaysYmd\(todayYmd, offsets\[i\]!\)\);/);
-assert.match(push, /morningPush\(pick\.prompt\)/);
+// PHASE-11f: the pick prompt is the base copy; an Almanac push card replaces it when seasonal is on.
+assert.match(push, /morningPush\(morningCopy\(almanacLine\(ymd\), pick\.prompt\)\)/);
 const cancelAll = push.slice(push.indexOf('export async function cancelAllScheduledPush'));
 assert.match(cancelAll.slice(0, cancelAll.indexOf('export async function syncPushSchedule')), /cancelMorningAhead\(\)/);
 ok('each morning push asks that day’s pick, and account deletion cancels every planned morning');

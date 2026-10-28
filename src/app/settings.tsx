@@ -14,6 +14,7 @@ import { HelplineRow } from '@/components/helpline-row';
 import { LegalLinks } from '@/components/legal-links';
 import { NotificationPrefsFold } from '@/components/notification-prefs-fold';
 import { RunningUpdateLine } from '@/components/running-update-line';
+import { SeasonalPrefsFold } from '@/components/seasonal-prefs-fold';
 import { SettingsFold } from '@/components/settings-fold';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -184,6 +185,7 @@ Update: ${Updates.updateId ?? 'original build'}`);
             Notifications
           </ThemedText>
           <NotificationPrefsFold />
+          <SeasonalPrefsFold />
 
           <ThemedText type="code" themeColor="textSecondary" style={styles.sectionHead}>
             Privacy &amp; AI

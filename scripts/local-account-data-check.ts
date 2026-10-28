@@ -93,6 +93,7 @@ for (const wiped of [
   'ato.daily-line-ai-log.v1', // PHASE-11: writer removed; phones that already hold it are cleaned on sign-out
   'ato.almanac.seen.v1', // PHASE-11a: Almanac seen-set (per account)
   'ato.almanac.today.v1', // PHASE-11a: today's Almanac card per surface (per account)
+  'ato.almanac.prefs.v1', // PHASE-11f: seasonal switches (wiped on sign-out with the rest)
   'ato.almanac.locale.v1', // PHASE-11b: stored hemisphere (wiped on sign-out, worked out again for the next account)
   'ato.almanac.badges.v1', // PHASE-11e: cosmetic seasonal badges earned on this phone
   'ato.insights.collection.v2', // PHASE-11e: Insights seen + per-event decks (v1 is read once, then left to the sign-out wipe)

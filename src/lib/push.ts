@@ -3,6 +3,13 @@ import { Platform } from 'react-native';
 import * as Notifications from 'expo-notifications';
 
 import { checkLoggedOnYmd, fetchChecks, type Check } from '@/lib/checks';
+import { almanac } from '@/lib/almanac';
+import { deviceRegion, loadLocale } from '@/lib/almanac/locale';
+import { eventPrefsOf, loadAlmanacPrefs } from '@/lib/almanac/prefs';
+import { cardIsShareable } from '@/lib/almanac-share';
+import { almanacTodayFromTheme, createCalendar } from '@/lib/almanac/resolve';
+import { almanacYmd } from '@/lib/almanac/seed';
+import { clearLeans } from '@/lib/daily-line/pick';
 import { loadDailyLineState } from '@/lib/daily-line/state';
 import { pickForYmd } from '@/lib/daily-pick/bank';
 import { addDaysYmd, hoursSinceLocalMidnight, localYmd, weekdayInZone } from '@/lib/local-date';
@@ -10,6 +17,7 @@ import type { Me } from '@/lib/me';
 import {
   eveningPush,
   insightPush,
+  morningCopy,
   morningPush,
   recapFromReads,
   sundayPush,
@@ -50,6 +58,52 @@ export const EVENING_PUSH_ENABLED = false;
 const SUNDAY_PUSH_HOUR = 10;
 export function morningAheadId(index: number): string {
   return `ato.morning.d${index}`;
+}
+
+/**
+ * Today's and the coming mornings' copy from `almanac.today('push')` (PHASE-11f).
+ * Seasonal off (or any failure) gives no Almanac line, so the base copy is sent.
+ * Pure draw, no seen-list write: a week of pushes is scheduled ahead and must not
+ * mark cards seen for days the phone has not reached.
+ */
+async function almanacPushLines(
+  me: Me,
+  tracks: readonly TraitTrack[],
+): Promise<(ymd: string) => string | null> {
+  try {
+    const prefs = await loadAlmanacPrefs(AsyncStorage);
+    if (!prefs.seasonal) return () => null;
+    const zone = me.timezone || 'UTC';
+    const { hemisphere } = await loadLocale(AsyncStorage, zone);
+    const joinedYmd = me.created_at ? almanacYmd(new Date(me.created_at), zone) : null;
+    const calendar = createCalendar({
+      tz: zone,
+      region: deviceRegion(),
+      hemisphere,
+      bornOn: me.born_on ?? null,
+      joinedYmd,
+      prefs: eventPrefsOf(prefs),
+    });
+    const leans = clearLeans(tracks);
+    return (ymd) => {
+      try {
+        const theme = calendar.theme(ymd);
+        const result = almanac.today('push', {
+          userId: me.id,
+          ymd,
+          leans,
+          dataDays: 0,
+          ...almanacTodayFromTheme(theme),
+        });
+        // Lock-screen rule, same as the daily-line push: nothing struggle-side.
+        return result?.source === 'card' && cardIsShareable(result.card, leans) ? result.text : null;
+      } catch {
+        return null;
+      }
+    };
+  } catch {
+    return () => null;
+  }
 }
 
 async function cancelMorningAhead(): Promise<void> {
@@ -319,12 +373,14 @@ export async function syncPushSchedule(input: {
       const offsets = Array.from({ length: MORNING_AHEAD_DAYS }, (_, i) => firstOffset + i);
       // Each morning asks that day's Today's Pick (emci, 2026-10-05): the same
       // question everyone gets that day, chosen by date, so it is known ahead.
+      const almanacLine = await almanacPushLines(input.me, input.tracks);
       for (let i = 0; i < offsets.length; i += 1) {
         const hoursUntil = offsets[i]! * 24 + (window.morningHour - hoursNow);
         const pick = pickForYmd(addDaysYmd(todayYmd, offsets[i]!));
+        const ymd = addDaysYmd(todayYmd, offsets[i]!);
         await scheduleAtOrCancel(
           morningAheadId(i),
-          morningPush(pick.prompt),
+          morningPush(morningCopy(almanacLine(ymd), pick.prompt)),
           new Date(now.getTime() + hoursUntil * 3_600_000),
         );
       }
