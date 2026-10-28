@@ -56,7 +56,7 @@ Stage C2 Almanac
 - [x] PHASE-11g Art: Almanac decor, stickers, badges (PixelLab)  ⚑ art OK
 - [x] PHASE-11h Theming integration
 Stage D Quests
-- [ ] PHASE-12 Quests content model + validator
+- [x] PHASE-12 Quests content model + validator
 - [ ] PHASE-13 Scoring + sims
 - [ ] PHASE-14 Run engine + saves
 - [ ] PHASE-15 Art 1: style lock + Lantern set (PixelLab)
