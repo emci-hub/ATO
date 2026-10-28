@@ -6,8 +6,8 @@
  *   almanac.loadToday(surface, ctx, store)        today's cached card, else today() + save
  *
  * Surfaces: home.pick, home.line, insights.deck, insights.try, push, you.week,
- * you.month, you.year. Nothing calls this yet: PHASE-11e wires the surfaces and
- * PHASE-11c replaces the empty bank with the reviewed one.
+ * you.month, you.year. Nothing calls this yet: PHASE-11e wires the surfaces. The bank
+ * is `bank.generated.ts` (PHASE-11c): only the cards emci ticked ship.
  */
 import {
   cacheKey,
@@ -17,6 +17,7 @@ import {
   writeCached,
   type CachedResult,
 } from './cache';
+import { GENERATED_BANK_VERSION, GENERATED_CARDS } from './bank.generated';
 import { addSeen, loadSeen, saveSeen, seenFor } from './seen-store';
 import { basePickIndex, sharedSeed } from './seed';
 import { candidatesFor, drawFromTop, selectCard } from './select';
@@ -35,10 +36,15 @@ export { ALMANAC_MAX_CHARS, ALMANAC_SLOTS, fillCard } from './slots';
 export { ALMANAC_SEEN_CAP, ALMANAC_SEEN_KEY } from './seen-store';
 export { ALMANAC_TODAY_KEY, cacheKey } from './cache';
 
-/** Bump whenever the bank's cards change (PHASE-11c's loader writes it). */
-export const ALMANAC_BANK_VERSION = 0;
-/** Empty until PHASE-11c lands the reviewed bank. */
-export const ALMANAC_BANK: readonly AlmanacCard[] = [];
+/**
+ * False until emci has ticked the first cards in docs/almanac-review.md (⚑ almanac copy).
+ * Only ticked rows reach the generated bank, so with nothing ticked the bank is empty.
+ */
+export const ALMANAC_COPY_REVIEWED = false;
+/** Changes whenever a shipped card changes (`npm run load:almanac` writes it). 0 = nothing shipped. */
+export const ALMANAC_BANK_VERSION = GENERATED_BANK_VERSION;
+/** The ticked cards, from `bank.generated.ts`. Empty until emci ticks. */
+export const ALMANAC_BANK: readonly AlmanacCard[] = GENERATED_CARDS;
 
 export interface TodayOptions {
   bank?: readonly AlmanacCard[];

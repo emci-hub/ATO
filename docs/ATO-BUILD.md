@@ -49,7 +49,7 @@ Stage C Gamify screens
 Stage C2 Almanac
 - [ ] PHASE-11a Almanac engine core
 - [ ] PHASE-11b Calendar, locale, ramp, arcs
-- [ ] PHASE-11c Almanac content pipeline + MVP bank  ⚑ copy OK
+- [x] PHASE-11c Almanac content pipeline + MVP bank  ⚑ copy OK (built; emci's ticks still to come)
 - [ ] PHASE-11d Pick 368 + community counter  ⚑ wave117
 - [ ] PHASE-11e Almanac surfaces: Home, Insights, You
 - [ ] PHASE-11f Seasonal settings + morning push copy

@@ -309,8 +309,8 @@ assert.deepEqual(today('home.pick', PROFILES.strong!), { surface: 'home.pick', s
 ok('home.pick: the existing global rotation by ymd; event Picks shared, not personal');
 
 // ---------------------------------------------------------------- empty shipped bank
-assert.equal(ALMANAC_BANK.length, 0, 'the shipped bank stays empty until PHASE-11c');
-assert.equal(today('home.line', PROFILES.strong!), null, 'nothing fits → null, never a crash');
+assert.ok(ALMANAC_BANK.every((c) => c.reviewed), 'the shipped bank holds only reviewed (ticked) cards');
+assert.equal(today('home.line', PROFILES.strong!, { bank: [] }), null, 'nothing fits → null, never a crash');
 ok('empty bank → null on every personal surface');
 
 // ---------------------------------------------------------------- cache + seen

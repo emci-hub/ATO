@@ -267,6 +267,8 @@
     "check:home-path": "tsx ./scripts/home-path-check.ts",
     "check:almanac": "tsx ./scripts/almanac-check.ts",
     "check:almanac-calendar": "tsx ./scripts/almanac-calendar-check.ts",
+    "check:almanac-bank": "tsx ./scripts/almanac-bank-check.ts",
+    "load:almanac": "tsx ./scripts/load-almanac.ts",
     "check:insights-g3": "tsx ./scripts/insights-g3-check.ts",
     "check:copy-flags": "tsx ./scripts/copy-flags-check.ts",
     "check:daily-pick": "tsx ./scripts/daily-pick-check.ts",
