@@ -306,7 +306,8 @@
     "check:ota-gate": "tsx ./scripts/ota-gate.ts",
     "ota:publish": "tsx ./scripts/ota-publish.ts",
     "pixellab:watch": "tsx ./scripts/pixellab-watch.ts",
-    "probe:apple-endpoint": "tsx ./scripts/apple-endpoint-probe.ts"
+    "probe:apple-endpoint": "tsx ./scripts/apple-endpoint-probe.ts",
+    "check:legends-g4": "tsx ./scripts/legends-g4-check.ts"
   },
   "private": true,
   "allowScripts": {

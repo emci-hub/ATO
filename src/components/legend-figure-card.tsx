@@ -15,12 +15,16 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { useRef, useState, type ComponentProps } from 'react';
 import { ActivityIndicator, Linking, Modal, Pressable, StyleSheet, View } from 'react-native';
+import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 
 import { AiBadge } from '@/components/ai-badge';
 import { LibraryCardFooter } from '@/components/library-card-footer';
+import { Sheen } from '@/components/sheen';
 import { ThemedText } from '@/components/themed-text';
 import { Fonts, Spacing } from '@/constants/theme';
+import { useMotionReduced } from '@/hooks/use-motion-reduced';
 import { useTheme } from '@/hooks/use-theme';
+import { ENTER, HOLO, SHIMMER } from '@/lib/motion-tokens';
 import { AXIS_POLE_NAME } from '@/lib/axis-poles';
 import { shownFacts, shownMoments, titleCase, type LegendStory } from '@/lib/legend-figures/story';
 import {
@@ -145,7 +149,12 @@ export function LegendFrame({
 }) {
   const color = HALL_COLOR[hall];
   const disabled = state !== 'ready';
-  return (
+  const rm = useMotionReduced();
+  // Binder: the cards rise one after another (80 ms apart); Reduce Motion cross-fades.
+  const entering = rm
+    ? FadeIn.duration(HOLO.reducedFadeMs)
+    : FadeInDown.delay(index * ENTER.staggerMs).duration(ENTER.duration);
+  const button = (
     <Pressable
       onPress={onReveal}
       disabled={disabled}
@@ -161,14 +170,26 @@ export function LegendFrame({
       {state === 'loading' ? (
         <ActivityIndicator color={color} />
       ) : (
-        <ThemedText type="subtitle" style={{ color }}>
-          ???
+        <ThemedText type="title" style={{ color }}>
+          ?
         </ThemedText>
       )}
       <ThemedText type="small" themeColor="textSecondary" style={styles.frameCaption}>
         {chapter ? 'A new chapter' : 'A hidden legend'}
       </ThemedText>
     </Pressable>
+  );
+  return (
+    <Animated.View entering={entering} style={styles.frameSlot}>
+      {/* A locked frame shimmers (light band, 2.2 s, linear); Reduce Motion: it breathes instead. */}
+      {state === 'ready' ? (
+        <Sheen durationMs={SHIMMER.durationMs} borderRadius={14} style={styles.frameSlot}>
+          {button}
+        </Sheen>
+      ) : (
+        button
+      )}
+    </Animated.View>
   );
 }
 
@@ -547,6 +568,7 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   frameCaption: { textAlign: 'center' },
+  frameSlot: { flex: 1 },
   secondary: {
     minHeight: 44,
     borderRadius: 10,
