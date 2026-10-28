@@ -274,6 +274,12 @@ export type ArtId =
   | 'creep.wizard.cast.atlas-1'
   | 'creep.wizard.streetwear.combat'
   | 'creep.wizard.streetwear.core'
+  | 'fx.almanac-candle.candle-64'
+  | 'fx.almanac-firework.firework-64'
+  | 'fx.almanac-lantern-glow.lantern-glow-64'
+  | 'fx.almanac-leaf.leaf-64'
+  | 'fx.almanac-petal.petal-64'
+  | 'fx.almanac-snow.snow-64'
   | 'fx.drip.streetwear'
   | 'fx.moth.streetwear'
   | 'fx.note.streetwear.note'
@@ -346,6 +352,84 @@ export type ArtId =
   | 'hero.void-raven.streetwear.core'
   | 'hero.zipline-shade.streetwear.combat'
   | 'hero.zipline-shade.streetwear.core'
+  | 'icon.almanac-badges.back-to-school'
+  | 'icon.almanac-badges.christmas'
+  | 'icon.almanac-badges.diwali'
+  | 'icon.almanac-badges.easter'
+  | 'icon.almanac-badges.eid-al-fitr'
+  | 'icon.almanac-badges.fathers-day'
+  | 'icon.almanac-badges.halloween'
+  | 'icon.almanac-badges.lunar-new-year'
+  | 'icon.almanac-badges.mothers-day'
+  | 'icon.almanac-badges.new-year'
+  | 'icon.almanac-badges.season-autumn'
+  | 'icon.almanac-badges.season-spring'
+  | 'icon.almanac-badges.season-summer'
+  | 'icon.almanac-badges.season-winter'
+  | 'icon.almanac-badges.summer'
+  | 'icon.almanac-badges.summer-solstice'
+  | 'icon.almanac-badges.thanksgiving-ca'
+  | 'icon.almanac-badges.thanksgiving-us'
+  | 'icon.almanac-badges.valentines'
+  | 'icon.almanac-badges.winter-solstice'
+  | 'icon.almanac-badges.year-end'
+  | 'icon.almanac-decor.crescent'
+  | 'icon.almanac-decor.diya'
+  | 'icon.almanac-decor.egg'
+  | 'icon.almanac-decor.firework'
+  | 'icon.almanac-decor.lantern'
+  | 'icon.almanac-decor.petal'
+  | 'icon.almanac-decor.pumpkin'
+  | 'icon.almanac-decor.snowflake'
+  | 'icon.almanac-decor.star'
+  | 'icon.almanac-decor.wreath'
+  | 'icon.almanac-emblems.christmas'
+  | 'icon.almanac-emblems.diwali'
+  | 'icon.almanac-emblems.easter'
+  | 'icon.almanac-emblems.eid-al-fitr'
+  | 'icon.almanac-emblems.halloween'
+  | 'icon.almanac-emblems.lunar-new-year'
+  | 'icon.almanac-emblems.mothers-day'
+  | 'icon.almanac-emblems.new-year'
+  | 'icon.almanac-emblems.summer'
+  | 'icon.almanac-emblems.thanksgiving'
+  | 'icon.almanac-emblems.valentines'
+  | 'icon.almanac-emblems.winter-solstice'
+  | 'icon.almanac-sprigs.christmas'
+  | 'icon.almanac-sprigs.diwali'
+  | 'icon.almanac-sprigs.easter'
+  | 'icon.almanac-sprigs.eid-al-fitr'
+  | 'icon.almanac-sprigs.halloween'
+  | 'icon.almanac-sprigs.lunar-new-year'
+  | 'icon.almanac-sprigs.mothers-day'
+  | 'icon.almanac-sprigs.new-year'
+  | 'icon.almanac-sprigs.summer'
+  | 'icon.almanac-sprigs.thanksgiving'
+  | 'icon.almanac-sprigs.valentines'
+  | 'icon.almanac-sprigs.winter-solstice'
+  | 'icon.almanac-stickers.clock-change'
+  | 'icon.almanac-stickers.equinox'
+  | 'icon.almanac-stickers.first-snow'
+  | 'icon.almanac-stickers.friday-13th'
+  | 'icon.almanac-stickers.full-moon'
+  | 'icon.almanac-stickers.glow-30'
+  | 'icon.almanac-stickers.half-year'
+  | 'icon.almanac-stickers.month01'
+  | 'icon.almanac-stickers.month02'
+  | 'icon.almanac-stickers.month03'
+  | 'icon.almanac-stickers.month04'
+  | 'icon.almanac-stickers.month05'
+  | 'icon.almanac-stickers.month06'
+  | 'icon.almanac-stickers.month07'
+  | 'icon.almanac-stickers.month08'
+  | 'icon.almanac-stickers.month09'
+  | 'icon.almanac-stickers.month10'
+  | 'icon.almanac-stickers.month11'
+  | 'icon.almanac-stickers.month12'
+  | 'icon.almanac-stickers.one-year-ago'
+  | 'icon.almanac-stickers.payday-friday'
+  | 'icon.almanac-stickers.pick-100'
+  | 'icon.almanac-stickers.small-moment'
   | 'icon.currency.streetwear.cur-caps'
   | 'icon.currency.streetwear.cur-prism'
   | 'icon.currency.streetwear.cur-shine'
@@ -808,6 +892,9 @@ export type ArtId =
   | 'tower.viper.cast.atlas'
   | 'tower.viper.streetwear.combat'
   | 'tower.viper.streetwear.core'
+  | 'ui.almanac-frames.complete'
+  | 'ui.almanac-frames.event'
+  | 'ui.almanac-frames.plain'
   | 'ui.frames.streetwear.frame-base'
   | 'ui.frames.streetwear.frame-common'
   | 'ui.frames.streetwear.frame-divine'
@@ -1326,6 +1413,24 @@ export const ART = {
     },
   },
   fx: {
+    almanacCandle: {
+      candle64: 'fx.almanac-candle.candle-64',
+    },
+    almanacFirework: {
+      firework64: 'fx.almanac-firework.firework-64',
+    },
+    almanacLanternGlow: {
+      lanternGlow64: 'fx.almanac-lantern-glow.lantern-glow-64',
+    },
+    almanacLeaf: {
+      leaf64: 'fx.almanac-leaf.leaf-64',
+    },
+    almanacPetal: {
+      petal64: 'fx.almanac-petal.petal-64',
+    },
+    almanacSnow: {
+      snow64: 'fx.almanac-snow.snow-64',
+    },
     drip: {
       streetwear: 'fx.drip.streetwear',
     },
@@ -1546,6 +1651,94 @@ export const ART = {
     },
   },
   icon: {
+    almanacBadges: {
+      backToSchool: 'icon.almanac-badges.back-to-school',
+      christmas: 'icon.almanac-badges.christmas',
+      diwali: 'icon.almanac-badges.diwali',
+      easter: 'icon.almanac-badges.easter',
+      eidAlFitr: 'icon.almanac-badges.eid-al-fitr',
+      fathersDay: 'icon.almanac-badges.fathers-day',
+      halloween: 'icon.almanac-badges.halloween',
+      lunarNewYear: 'icon.almanac-badges.lunar-new-year',
+      mothersDay: 'icon.almanac-badges.mothers-day',
+      newYear: 'icon.almanac-badges.new-year',
+      seasonAutumn: 'icon.almanac-badges.season-autumn',
+      seasonSpring: 'icon.almanac-badges.season-spring',
+      seasonSummer: 'icon.almanac-badges.season-summer',
+      seasonWinter: 'icon.almanac-badges.season-winter',
+      summer: 'icon.almanac-badges.summer',
+      summerSolstice: 'icon.almanac-badges.summer-solstice',
+      thanksgivingCa: 'icon.almanac-badges.thanksgiving-ca',
+      thanksgivingUs: 'icon.almanac-badges.thanksgiving-us',
+      valentines: 'icon.almanac-badges.valentines',
+      winterSolstice: 'icon.almanac-badges.winter-solstice',
+      yearEnd: 'icon.almanac-badges.year-end',
+    },
+    almanacDecor: {
+      crescent: 'icon.almanac-decor.crescent',
+      diya: 'icon.almanac-decor.diya',
+      egg: 'icon.almanac-decor.egg',
+      firework: 'icon.almanac-decor.firework',
+      lantern: 'icon.almanac-decor.lantern',
+      petal: 'icon.almanac-decor.petal',
+      pumpkin: 'icon.almanac-decor.pumpkin',
+      snowflake: 'icon.almanac-decor.snowflake',
+      star: 'icon.almanac-decor.star',
+      wreath: 'icon.almanac-decor.wreath',
+    },
+    almanacEmblems: {
+      christmas: 'icon.almanac-emblems.christmas',
+      diwali: 'icon.almanac-emblems.diwali',
+      easter: 'icon.almanac-emblems.easter',
+      eidAlFitr: 'icon.almanac-emblems.eid-al-fitr',
+      halloween: 'icon.almanac-emblems.halloween',
+      lunarNewYear: 'icon.almanac-emblems.lunar-new-year',
+      mothersDay: 'icon.almanac-emblems.mothers-day',
+      newYear: 'icon.almanac-emblems.new-year',
+      summer: 'icon.almanac-emblems.summer',
+      thanksgiving: 'icon.almanac-emblems.thanksgiving',
+      valentines: 'icon.almanac-emblems.valentines',
+      winterSolstice: 'icon.almanac-emblems.winter-solstice',
+    },
+    almanacSprigs: {
+      christmas: 'icon.almanac-sprigs.christmas',
+      diwali: 'icon.almanac-sprigs.diwali',
+      easter: 'icon.almanac-sprigs.easter',
+      eidAlFitr: 'icon.almanac-sprigs.eid-al-fitr',
+      halloween: 'icon.almanac-sprigs.halloween',
+      lunarNewYear: 'icon.almanac-sprigs.lunar-new-year',
+      mothersDay: 'icon.almanac-sprigs.mothers-day',
+      newYear: 'icon.almanac-sprigs.new-year',
+      summer: 'icon.almanac-sprigs.summer',
+      thanksgiving: 'icon.almanac-sprigs.thanksgiving',
+      valentines: 'icon.almanac-sprigs.valentines',
+      winterSolstice: 'icon.almanac-sprigs.winter-solstice',
+    },
+    almanacStickers: {
+      clockChange: 'icon.almanac-stickers.clock-change',
+      equinox: 'icon.almanac-stickers.equinox',
+      firstSnow: 'icon.almanac-stickers.first-snow',
+      friday13th: 'icon.almanac-stickers.friday-13th',
+      fullMoon: 'icon.almanac-stickers.full-moon',
+      glow30: 'icon.almanac-stickers.glow-30',
+      halfYear: 'icon.almanac-stickers.half-year',
+      month01: 'icon.almanac-stickers.month01',
+      month02: 'icon.almanac-stickers.month02',
+      month03: 'icon.almanac-stickers.month03',
+      month04: 'icon.almanac-stickers.month04',
+      month05: 'icon.almanac-stickers.month05',
+      month06: 'icon.almanac-stickers.month06',
+      month07: 'icon.almanac-stickers.month07',
+      month08: 'icon.almanac-stickers.month08',
+      month09: 'icon.almanac-stickers.month09',
+      month10: 'icon.almanac-stickers.month10',
+      month11: 'icon.almanac-stickers.month11',
+      month12: 'icon.almanac-stickers.month12',
+      oneYearAgo: 'icon.almanac-stickers.one-year-ago',
+      paydayFriday: 'icon.almanac-stickers.payday-friday',
+      pick100: 'icon.almanac-stickers.pick-100',
+      smallMoment: 'icon.almanac-stickers.small-moment',
+    },
     currency: {
       streetwear: {
         curCaps: 'icon.currency.streetwear.cur-caps',
@@ -2174,6 +2367,11 @@ export const ART = {
     },
   },
   ui: {
+    almanacFrames: {
+      complete: 'ui.almanac-frames.complete',
+      event: 'ui.almanac-frames.event',
+      plain: 'ui.almanac-frames.plain',
+    },
     frames: {
       streetwear: {
         frameBase: 'ui.frames.streetwear.frame-base',

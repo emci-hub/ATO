@@ -26,3 +26,13 @@ Tool notes: pixflux needs >= 1024 px area (16x16 refused); `create_image_pixen` 
 
 Balance: 3184.95 before, 3053.95 after = 131 generations (1 test + 130 batch). No Pro call. 77 + pumpkin = 78 final PNGs, 3 frames, 6 loops.
 Job id -> asset map: `jobs.tsv`. Final picks (retries win over first tries): `final/SOURCES.tsv`. Raw downloads: `raw/`.
+
+## Part 3 (import + scoring, 2026-10-28)
+| Step | Count | Gens |
+|---|---|---|
+| Regenerate the 9 assets that scored under 90 (simpler prompts) | 9 | 9 |
+| Second try for snowflake and sun (still under 90) | 2 | 2 |
+| Third try for the snowflake (two seeds, one kept) | 2 | 2 |
+| Workbench score / repair (free) | ~100 | 0 |
+Balance 3053.95 -> 3040.95 = 13 generations. Whole 11g total: 144 generations (3184.95 -> 3040.95), no Pro call.
+Import: flat PNGs copied into `assets/art/{icons,ui,fx}/unused/almanac-<kind>/` (the sync files unreferenced art under unused/) (ids `icon.almanac-<kind>.<name>`, `ui.almanac-frames.<name>`, `fx.almanac-<x>.<x>-64`), registered by `npm run art:sync`; `art:import`/`art:pack` are hero/atlas tools and were not used for flat icons.

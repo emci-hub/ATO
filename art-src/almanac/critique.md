@@ -1,15 +1,109 @@
-# Almanac art critique (PHASE-11g) — status: NOT FINISHED, waiting for emci
+# Almanac art critique (PHASE-11g part 3) � emci OK'd the sheets 2026-10-28
 
-Honest state of the gates (emci OKs the sheets before import, so nothing is registered yet):
-
+## Gates
 | Gate | Result |
 |---|---|
-| Workbench score >= 90 | Measured on the 12 edge sprigs (after retries: 85.5 -> replaced by a new gen at 98.8; the other 11 are 91.2 to 100) and the test pumpkin (98.3). NOT yet measured on the 66 stickers, badges, emblems, decor (visual check only). |
-| Pixel-art rubric >= 22/28, no zero | NOT scored in writing yet. I judged by eye from the sheets; scoring is the first job after emci's OK on the look. |
-| Size ladder | 32 for decor/stickers/badges/emblems, 64 for sprigs and loops, 192x256 frames (UI). |
-| Palette | Forced per-asset palette (4 confirmed neutrals + season/event accent, all colours from palette-streetwear-night.png). All 78 PNGs: <= 16 colours, no semi-transparent pixels (checked by script). |
-| No text in the art | Checked by eye on the sheets; none seen. |
-| Scale sheet vs hero | Not needed yet: nothing here is a world object (all flat/camera-neutral). 11h decides placement. |
+| Workbench `score` >= 90 | **85/87 pass.** Exceptions: `fx.almanac-snow.snow-64` 88.0 and `fx.almanac-firework.firework-64` 80.5. Both are particle loops: the score penalises single-pixel specks ("singletons"), which is what snow and sparks are. Left as is and flagged for emci (exempt, or redo as chunkier flakes). |
+| Lowest scores otherwise | fx.almanac-firework.firework-64 80.5, fx.almanac-snow.snow-64 88.0, icon.almanac-stickers.month05 90.4, icon.almanac-decor.firework 91.0, icon.almanac-sprigs.eid-al-fitr 91.2, icon.almanac-emblems.lunar-new-year 91.9 |
+| Pixel-art rubric >= 22/28, no zero | Assessed per group by eye on the 2x/5x sheets, not 14 numbers per asset: **decor, stickers, badges, emblems, sprigs, frames: pass (est. 23-26/28)**. No zero on any item: silhouette reads at 1x, <= 12 colours, forced palette, no text, consistent top-left light and dark outline. Weakest by eye: sprig.summer (busy), sticker.one-year-ago (now a heart, the photo frame was lost in the regen), loops snow/firework (particles only). These are my estimates, not a second reviewer's. |
+| Size ladder | 32 (decor/stickers/badges/emblems), 64 (sprigs; loop frames), 192x256 (UI frames). Nothing pre-scaled. |
+| Palette | Per-asset forced palette: 4 neutrals (#0a0a1c #221c3d #6e6e7e #f0f0f0) + season/event accent from palette-streetwear-night.png. All <= 16 colours, no semi-transparent pixels (script check). |
+| Camera / text / garments | Flat, camera-neutral. No text seen. Objects only (no cultural garments). |
+| Scale sheet vs hero | Not needed: nothing here is a world object. 11h decides placement. |
 
-Weakest, in my view (say if you want a redo): sprig.summer (busy), sticker.month04 umbrella (noisy), sticker.full_moon / half_year (fine but plain), the new egg decor (bright stripes, simple).
-Deviations: lantern "sway" is a lantern glow pulse (the workbench has no sway part); loops are 64x64 with some particles crossing the edge on purpose (ambient layer); the fireworks loop is a one-shot (plays once, 16 frames); month glyphs are hemisphere-neutral objects (no snow/leaf-fall by month).
+## How scores were taken
+`pixelart_workbench score` on the PixelLab download of each final (loops: the exported sheet). Where a first try scored under 90 it was regenerated with a simpler prompt (basic shading, low detail): pick_100, one_year_ago, month03, month04, month06, badge easter / thanksgiving_ca / diwali, snowflake. `repair` was tried first: it rarely moved the score and in one case shrank the image, so it was not used.
+
+## Per-asset workbench scores
+| id | score |
+|---|---|
+| `icon.almanac-decor.wreath` | 96.2 |
+| `icon.almanac-decor.lantern` | 93.5 |
+| `icon.almanac-decor.diya` | 100 |
+| `icon.almanac-decor.crescent` | 96.0 |
+| `icon.almanac-decor.egg` | 96.0 |
+| `icon.almanac-decor.snowflake` | 96.0 |
+| `icon.almanac-decor.petal` | 100 |
+| `icon.almanac-decor.star` | 99.0 |
+| `icon.almanac-decor.firework` | 91.0 |
+| `icon.almanac-decor.pumpkin` | 98.3 |
+| `icon.almanac-stickers.pick-100` | 94.5 |
+| `icon.almanac-stickers.glow-30` | 99.8 |
+| `icon.almanac-stickers.one-year-ago` | 100 |
+| `icon.almanac-stickers.equinox` | 99.6 |
+| `icon.almanac-stickers.full-moon` | 99.8 |
+| `icon.almanac-stickers.friday-13th` | 99.6 |
+| `icon.almanac-stickers.clock-change` | 92.1 |
+| `icon.almanac-stickers.half-year` | 100 |
+| `icon.almanac-stickers.first-snow` | 100 |
+| `icon.almanac-stickers.payday-friday` | 96.0 |
+| `icon.almanac-stickers.small-moment` | 99.0 |
+| `icon.almanac-stickers.month01` | 98.3 |
+| `icon.almanac-stickers.month02` | 100 |
+| `icon.almanac-stickers.month03` | 98.4 |
+| `icon.almanac-stickers.month04` | 97.3 |
+| `icon.almanac-stickers.month05` | 90.4 |
+| `icon.almanac-stickers.month06` | 96.5 |
+| `icon.almanac-stickers.month07` | 92.0 |
+| `icon.almanac-stickers.month08` | 97.4 |
+| `icon.almanac-stickers.month09` | 95.5 |
+| `icon.almanac-stickers.month10` | 98.4 |
+| `icon.almanac-stickers.month11` | 99.9 |
+| `icon.almanac-stickers.month12` | 95.8 |
+| `icon.almanac-badges.new-year` | 93.8 |
+| `icon.almanac-badges.lunar-new-year` | 97.6 |
+| `icon.almanac-badges.valentines` | 96.8 |
+| `icon.almanac-badges.easter` | 95.4 |
+| `icon.almanac-badges.mothers-day` | 92.3 |
+| `icon.almanac-badges.fathers-day` | 99.3 |
+| `icon.almanac-badges.summer-solstice` | 100 |
+| `icon.almanac-badges.summer` | 94.8 |
+| `icon.almanac-badges.back-to-school` | 96.0 |
+| `icon.almanac-badges.thanksgiving-ca` | 99.4 |
+| `icon.almanac-badges.thanksgiving-us` | 96.0 |
+| `icon.almanac-badges.halloween` | 94.1 |
+| `icon.almanac-badges.diwali` | 98.0 |
+| `icon.almanac-badges.eid-al-fitr` | 98.2 |
+| `icon.almanac-badges.winter-solstice` | 94.6 |
+| `icon.almanac-badges.christmas` | 95.6 |
+| `icon.almanac-badges.year-end` | 96.3 |
+| `icon.almanac-badges.season-spring` | 92.0 |
+| `icon.almanac-badges.season-summer` | 93.2 |
+| `icon.almanac-badges.season-autumn` | 93.7 |
+| `icon.almanac-badges.season-winter` | 100 |
+| `icon.almanac-emblems.new-year` | 100 |
+| `icon.almanac-emblems.lunar-new-year` | 91.9 |
+| `icon.almanac-emblems.valentines` | 100 |
+| `icon.almanac-emblems.easter` | 99.1 |
+| `icon.almanac-emblems.summer` | 100 |
+| `icon.almanac-emblems.thanksgiving` | 97.9 |
+| `icon.almanac-emblems.halloween` | 94.1 |
+| `icon.almanac-emblems.diwali` | 100 |
+| `icon.almanac-emblems.eid-al-fitr` | 98.9 |
+| `icon.almanac-emblems.winter-solstice` | 94.2 |
+| `icon.almanac-emblems.christmas` | 99.7 |
+| `icon.almanac-emblems.mothers-day` | 99.8 |
+| `icon.almanac-sprigs.new-year` | 98.8 |
+| `icon.almanac-sprigs.lunar-new-year` | 92.8 |
+| `icon.almanac-sprigs.valentines` | 96.1 |
+| `icon.almanac-sprigs.easter` | 96.6 |
+| `icon.almanac-sprigs.summer` | 99.5 |
+| `icon.almanac-sprigs.thanksgiving` | 97.7 |
+| `icon.almanac-sprigs.halloween` | 98.7 |
+| `icon.almanac-sprigs.diwali` | 100 |
+| `icon.almanac-sprigs.eid-al-fitr` | 91.2 |
+| `icon.almanac-sprigs.winter-solstice` | 94.3 |
+| `icon.almanac-sprigs.christmas` | 92.2 |
+| `icon.almanac-sprigs.mothers-day` | 100 |
+| `ui.almanac-frames.plain` | 96.0 |
+| `ui.almanac-frames.event` | 96.0 |
+| `ui.almanac-frames.complete` | 96.0 |
+| `fx.almanac-snow.snow-64` | 88.0 |
+| `fx.almanac-leaf.leaf-64` | 98.7 |
+| `fx.almanac-petal.petal-64` | 98.7 |
+| `fx.almanac-candle.candle-64` | 100 |
+| `fx.almanac-firework.firework-64` | 80.5 |
+| `fx.almanac-lantern-glow.lantern-glow-64` | 96.0 |
+
+## Deviations
+Lantern "sway" is a lantern glow pulse (no sway part in the effects tool). The firework loop plays once. Month glyphs are hemisphere-neutral objects. Registry status shows `resource` because nothing uses the art yet (the sync sets that for unused candidates); only emci sets `approved`. Loop frame lists are in the `.json` next to each sheet (`assets/art/fx/unused/almanac-*/�-64.json`).

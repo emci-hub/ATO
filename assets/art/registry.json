@@ -891,6 +891,258 @@
       "part": "core"
     },
     {
+      "id": "fx.almanac-candle.candle-64",
+      "path": "assets/art/fx/unused/almanac-candle/candle-64.png",
+      "category": "fx",
+      "type": "fx",
+      "theme": "streetwear",
+      "placement": "overlay",
+      "camera": "flat-ui",
+      "size": {
+        "w": 192,
+        "h": 192
+      },
+      "status": "resource",
+      "source": "pixellab",
+      "diskBytes": 1071,
+      "decodedBytes": 147456,
+      "format": "png32",
+      "notes": "md5:09b3cbddddb527995a83f02ff2f9941a",
+      "inUse": false,
+      "set": "almanac-candle",
+      "variant": "default",
+      "tags": [
+        "64px-frames",
+        "almanac",
+        "candle",
+        "loop",
+        "sheet"
+      ],
+      "usedBy": [],
+      "part": "candle-64",
+      "critiqueScore": null,
+      "palette": "streetwear-night+almanac-accent",
+      "genCount": 0,
+      "clips": {
+        "loop": {
+          "dirs": [],
+          "frames": 8,
+          "ms": 100,
+          "loop": true
+        }
+      }
+    },
+    {
+      "id": "fx.almanac-firework.firework-64",
+      "path": "assets/art/fx/unused/almanac-firework/firework-64.png",
+      "category": "fx",
+      "type": "fx",
+      "theme": "streetwear",
+      "placement": "overlay",
+      "camera": "flat-ui",
+      "size": {
+        "w": 256,
+        "h": 256
+      },
+      "status": "resource",
+      "source": "pixellab",
+      "diskBytes": 5796,
+      "decodedBytes": 262144,
+      "format": "png32",
+      "notes": "md5:06755011a7b402fa52ea5b328b497996",
+      "inUse": false,
+      "set": "almanac-firework",
+      "variant": "default",
+      "tags": [
+        "64px-frames",
+        "almanac",
+        "firework",
+        "loop",
+        "sheet"
+      ],
+      "usedBy": [],
+      "part": "firework-64",
+      "critiqueScore": null,
+      "palette": "streetwear-night+almanac-accent",
+      "genCount": 0,
+      "clips": {
+        "loop": {
+          "dirs": [],
+          "frames": 16,
+          "ms": 71,
+          "loop": true
+        }
+      }
+    },
+    {
+      "id": "fx.almanac-lantern-glow.lantern-glow-64",
+      "path": "assets/art/fx/unused/almanac-lantern-glow/lantern-glow-64.png",
+      "category": "fx",
+      "type": "fx",
+      "theme": "streetwear",
+      "placement": "overlay",
+      "camera": "flat-ui",
+      "size": {
+        "w": 256,
+        "h": 192
+      },
+      "status": "resource",
+      "source": "pixellab",
+      "diskBytes": 1150,
+      "decodedBytes": 196608,
+      "format": "png32",
+      "notes": "md5:dde1c41a413931ee8ae71c73c7e18f63",
+      "inUse": false,
+      "set": "almanac-lantern-glow",
+      "variant": "default",
+      "tags": [
+        "64px-frames",
+        "almanac",
+        "lantern-glow",
+        "loop",
+        "sheet"
+      ],
+      "usedBy": [],
+      "part": "lantern-glow-64",
+      "critiqueScore": null,
+      "palette": "streetwear-night+almanac-accent",
+      "genCount": 0,
+      "clips": {
+        "loop": {
+          "dirs": [],
+          "frames": 12,
+          "ms": 83,
+          "loop": true
+        }
+      }
+    },
+    {
+      "id": "fx.almanac-leaf.leaf-64",
+      "path": "assets/art/fx/unused/almanac-leaf/leaf-64.png",
+      "category": "fx",
+      "type": "fx",
+      "theme": "streetwear",
+      "placement": "overlay",
+      "camera": "flat-ui",
+      "size": {
+        "w": 256,
+        "h": 256
+      },
+      "status": "resource",
+      "source": "pixellab",
+      "diskBytes": 3296,
+      "decodedBytes": 262144,
+      "format": "png32",
+      "notes": "md5:80ae9d9732511b4d6ceb00fe36ad28a1",
+      "inUse": false,
+      "set": "almanac-leaf",
+      "variant": "default",
+      "tags": [
+        "64px-frames",
+        "almanac",
+        "leaf",
+        "loop",
+        "sheet"
+      ],
+      "usedBy": [],
+      "part": "leaf-64",
+      "critiqueScore": null,
+      "palette": "streetwear-night+almanac-accent",
+      "genCount": 0,
+      "clips": {
+        "loop": {
+          "dirs": [],
+          "frames": 16,
+          "ms": 100,
+          "loop": true
+        }
+      }
+    },
+    {
+      "id": "fx.almanac-petal.petal-64",
+      "path": "assets/art/fx/unused/almanac-petal/petal-64.png",
+      "category": "fx",
+      "type": "fx",
+      "theme": "streetwear",
+      "placement": "overlay",
+      "camera": "flat-ui",
+      "size": {
+        "w": 256,
+        "h": 256
+      },
+      "status": "resource",
+      "source": "pixellab",
+      "diskBytes": 2755,
+      "decodedBytes": 262144,
+      "format": "png32",
+      "notes": "md5:a782799baf90974ca36c7b70bf763bf0",
+      "inUse": false,
+      "set": "almanac-petal",
+      "variant": "default",
+      "tags": [
+        "64px-frames",
+        "almanac",
+        "loop",
+        "petal",
+        "sheet"
+      ],
+      "usedBy": [],
+      "part": "petal-64",
+      "critiqueScore": null,
+      "palette": "streetwear-night+almanac-accent",
+      "genCount": 0,
+      "clips": {
+        "loop": {
+          "dirs": [],
+          "frames": 16,
+          "ms": 100,
+          "loop": true
+        }
+      }
+    },
+    {
+      "id": "fx.almanac-snow.snow-64",
+      "path": "assets/art/fx/unused/almanac-snow/snow-64.png",
+      "category": "fx",
+      "type": "fx",
+      "theme": "streetwear",
+      "placement": "overlay",
+      "camera": "flat-ui",
+      "size": {
+        "w": 256,
+        "h": 256
+      },
+      "status": "resource",
+      "source": "pixellab",
+      "diskBytes": 1555,
+      "decodedBytes": 262144,
+      "format": "png32",
+      "notes": "md5:93b1e3f4e6dbc32778fb4c9b804933ce",
+      "inUse": false,
+      "set": "almanac-snow",
+      "variant": "default",
+      "tags": [
+        "64px-frames",
+        "almanac",
+        "loop",
+        "sheet",
+        "snow"
+      ],
+      "usedBy": [],
+      "part": "snow-64",
+      "critiqueScore": null,
+      "palette": "streetwear-night+almanac-accent",
+      "genCount": 0,
+      "clips": {
+        "loop": {
+          "dirs": [],
+          "frames": 16,
+          "ms": 83,
+          "loop": true
+        }
+      }
+    },
+    {
       "id": "fx.drip.streetwear",
       "path": "assets/art/fx/unused/streetwear/drip.png",
       "type": "fx",
@@ -2997,6 +3249,2424 @@
         "src/play/generated-play-sheets.ts"
       ],
       "part": "core"
+    },
+    {
+      "id": "icon.almanac-badges.back-to-school",
+      "path": "assets/art/icons/unused/almanac-badges/back-to-school.png",
+      "category": "icons",
+      "type": "icon",
+      "theme": "streetwear",
+      "placement": "hud",
+      "camera": "flat-ui",
+      "size": {
+        "w": 32,
+        "h": 32
+      },
+      "status": "resource",
+      "source": "pixellab",
+      "diskBytes": 898,
+      "decodedBytes": 4096,
+      "format": "png32",
+      "notes": "md5:d1ec0eebe6bb6d6d3d9b9bab08fda5fa",
+      "inUse": false,
+      "set": "almanac-badges",
+      "variant": "default",
+      "tags": [
+        "almanac",
+        "badges"
+      ],
+      "usedBy": [],
+      "part": "back-to-school",
+      "critiqueScore": null,
+      "palette": "streetwear-night+almanac-accent",
+      "genCount": 2
+    },
+    {
+      "id": "icon.almanac-badges.christmas",
+      "path": "assets/art/icons/unused/almanac-badges/christmas.png",
+      "category": "icons",
+      "type": "icon",
+      "theme": "streetwear",
+      "placement": "hud",
+      "camera": "flat-ui",
+      "size": {
+        "w": 32,
+        "h": 32
+      },
+      "status": "resource",
+      "source": "pixellab",
+      "diskBytes": 1005,
+      "decodedBytes": 4096,
+      "format": "png32",
+      "notes": "md5:13438fd350c6c379450a869eee582145",
+      "inUse": false,
+      "set": "almanac-badges",
+      "variant": "default",
+      "tags": [
+        "almanac",
+        "badges"
+      ],
+      "usedBy": [],
+      "part": "christmas",
+      "critiqueScore": null,
+      "palette": "streetwear-night+almanac-accent",
+      "genCount": 1
+    },
+    {
+      "id": "icon.almanac-badges.diwali",
+      "path": "assets/art/icons/unused/almanac-badges/diwali.png",
+      "category": "icons",
+      "type": "icon",
+      "theme": "streetwear",
+      "placement": "hud",
+      "camera": "flat-ui",
+      "size": {
+        "w": 32,
+        "h": 32
+      },
+      "status": "resource",
+      "source": "pixellab",
+      "diskBytes": 738,
+      "decodedBytes": 4096,
+      "format": "png32",
+      "notes": "md5:ec7710413899f20acf5519d42792ad12",
+      "inUse": false,
+      "set": "almanac-badges",
+      "variant": "default",
+      "tags": [
+        "almanac",
+        "badges"
+      ],
+      "usedBy": [],
+      "part": "diwali",
+      "critiqueScore": null,
+      "palette": "streetwear-night+almanac-accent",
+      "genCount": 2
+    },
+    {
+      "id": "icon.almanac-badges.easter",
+      "path": "assets/art/icons/unused/almanac-badges/easter.png",
+      "category": "icons",
+      "type": "icon",
+      "theme": "streetwear",
+      "placement": "hud",
+      "camera": "flat-ui",
+      "size": {
+        "w": 32,
+        "h": 32
+      },
+      "status": "resource",
+      "source": "pixellab",
+      "diskBytes": 832,
+      "decodedBytes": 4096,
+      "format": "png32",
+      "notes": "md5:42cdc61743441fca298ebd25c6aeb053",
+      "inUse": false,
+      "set": "almanac-badges",
+      "variant": "default",
+      "tags": [
+        "almanac",
+        "badges"
+      ],
+      "usedBy": [],
+      "part": "easter",
+      "critiqueScore": null,
+      "palette": "streetwear-night+almanac-accent",
+      "genCount": 2
+    },
+    {
+      "id": "icon.almanac-badges.eid-al-fitr",
+      "path": "assets/art/icons/unused/almanac-badges/eid-al-fitr.png",
+      "category": "icons",
+      "type": "icon",
+      "theme": "streetwear",
+      "placement": "hud",
+      "camera": "flat-ui",
+      "size": {
+        "w": 32,
+        "h": 32
+      },
+      "status": "resource",
+      "source": "pixellab",
+      "diskBytes": 708,
+      "decodedBytes": 4096,
+      "format": "png32",
+      "notes": "md5:db26a423734a27bd376d4626b3dcd2c6",
+      "inUse": false,
+      "set": "almanac-badges",
+      "variant": "default",
+      "tags": [
+        "almanac",
+        "badges"
+      ],
+      "usedBy": [],
+      "part": "eid-al-fitr",
+      "critiqueScore": null,
+      "palette": "streetwear-night+almanac-accent",
+      "genCount": 1
+    },
+    {
+      "id": "icon.almanac-badges.fathers-day",
+      "path": "assets/art/icons/unused/almanac-badges/fathers-day.png",
+      "category": "icons",
+      "type": "icon",
+      "theme": "streetwear",
+      "placement": "hud",
+      "camera": "flat-ui",
+      "size": {
+        "w": 32,
+        "h": 32
+      },
+      "status": "resource",
+      "source": "pixellab",
+      "diskBytes": 609,
+      "decodedBytes": 4096,
+      "format": "png32",
+      "notes": "md5:47de2b54a08db965d3e03841d282c978",
+      "inUse": false,
+      "set": "almanac-badges",
+      "variant": "default",
+      "tags": [
+        "almanac",
+        "badges"
+      ],
+      "usedBy": [],
+      "part": "fathers-day",
+      "critiqueScore": null,
+      "palette": "streetwear-night+almanac-accent",
+      "genCount": 2
+    },
+    {
+      "id": "icon.almanac-badges.halloween",
+      "path": "assets/art/icons/unused/almanac-badges/halloween.png",
+      "category": "icons",
+      "type": "icon",
+      "theme": "streetwear",
+      "placement": "hud",
+      "camera": "flat-ui",
+      "size": {
+        "w": 32,
+        "h": 32
+      },
+      "status": "resource",
+      "source": "pixellab",
+      "diskBytes": 954,
+      "decodedBytes": 4096,
+      "format": "png32",
+      "notes": "md5:b303c6237b17a99ea4d242e92d55d2c6",
+      "inUse": false,
+      "set": "almanac-badges",
+      "variant": "default",
+      "tags": [
+        "almanac",
+        "badges"
+      ],
+      "usedBy": [],
+      "part": "halloween",
+      "critiqueScore": null,
+      "palette": "streetwear-night+almanac-accent",
+      "genCount": 1
+    },
+    {
+      "id": "icon.almanac-badges.lunar-new-year",
+      "path": "assets/art/icons/unused/almanac-badges/lunar-new-year.png",
+      "category": "icons",
+      "type": "icon",
+      "theme": "streetwear",
+      "placement": "hud",
+      "camera": "flat-ui",
+      "size": {
+        "w": 32,
+        "h": 32
+      },
+      "status": "resource",
+      "source": "pixellab",
+      "diskBytes": 693,
+      "decodedBytes": 4096,
+      "format": "png32",
+      "notes": "md5:e45536b2fbb4214b97892c26dbd65ec6",
+      "inUse": false,
+      "set": "almanac-badges",
+      "variant": "default",
+      "tags": [
+        "almanac",
+        "badges"
+      ],
+      "usedBy": [],
+      "part": "lunar-new-year",
+      "critiqueScore": null,
+      "palette": "streetwear-night+almanac-accent",
+      "genCount": 1
+    },
+    {
+      "id": "icon.almanac-badges.mothers-day",
+      "path": "assets/art/icons/unused/almanac-badges/mothers-day.png",
+      "category": "icons",
+      "type": "icon",
+      "theme": "streetwear",
+      "placement": "hud",
+      "camera": "flat-ui",
+      "size": {
+        "w": 32,
+        "h": 32
+      },
+      "status": "resource",
+      "source": "pixellab",
+      "diskBytes": 1146,
+      "decodedBytes": 4096,
+      "format": "png32",
+      "notes": "md5:14a7d54e1b298c3373162fd2e586ccd0",
+      "inUse": false,
+      "set": "almanac-badges",
+      "variant": "default",
+      "tags": [
+        "almanac",
+        "badges"
+      ],
+      "usedBy": [],
+      "part": "mothers-day",
+      "critiqueScore": null,
+      "palette": "streetwear-night+almanac-accent",
+      "genCount": 3
+    },
+    {
+      "id": "icon.almanac-badges.new-year",
+      "path": "assets/art/icons/unused/almanac-badges/new-year.png",
+      "category": "icons",
+      "type": "icon",
+      "theme": "streetwear",
+      "placement": "hud",
+      "camera": "flat-ui",
+      "size": {
+        "w": 32,
+        "h": 32
+      },
+      "status": "resource",
+      "source": "pixellab",
+      "diskBytes": 866,
+      "decodedBytes": 4096,
+      "format": "png32",
+      "notes": "md5:db827caa483447c02a7ff85b0fbc0ff9",
+      "inUse": false,
+      "set": "almanac-badges",
+      "variant": "default",
+      "tags": [
+        "almanac",
+        "badges"
+      ],
+      "usedBy": [],
+      "part": "new-year",
+      "critiqueScore": null,
+      "palette": "streetwear-night+almanac-accent",
+      "genCount": 1
+    },
+    {
+      "id": "icon.almanac-badges.season-autumn",
+      "path": "assets/art/icons/unused/almanac-badges/season-autumn.png",
+      "category": "icons",
+      "type": "icon",
+      "theme": "streetwear",
+      "placement": "hud",
+      "camera": "flat-ui",
+      "size": {
+        "w": 32,
+        "h": 32
+      },
+      "status": "resource",
+      "source": "pixellab",
+      "diskBytes": 972,
+      "decodedBytes": 4096,
+      "format": "png32",
+      "notes": "md5:62ebd05ced5e19f6cf61f76261efb5cb",
+      "inUse": false,
+      "set": "almanac-badges",
+      "variant": "default",
+      "tags": [
+        "almanac",
+        "badges"
+      ],
+      "usedBy": [],
+      "part": "season-autumn",
+      "critiqueScore": null,
+      "palette": "streetwear-night+almanac-accent",
+      "genCount": 1
+    },
+    {
+      "id": "icon.almanac-badges.season-spring",
+      "path": "assets/art/icons/unused/almanac-badges/season-spring.png",
+      "category": "icons",
+      "type": "icon",
+      "theme": "streetwear",
+      "placement": "hud",
+      "camera": "flat-ui",
+      "size": {
+        "w": 32,
+        "h": 32
+      },
+      "status": "resource",
+      "source": "pixellab",
+      "diskBytes": 757,
+      "decodedBytes": 4096,
+      "format": "png32",
+      "notes": "md5:e616d6b1e934d9007da2f83196335408",
+      "inUse": false,
+      "set": "almanac-badges",
+      "variant": "default",
+      "tags": [
+        "almanac",
+        "badges"
+      ],
+      "usedBy": [],
+      "part": "season-spring",
+      "critiqueScore": null,
+      "palette": "streetwear-night+almanac-accent",
+      "genCount": 1
+    },
+    {
+      "id": "icon.almanac-badges.season-summer",
+      "path": "assets/art/icons/unused/almanac-badges/season-summer.png",
+      "category": "icons",
+      "type": "icon",
+      "theme": "streetwear",
+      "placement": "hud",
+      "camera": "flat-ui",
+      "size": {
+        "w": 32,
+        "h": 32
+      },
+      "status": "resource",
+      "source": "pixellab",
+      "diskBytes": 1038,
+      "decodedBytes": 4096,
+      "format": "png32",
+      "notes": "md5:251c4f23176e93768b50ebb2d6ceaeb5",
+      "inUse": false,
+      "set": "almanac-badges",
+      "variant": "default",
+      "tags": [
+        "almanac",
+        "badges"
+      ],
+      "usedBy": [],
+      "part": "season-summer",
+      "critiqueScore": null,
+      "palette": "streetwear-night+almanac-accent",
+      "genCount": 1
+    },
+    {
+      "id": "icon.almanac-badges.season-winter",
+      "path": "assets/art/icons/unused/almanac-badges/season-winter.png",
+      "category": "icons",
+      "type": "icon",
+      "theme": "streetwear",
+      "placement": "hud",
+      "camera": "flat-ui",
+      "size": {
+        "w": 32,
+        "h": 32
+      },
+      "status": "resource",
+      "source": "pixellab",
+      "diskBytes": 631,
+      "decodedBytes": 4096,
+      "format": "png32",
+      "notes": "md5:1be43942e9c0fe96e29a7beac4e9b450",
+      "inUse": false,
+      "set": "almanac-badges",
+      "variant": "default",
+      "tags": [
+        "almanac",
+        "badges"
+      ],
+      "usedBy": [],
+      "part": "season-winter",
+      "critiqueScore": null,
+      "palette": "streetwear-night+almanac-accent",
+      "genCount": 1
+    },
+    {
+      "id": "icon.almanac-badges.summer",
+      "path": "assets/art/icons/unused/almanac-badges/summer.png",
+      "category": "icons",
+      "type": "icon",
+      "theme": "streetwear",
+      "placement": "hud",
+      "camera": "flat-ui",
+      "size": {
+        "w": 32,
+        "h": 32
+      },
+      "status": "resource",
+      "source": "pixellab",
+      "diskBytes": 914,
+      "decodedBytes": 4096,
+      "format": "png32",
+      "notes": "md5:4b561fbf0cc30d09b43a20b520e97ca4",
+      "inUse": false,
+      "set": "almanac-badges",
+      "variant": "default",
+      "tags": [
+        "almanac",
+        "badges"
+      ],
+      "usedBy": [],
+      "part": "summer",
+      "critiqueScore": null,
+      "palette": "streetwear-night+almanac-accent",
+      "genCount": 1
+    },
+    {
+      "id": "icon.almanac-badges.summer-solstice",
+      "path": "assets/art/icons/unused/almanac-badges/summer-solstice.png",
+      "category": "icons",
+      "type": "icon",
+      "theme": "streetwear",
+      "placement": "hud",
+      "camera": "flat-ui",
+      "size": {
+        "w": 32,
+        "h": 32
+      },
+      "status": "resource",
+      "source": "pixellab",
+      "diskBytes": 590,
+      "decodedBytes": 4096,
+      "format": "png32",
+      "notes": "md5:c307d967d5a1a4b81f0c2408505d24f2",
+      "inUse": false,
+      "set": "almanac-badges",
+      "variant": "default",
+      "tags": [
+        "almanac",
+        "badges"
+      ],
+      "usedBy": [],
+      "part": "summer-solstice",
+      "critiqueScore": null,
+      "palette": "streetwear-night+almanac-accent",
+      "genCount": 1
+    },
+    {
+      "id": "icon.almanac-badges.thanksgiving-ca",
+      "path": "assets/art/icons/unused/almanac-badges/thanksgiving-ca.png",
+      "category": "icons",
+      "type": "icon",
+      "theme": "streetwear",
+      "placement": "hud",
+      "camera": "flat-ui",
+      "size": {
+        "w": 32,
+        "h": 32
+      },
+      "status": "resource",
+      "source": "pixellab",
+      "diskBytes": 570,
+      "decodedBytes": 4096,
+      "format": "png32",
+      "notes": "md5:78e75eaee732987704b358e893b1cef7",
+      "inUse": false,
+      "set": "almanac-badges",
+      "variant": "default",
+      "tags": [
+        "almanac",
+        "badges"
+      ],
+      "usedBy": [],
+      "part": "thanksgiving-ca",
+      "critiqueScore": null,
+      "palette": "streetwear-night+almanac-accent",
+      "genCount": 2
+    },
+    {
+      "id": "icon.almanac-badges.thanksgiving-us",
+      "path": "assets/art/icons/unused/almanac-badges/thanksgiving-us.png",
+      "category": "icons",
+      "type": "icon",
+      "theme": "streetwear",
+      "placement": "hud",
+      "camera": "flat-ui",
+      "size": {
+        "w": 32,
+        "h": 32
+      },
+      "status": "resource",
+      "source": "pixellab",
+      "diskBytes": 966,
+      "decodedBytes": 4096,
+      "format": "png32",
+      "notes": "md5:16f17cb3a2f7d2da90229e41d2fe3d0a",
+      "inUse": false,
+      "set": "almanac-badges",
+      "variant": "default",
+      "tags": [
+        "almanac",
+        "badges"
+      ],
+      "usedBy": [],
+      "part": "thanksgiving-us",
+      "critiqueScore": null,
+      "palette": "streetwear-night+almanac-accent",
+      "genCount": 2
+    },
+    {
+      "id": "icon.almanac-badges.valentines",
+      "path": "assets/art/icons/unused/almanac-badges/valentines.png",
+      "category": "icons",
+      "type": "icon",
+      "theme": "streetwear",
+      "placement": "hud",
+      "camera": "flat-ui",
+      "size": {
+        "w": 32,
+        "h": 32
+      },
+      "status": "resource",
+      "source": "pixellab",
+      "diskBytes": 784,
+      "decodedBytes": 4096,
+      "format": "png32",
+      "notes": "md5:a266ecddd246d538cf5395f92be76488",
+      "inUse": false,
+      "set": "almanac-badges",
+      "variant": "default",
+      "tags": [
+        "almanac",
+        "badges"
+      ],
+      "usedBy": [],
+      "part": "valentines",
+      "critiqueScore": null,
+      "palette": "streetwear-night+almanac-accent",
+      "genCount": 1
+    },
+    {
+      "id": "icon.almanac-badges.winter-solstice",
+      "path": "assets/art/icons/unused/almanac-badges/winter-solstice.png",
+      "category": "icons",
+      "type": "icon",
+      "theme": "streetwear",
+      "placement": "hud",
+      "camera": "flat-ui",
+      "size": {
+        "w": 32,
+        "h": 32
+      },
+      "status": "resource",
+      "source": "pixellab",
+      "diskBytes": 588,
+      "decodedBytes": 4096,
+      "format": "png32",
+      "notes": "md5:a548ed86f30363ce741375d78101e938",
+      "inUse": false,
+      "set": "almanac-badges",
+      "variant": "default",
+      "tags": [
+        "almanac",
+        "badges"
+      ],
+      "usedBy": [],
+      "part": "winter-solstice",
+      "critiqueScore": null,
+      "palette": "streetwear-night+almanac-accent",
+      "genCount": 2
+    },
+    {
+      "id": "icon.almanac-badges.year-end",
+      "path": "assets/art/icons/unused/almanac-badges/year-end.png",
+      "category": "icons",
+      "type": "icon",
+      "theme": "streetwear",
+      "placement": "hud",
+      "camera": "flat-ui",
+      "size": {
+        "w": 32,
+        "h": 32
+      },
+      "status": "resource",
+      "source": "pixellab",
+      "diskBytes": 729,
+      "decodedBytes": 4096,
+      "format": "png32",
+      "notes": "md5:8a7f1d980c3972f9359bc42a384ce602",
+      "inUse": false,
+      "set": "almanac-badges",
+      "variant": "default",
+      "tags": [
+        "almanac",
+        "badges"
+      ],
+      "usedBy": [],
+      "part": "year-end",
+      "critiqueScore": null,
+      "palette": "streetwear-night+almanac-accent",
+      "genCount": 1
+    },
+    {
+      "id": "icon.almanac-decor.crescent",
+      "path": "assets/art/icons/unused/almanac-decor/crescent.png",
+      "category": "icons",
+      "type": "icon",
+      "theme": "streetwear",
+      "placement": "hud",
+      "camera": "flat-ui",
+      "size": {
+        "w": 32,
+        "h": 32
+      },
+      "status": "resource",
+      "source": "pixellab",
+      "diskBytes": 306,
+      "decodedBytes": 4096,
+      "format": "png32",
+      "notes": "md5:540b9493b6b34a5982948a41469bc551",
+      "inUse": false,
+      "set": "almanac-decor",
+      "variant": "default",
+      "tags": [
+        "almanac",
+        "decor"
+      ],
+      "usedBy": [],
+      "part": "crescent",
+      "critiqueScore": null,
+      "palette": "streetwear-night+almanac-accent",
+      "genCount": 1
+    },
+    {
+      "id": "icon.almanac-decor.diya",
+      "path": "assets/art/icons/unused/almanac-decor/diya.png",
+      "category": "icons",
+      "type": "icon",
+      "theme": "streetwear",
+      "placement": "hud",
+      "camera": "flat-ui",
+      "size": {
+        "w": 32,
+        "h": 32
+      },
+      "status": "resource",
+      "source": "pixellab",
+      "diskBytes": 480,
+      "decodedBytes": 4096,
+      "format": "png32",
+      "notes": "md5:79e4d13cb69fd8cb82b97acfd0455d3c",
+      "inUse": false,
+      "set": "almanac-decor",
+      "variant": "default",
+      "tags": [
+        "almanac",
+        "decor"
+      ],
+      "usedBy": [],
+      "part": "diya",
+      "critiqueScore": null,
+      "palette": "streetwear-night+almanac-accent",
+      "genCount": 1
+    },
+    {
+      "id": "icon.almanac-decor.egg",
+      "path": "assets/art/icons/unused/almanac-decor/egg.png",
+      "category": "icons",
+      "type": "icon",
+      "theme": "streetwear",
+      "placement": "hud",
+      "camera": "flat-ui",
+      "size": {
+        "w": 32,
+        "h": 32
+      },
+      "status": "resource",
+      "source": "pixellab",
+      "diskBytes": 552,
+      "decodedBytes": 4096,
+      "format": "png32",
+      "notes": "md5:4900e3f5a34e3b134882f913acafff48",
+      "inUse": false,
+      "set": "almanac-decor",
+      "variant": "default",
+      "tags": [
+        "almanac",
+        "decor"
+      ],
+      "usedBy": [],
+      "part": "egg",
+      "critiqueScore": null,
+      "palette": "streetwear-night+almanac-accent",
+      "genCount": 2
+    },
+    {
+      "id": "icon.almanac-decor.firework",
+      "path": "assets/art/icons/unused/almanac-decor/firework.png",
+      "category": "icons",
+      "type": "icon",
+      "theme": "streetwear",
+      "placement": "hud",
+      "camera": "flat-ui",
+      "size": {
+        "w": 32,
+        "h": 32
+      },
+      "status": "resource",
+      "source": "pixellab",
+      "diskBytes": 566,
+      "decodedBytes": 4096,
+      "format": "png32",
+      "notes": "md5:c4a205f9a10ee2c048944dd26d5fc1d3",
+      "inUse": false,
+      "set": "almanac-decor",
+      "variant": "default",
+      "tags": [
+        "almanac",
+        "decor"
+      ],
+      "usedBy": [],
+      "part": "firework",
+      "critiqueScore": null,
+      "palette": "streetwear-night+almanac-accent",
+      "genCount": 1
+    },
+    {
+      "id": "icon.almanac-decor.lantern",
+      "path": "assets/art/icons/unused/almanac-decor/lantern.png",
+      "category": "icons",
+      "type": "icon",
+      "theme": "streetwear",
+      "placement": "hud",
+      "camera": "flat-ui",
+      "size": {
+        "w": 32,
+        "h": 32
+      },
+      "status": "resource",
+      "source": "pixellab",
+      "diskBytes": 450,
+      "decodedBytes": 4096,
+      "format": "png32",
+      "notes": "md5:ee713890e0a37d088fbf004a7839bc14",
+      "inUse": false,
+      "set": "almanac-decor",
+      "variant": "default",
+      "tags": [
+        "almanac",
+        "decor"
+      ],
+      "usedBy": [],
+      "part": "lantern",
+      "critiqueScore": null,
+      "palette": "streetwear-night+almanac-accent",
+      "genCount": 1
+    },
+    {
+      "id": "icon.almanac-decor.petal",
+      "path": "assets/art/icons/unused/almanac-decor/petal.png",
+      "category": "icons",
+      "type": "icon",
+      "theme": "streetwear",
+      "placement": "hud",
+      "camera": "flat-ui",
+      "size": {
+        "w": 32,
+        "h": 32
+      },
+      "status": "resource",
+      "source": "pixellab",
+      "diskBytes": 488,
+      "decodedBytes": 4096,
+      "format": "png32",
+      "notes": "md5:b2be5e8a898d751ffa3d36d880e15745",
+      "inUse": false,
+      "set": "almanac-decor",
+      "variant": "default",
+      "tags": [
+        "almanac",
+        "decor"
+      ],
+      "usedBy": [],
+      "part": "petal",
+      "critiqueScore": null,
+      "palette": "streetwear-night+almanac-accent",
+      "genCount": 1
+    },
+    {
+      "id": "icon.almanac-decor.pumpkin",
+      "path": "assets/art/icons/unused/almanac-decor/pumpkin.png",
+      "category": "icons",
+      "type": "icon",
+      "theme": "streetwear",
+      "placement": "hud",
+      "camera": "flat-ui",
+      "size": {
+        "w": 32,
+        "h": 32
+      },
+      "status": "resource",
+      "source": "pixellab",
+      "diskBytes": 935,
+      "decodedBytes": 4096,
+      "format": "png32",
+      "notes": "md5:a4c2e43096bb0d970bb116bf82b1ebe9",
+      "inUse": false,
+      "set": "almanac-decor",
+      "variant": "default",
+      "tags": [
+        "almanac",
+        "decor"
+      ],
+      "usedBy": [],
+      "part": "pumpkin",
+      "critiqueScore": null,
+      "palette": "streetwear-night+almanac-accent",
+      "genCount": 1
+    },
+    {
+      "id": "icon.almanac-decor.snowflake",
+      "path": "assets/art/icons/unused/almanac-decor/snowflake.png",
+      "category": "icons",
+      "type": "icon",
+      "theme": "streetwear",
+      "placement": "hud",
+      "camera": "flat-ui",
+      "size": {
+        "w": 32,
+        "h": 32
+      },
+      "status": "resource",
+      "source": "pixellab",
+      "diskBytes": 577,
+      "decodedBytes": 4096,
+      "format": "png32",
+      "notes": "md5:5384fdcb6128cfd8c1e8128fc20a4605",
+      "inUse": false,
+      "set": "almanac-decor",
+      "variant": "default",
+      "tags": [
+        "almanac",
+        "decor"
+      ],
+      "usedBy": [],
+      "part": "snowflake",
+      "critiqueScore": null,
+      "palette": "streetwear-night+almanac-accent",
+      "genCount": 5
+    },
+    {
+      "id": "icon.almanac-decor.star",
+      "path": "assets/art/icons/unused/almanac-decor/star.png",
+      "category": "icons",
+      "type": "icon",
+      "theme": "streetwear",
+      "placement": "hud",
+      "camera": "flat-ui",
+      "size": {
+        "w": 32,
+        "h": 32
+      },
+      "status": "resource",
+      "source": "pixellab",
+      "diskBytes": 403,
+      "decodedBytes": 4096,
+      "format": "png32",
+      "notes": "md5:866772e52c3de6394a4c2538cfd64a02",
+      "inUse": false,
+      "set": "almanac-decor",
+      "variant": "default",
+      "tags": [
+        "almanac",
+        "decor"
+      ],
+      "usedBy": [],
+      "part": "star",
+      "critiqueScore": null,
+      "palette": "streetwear-night+almanac-accent",
+      "genCount": 1
+    },
+    {
+      "id": "icon.almanac-decor.wreath",
+      "path": "assets/art/icons/unused/almanac-decor/wreath.png",
+      "category": "icons",
+      "type": "icon",
+      "theme": "streetwear",
+      "placement": "hud",
+      "camera": "flat-ui",
+      "size": {
+        "w": 32,
+        "h": 32
+      },
+      "status": "resource",
+      "source": "pixellab",
+      "diskBytes": 820,
+      "decodedBytes": 4096,
+      "format": "png32",
+      "notes": "md5:6479a6fa218a98c74486635ccc597e10",
+      "inUse": false,
+      "set": "almanac-decor",
+      "variant": "default",
+      "tags": [
+        "almanac",
+        "decor"
+      ],
+      "usedBy": [],
+      "part": "wreath",
+      "critiqueScore": null,
+      "palette": "streetwear-night+almanac-accent",
+      "genCount": 1
+    },
+    {
+      "id": "icon.almanac-emblems.christmas",
+      "path": "assets/art/icons/unused/almanac-emblems/christmas.png",
+      "category": "icons",
+      "type": "icon",
+      "theme": "streetwear",
+      "placement": "hud",
+      "camera": "flat-ui",
+      "size": {
+        "w": 32,
+        "h": 32
+      },
+      "status": "resource",
+      "source": "pixellab",
+      "diskBytes": 760,
+      "decodedBytes": 4096,
+      "format": "png32",
+      "notes": "md5:86b20c6444f6aeb652f5d7860b0fce08",
+      "inUse": false,
+      "set": "almanac-emblems",
+      "variant": "default",
+      "tags": [
+        "almanac",
+        "emblems"
+      ],
+      "usedBy": [],
+      "part": "christmas",
+      "critiqueScore": null,
+      "palette": "streetwear-night+almanac-accent",
+      "genCount": 1
+    },
+    {
+      "id": "icon.almanac-emblems.diwali",
+      "path": "assets/art/icons/unused/almanac-emblems/diwali.png",
+      "category": "icons",
+      "type": "icon",
+      "theme": "streetwear",
+      "placement": "hud",
+      "camera": "flat-ui",
+      "size": {
+        "w": 32,
+        "h": 32
+      },
+      "status": "resource",
+      "source": "pixellab",
+      "diskBytes": 652,
+      "decodedBytes": 4096,
+      "format": "png32",
+      "notes": "md5:158d048e999e1b3d1cbbfd6d3a89b5f6",
+      "inUse": false,
+      "set": "almanac-emblems",
+      "variant": "default",
+      "tags": [
+        "almanac",
+        "emblems"
+      ],
+      "usedBy": [],
+      "part": "diwali",
+      "critiqueScore": null,
+      "palette": "streetwear-night+almanac-accent",
+      "genCount": 1
+    },
+    {
+      "id": "icon.almanac-emblems.easter",
+      "path": "assets/art/icons/unused/almanac-emblems/easter.png",
+      "category": "icons",
+      "type": "icon",
+      "theme": "streetwear",
+      "placement": "hud",
+      "camera": "flat-ui",
+      "size": {
+        "w": 32,
+        "h": 32
+      },
+      "status": "resource",
+      "source": "pixellab",
+      "diskBytes": 651,
+      "decodedBytes": 4096,
+      "format": "png32",
+      "notes": "md5:881954d8149aed6e298f4a38e6650563",
+      "inUse": false,
+      "set": "almanac-emblems",
+      "variant": "default",
+      "tags": [
+        "almanac",
+        "emblems"
+      ],
+      "usedBy": [],
+      "part": "easter",
+      "critiqueScore": null,
+      "palette": "streetwear-night+almanac-accent",
+      "genCount": 1
+    },
+    {
+      "id": "icon.almanac-emblems.eid-al-fitr",
+      "path": "assets/art/icons/unused/almanac-emblems/eid-al-fitr.png",
+      "category": "icons",
+      "type": "icon",
+      "theme": "streetwear",
+      "placement": "hud",
+      "camera": "flat-ui",
+      "size": {
+        "w": 32,
+        "h": 32
+      },
+      "status": "resource",
+      "source": "pixellab",
+      "diskBytes": 473,
+      "decodedBytes": 4096,
+      "format": "png32",
+      "notes": "md5:37557f1baae3f14d2c310927bc298753",
+      "inUse": false,
+      "set": "almanac-emblems",
+      "variant": "default",
+      "tags": [
+        "almanac",
+        "emblems"
+      ],
+      "usedBy": [],
+      "part": "eid-al-fitr",
+      "critiqueScore": null,
+      "palette": "streetwear-night+almanac-accent",
+      "genCount": 1
+    },
+    {
+      "id": "icon.almanac-emblems.halloween",
+      "path": "assets/art/icons/unused/almanac-emblems/halloween.png",
+      "category": "icons",
+      "type": "icon",
+      "theme": "streetwear",
+      "placement": "hud",
+      "camera": "flat-ui",
+      "size": {
+        "w": 32,
+        "h": 32
+      },
+      "status": "resource",
+      "source": "pixellab",
+      "diskBytes": 637,
+      "decodedBytes": 4096,
+      "format": "png32",
+      "notes": "md5:80f481599809838fa50ea313d20f12f9",
+      "inUse": false,
+      "set": "almanac-emblems",
+      "variant": "default",
+      "tags": [
+        "almanac",
+        "emblems"
+      ],
+      "usedBy": [],
+      "part": "halloween",
+      "critiqueScore": null,
+      "palette": "streetwear-night+almanac-accent",
+      "genCount": 1
+    },
+    {
+      "id": "icon.almanac-emblems.lunar-new-year",
+      "path": "assets/art/icons/unused/almanac-emblems/lunar-new-year.png",
+      "category": "icons",
+      "type": "icon",
+      "theme": "streetwear",
+      "placement": "hud",
+      "camera": "flat-ui",
+      "size": {
+        "w": 32,
+        "h": 32
+      },
+      "status": "resource",
+      "source": "pixellab",
+      "diskBytes": 645,
+      "decodedBytes": 4096,
+      "format": "png32",
+      "notes": "md5:62362796bf5bf686582574577a393530",
+      "inUse": false,
+      "set": "almanac-emblems",
+      "variant": "default",
+      "tags": [
+        "almanac",
+        "emblems"
+      ],
+      "usedBy": [],
+      "part": "lunar-new-year",
+      "critiqueScore": null,
+      "palette": "streetwear-night+almanac-accent",
+      "genCount": 1
+    },
+    {
+      "id": "icon.almanac-emblems.mothers-day",
+      "path": "assets/art/icons/unused/almanac-emblems/mothers-day.png",
+      "category": "icons",
+      "type": "icon",
+      "theme": "streetwear",
+      "placement": "hud",
+      "camera": "flat-ui",
+      "size": {
+        "w": 32,
+        "h": 32
+      },
+      "status": "resource",
+      "source": "pixellab",
+      "diskBytes": 670,
+      "decodedBytes": 4096,
+      "format": "png32",
+      "notes": "md5:0112a9c59c1f50201cd123757a7e6af3",
+      "inUse": false,
+      "set": "almanac-emblems",
+      "variant": "default",
+      "tags": [
+        "almanac",
+        "emblems"
+      ],
+      "usedBy": [],
+      "part": "mothers-day",
+      "critiqueScore": null,
+      "palette": "streetwear-night+almanac-accent",
+      "genCount": 2
+    },
+    {
+      "id": "icon.almanac-emblems.new-year",
+      "path": "assets/art/icons/unused/almanac-emblems/new-year.png",
+      "category": "icons",
+      "type": "icon",
+      "theme": "streetwear",
+      "placement": "hud",
+      "camera": "flat-ui",
+      "size": {
+        "w": 32,
+        "h": 32
+      },
+      "status": "resource",
+      "source": "pixellab",
+      "diskBytes": 512,
+      "decodedBytes": 4096,
+      "format": "png32",
+      "notes": "md5:d47b6b8dc4eac7c712b7d1f158e1b712",
+      "inUse": false,
+      "set": "almanac-emblems",
+      "variant": "default",
+      "tags": [
+        "almanac",
+        "emblems"
+      ],
+      "usedBy": [],
+      "part": "new-year",
+      "critiqueScore": null,
+      "palette": "streetwear-night+almanac-accent",
+      "genCount": 2
+    },
+    {
+      "id": "icon.almanac-emblems.summer",
+      "path": "assets/art/icons/unused/almanac-emblems/summer.png",
+      "category": "icons",
+      "type": "icon",
+      "theme": "streetwear",
+      "placement": "hud",
+      "camera": "flat-ui",
+      "size": {
+        "w": 32,
+        "h": 32
+      },
+      "status": "resource",
+      "source": "pixellab",
+      "diskBytes": 733,
+      "decodedBytes": 4096,
+      "format": "png32",
+      "notes": "md5:22527440b10d6a54647a318f1bc6399e",
+      "inUse": false,
+      "set": "almanac-emblems",
+      "variant": "default",
+      "tags": [
+        "almanac",
+        "emblems"
+      ],
+      "usedBy": [],
+      "part": "summer",
+      "critiqueScore": null,
+      "palette": "streetwear-night+almanac-accent",
+      "genCount": 1
+    },
+    {
+      "id": "icon.almanac-emblems.thanksgiving",
+      "path": "assets/art/icons/unused/almanac-emblems/thanksgiving.png",
+      "category": "icons",
+      "type": "icon",
+      "theme": "streetwear",
+      "placement": "hud",
+      "camera": "flat-ui",
+      "size": {
+        "w": 32,
+        "h": 32
+      },
+      "status": "resource",
+      "source": "pixellab",
+      "diskBytes": 642,
+      "decodedBytes": 4096,
+      "format": "png32",
+      "notes": "md5:d5ad4dbb6f9472a39b269b4d3639303b",
+      "inUse": false,
+      "set": "almanac-emblems",
+      "variant": "default",
+      "tags": [
+        "almanac",
+        "emblems"
+      ],
+      "usedBy": [],
+      "part": "thanksgiving",
+      "critiqueScore": null,
+      "palette": "streetwear-night+almanac-accent",
+      "genCount": 1
+    },
+    {
+      "id": "icon.almanac-emblems.valentines",
+      "path": "assets/art/icons/unused/almanac-emblems/valentines.png",
+      "category": "icons",
+      "type": "icon",
+      "theme": "streetwear",
+      "placement": "hud",
+      "camera": "flat-ui",
+      "size": {
+        "w": 32,
+        "h": 32
+      },
+      "status": "resource",
+      "source": "pixellab",
+      "diskBytes": 388,
+      "decodedBytes": 4096,
+      "format": "png32",
+      "notes": "md5:978664bf0250fe8cd73892c552148e80",
+      "inUse": false,
+      "set": "almanac-emblems",
+      "variant": "default",
+      "tags": [
+        "almanac",
+        "emblems"
+      ],
+      "usedBy": [],
+      "part": "valentines",
+      "critiqueScore": null,
+      "palette": "streetwear-night+almanac-accent",
+      "genCount": 1
+    },
+    {
+      "id": "icon.almanac-emblems.winter-solstice",
+      "path": "assets/art/icons/unused/almanac-emblems/winter-solstice.png",
+      "category": "icons",
+      "type": "icon",
+      "theme": "streetwear",
+      "placement": "hud",
+      "camera": "flat-ui",
+      "size": {
+        "w": 32,
+        "h": 32
+      },
+      "status": "resource",
+      "source": "pixellab",
+      "diskBytes": 817,
+      "decodedBytes": 4096,
+      "format": "png32",
+      "notes": "md5:bf98464da539b2e47d936a11f7237289",
+      "inUse": false,
+      "set": "almanac-emblems",
+      "variant": "default",
+      "tags": [
+        "almanac",
+        "emblems"
+      ],
+      "usedBy": [],
+      "part": "winter-solstice",
+      "critiqueScore": null,
+      "palette": "streetwear-night+almanac-accent",
+      "genCount": 2
+    },
+    {
+      "id": "icon.almanac-sprigs.christmas",
+      "path": "assets/art/icons/unused/almanac-sprigs/christmas.png",
+      "category": "icons",
+      "type": "icon",
+      "theme": "streetwear",
+      "placement": "hud",
+      "camera": "flat-ui",
+      "size": {
+        "w": 64,
+        "h": 64
+      },
+      "status": "resource",
+      "source": "pixellab",
+      "diskBytes": 1380,
+      "decodedBytes": 16384,
+      "format": "png32",
+      "notes": "md5:2e3bd4551602123f178e4c16388ccede",
+      "inUse": false,
+      "set": "almanac-sprigs",
+      "variant": "default",
+      "tags": [
+        "almanac",
+        "sprigs"
+      ],
+      "usedBy": [],
+      "part": "christmas",
+      "critiqueScore": null,
+      "palette": "streetwear-night+almanac-accent",
+      "genCount": 2
+    },
+    {
+      "id": "icon.almanac-sprigs.diwali",
+      "path": "assets/art/icons/unused/almanac-sprigs/diwali.png",
+      "category": "icons",
+      "type": "icon",
+      "theme": "streetwear",
+      "placement": "hud",
+      "camera": "flat-ui",
+      "size": {
+        "w": 64,
+        "h": 64
+      },
+      "status": "resource",
+      "source": "pixellab",
+      "diskBytes": 813,
+      "decodedBytes": 16384,
+      "format": "png32",
+      "notes": "md5:b949bbd3c59e3141034b406fe8ba6889",
+      "inUse": false,
+      "set": "almanac-sprigs",
+      "variant": "default",
+      "tags": [
+        "almanac",
+        "sprigs"
+      ],
+      "usedBy": [],
+      "part": "diwali",
+      "critiqueScore": null,
+      "palette": "streetwear-night+almanac-accent",
+      "genCount": 1
+    },
+    {
+      "id": "icon.almanac-sprigs.easter",
+      "path": "assets/art/icons/unused/almanac-sprigs/easter.png",
+      "category": "icons",
+      "type": "icon",
+      "theme": "streetwear",
+      "placement": "hud",
+      "camera": "flat-ui",
+      "size": {
+        "w": 64,
+        "h": 64
+      },
+      "status": "resource",
+      "source": "pixellab",
+      "diskBytes": 1047,
+      "decodedBytes": 16384,
+      "format": "png32",
+      "notes": "md5:936e037471aae7f2d06bd521dfa9aaed",
+      "inUse": false,
+      "set": "almanac-sprigs",
+      "variant": "default",
+      "tags": [
+        "almanac",
+        "sprigs"
+      ],
+      "usedBy": [],
+      "part": "easter",
+      "critiqueScore": null,
+      "palette": "streetwear-night+almanac-accent",
+      "genCount": 2
+    },
+    {
+      "id": "icon.almanac-sprigs.eid-al-fitr",
+      "path": "assets/art/icons/unused/almanac-sprigs/eid-al-fitr.png",
+      "category": "icons",
+      "type": "icon",
+      "theme": "streetwear",
+      "placement": "hud",
+      "camera": "flat-ui",
+      "size": {
+        "w": 64,
+        "h": 64
+      },
+      "status": "resource",
+      "source": "pixellab",
+      "diskBytes": 976,
+      "decodedBytes": 16384,
+      "format": "png32",
+      "notes": "md5:4c4fe0231a7656518c9cb3ebddbdf95d",
+      "inUse": false,
+      "set": "almanac-sprigs",
+      "variant": "default",
+      "tags": [
+        "almanac",
+        "sprigs"
+      ],
+      "usedBy": [],
+      "part": "eid-al-fitr",
+      "critiqueScore": null,
+      "palette": "streetwear-night+almanac-accent",
+      "genCount": 4
+    },
+    {
+      "id": "icon.almanac-sprigs.halloween",
+      "path": "assets/art/icons/unused/almanac-sprigs/halloween.png",
+      "category": "icons",
+      "type": "icon",
+      "theme": "streetwear",
+      "placement": "hud",
+      "camera": "flat-ui",
+      "size": {
+        "w": 64,
+        "h": 64
+      },
+      "status": "resource",
+      "source": "pixellab",
+      "diskBytes": 763,
+      "decodedBytes": 16384,
+      "format": "png32",
+      "notes": "md5:5375c09650eb1a5fa68bf6fa8e940705",
+      "inUse": false,
+      "set": "almanac-sprigs",
+      "variant": "default",
+      "tags": [
+        "almanac",
+        "sprigs"
+      ],
+      "usedBy": [],
+      "part": "halloween",
+      "critiqueScore": null,
+      "palette": "streetwear-night+almanac-accent",
+      "genCount": 2
+    },
+    {
+      "id": "icon.almanac-sprigs.lunar-new-year",
+      "path": "assets/art/icons/unused/almanac-sprigs/lunar-new-year.png",
+      "category": "icons",
+      "type": "icon",
+      "theme": "streetwear",
+      "placement": "hud",
+      "camera": "flat-ui",
+      "size": {
+        "w": 64,
+        "h": 64
+      },
+      "status": "resource",
+      "source": "pixellab",
+      "diskBytes": 1149,
+      "decodedBytes": 16384,
+      "format": "png32",
+      "notes": "md5:b47d6d54f6cf39cc131dd2de3137c97c",
+      "inUse": false,
+      "set": "almanac-sprigs",
+      "variant": "default",
+      "tags": [
+        "almanac",
+        "sprigs"
+      ],
+      "usedBy": [],
+      "part": "lunar-new-year",
+      "critiqueScore": null,
+      "palette": "streetwear-night+almanac-accent",
+      "genCount": 1
+    },
+    {
+      "id": "icon.almanac-sprigs.mothers-day",
+      "path": "assets/art/icons/unused/almanac-sprigs/mothers-day.png",
+      "category": "icons",
+      "type": "icon",
+      "theme": "streetwear",
+      "placement": "hud",
+      "camera": "flat-ui",
+      "size": {
+        "w": 64,
+        "h": 64
+      },
+      "status": "resource",
+      "source": "pixellab",
+      "diskBytes": 1249,
+      "decodedBytes": 16384,
+      "format": "png32",
+      "notes": "md5:dbd63edf8c37422aefe20f7ad2dbc157",
+      "inUse": false,
+      "set": "almanac-sprigs",
+      "variant": "default",
+      "tags": [
+        "almanac",
+        "sprigs"
+      ],
+      "usedBy": [],
+      "part": "mothers-day",
+      "critiqueScore": null,
+      "palette": "streetwear-night+almanac-accent",
+      "genCount": 1
+    },
+    {
+      "id": "icon.almanac-sprigs.new-year",
+      "path": "assets/art/icons/unused/almanac-sprigs/new-year.png",
+      "category": "icons",
+      "type": "icon",
+      "theme": "streetwear",
+      "placement": "hud",
+      "camera": "flat-ui",
+      "size": {
+        "w": 64,
+        "h": 64
+      },
+      "status": "resource",
+      "source": "pixellab",
+      "diskBytes": 740,
+      "decodedBytes": 16384,
+      "format": "png32",
+      "notes": "md5:46fe4074088648cdfc24b28ab7169a7f",
+      "inUse": false,
+      "set": "almanac-sprigs",
+      "variant": "default",
+      "tags": [
+        "almanac",
+        "sprigs"
+      ],
+      "usedBy": [],
+      "part": "new-year",
+      "critiqueScore": null,
+      "palette": "streetwear-night+almanac-accent",
+      "genCount": 3
+    },
+    {
+      "id": "icon.almanac-sprigs.summer",
+      "path": "assets/art/icons/unused/almanac-sprigs/summer.png",
+      "category": "icons",
+      "type": "icon",
+      "theme": "streetwear",
+      "placement": "hud",
+      "camera": "flat-ui",
+      "size": {
+        "w": 64,
+        "h": 64
+      },
+      "status": "resource",
+      "source": "pixellab",
+      "diskBytes": 1615,
+      "decodedBytes": 16384,
+      "format": "png32",
+      "notes": "md5:7e49958cb822006103644d5117377e2b",
+      "inUse": false,
+      "set": "almanac-sprigs",
+      "variant": "default",
+      "tags": [
+        "almanac",
+        "sprigs"
+      ],
+      "usedBy": [],
+      "part": "summer",
+      "critiqueScore": null,
+      "palette": "streetwear-night+almanac-accent",
+      "genCount": 2
+    },
+    {
+      "id": "icon.almanac-sprigs.thanksgiving",
+      "path": "assets/art/icons/unused/almanac-sprigs/thanksgiving.png",
+      "category": "icons",
+      "type": "icon",
+      "theme": "streetwear",
+      "placement": "hud",
+      "camera": "flat-ui",
+      "size": {
+        "w": 64,
+        "h": 64
+      },
+      "status": "resource",
+      "source": "pixellab",
+      "diskBytes": 1453,
+      "decodedBytes": 16384,
+      "format": "png32",
+      "notes": "md5:3d86bcb020227c933fa2b76aca4aa5eb",
+      "inUse": false,
+      "set": "almanac-sprigs",
+      "variant": "default",
+      "tags": [
+        "almanac",
+        "sprigs"
+      ],
+      "usedBy": [],
+      "part": "thanksgiving",
+      "critiqueScore": null,
+      "palette": "streetwear-night+almanac-accent",
+      "genCount": 1
+    },
+    {
+      "id": "icon.almanac-sprigs.valentines",
+      "path": "assets/art/icons/unused/almanac-sprigs/valentines.png",
+      "category": "icons",
+      "type": "icon",
+      "theme": "streetwear",
+      "placement": "hud",
+      "camera": "flat-ui",
+      "size": {
+        "w": 64,
+        "h": 64
+      },
+      "status": "resource",
+      "source": "pixellab",
+      "diskBytes": 822,
+      "decodedBytes": 16384,
+      "format": "png32",
+      "notes": "md5:cc3e273ed7cee0d7bb83607df1e6c0e8",
+      "inUse": false,
+      "set": "almanac-sprigs",
+      "variant": "default",
+      "tags": [
+        "almanac",
+        "sprigs"
+      ],
+      "usedBy": [],
+      "part": "valentines",
+      "critiqueScore": null,
+      "palette": "streetwear-night+almanac-accent",
+      "genCount": 1
+    },
+    {
+      "id": "icon.almanac-sprigs.winter-solstice",
+      "path": "assets/art/icons/unused/almanac-sprigs/winter-solstice.png",
+      "category": "icons",
+      "type": "icon",
+      "theme": "streetwear",
+      "placement": "hud",
+      "camera": "flat-ui",
+      "size": {
+        "w": 64,
+        "h": 64
+      },
+      "status": "resource",
+      "source": "pixellab",
+      "diskBytes": 1423,
+      "decodedBytes": 16384,
+      "format": "png32",
+      "notes": "md5:7e04b5efd8a5bb8b313ce276748a8987",
+      "inUse": false,
+      "set": "almanac-sprigs",
+      "variant": "default",
+      "tags": [
+        "almanac",
+        "sprigs"
+      ],
+      "usedBy": [],
+      "part": "winter-solstice",
+      "critiqueScore": null,
+      "palette": "streetwear-night+almanac-accent",
+      "genCount": 1
+    },
+    {
+      "id": "icon.almanac-stickers.clock-change",
+      "path": "assets/art/icons/unused/almanac-stickers/clock-change.png",
+      "category": "icons",
+      "type": "icon",
+      "theme": "streetwear",
+      "placement": "hud",
+      "camera": "flat-ui",
+      "size": {
+        "w": 32,
+        "h": 32
+      },
+      "status": "resource",
+      "source": "pixellab",
+      "diskBytes": 757,
+      "decodedBytes": 4096,
+      "format": "png32",
+      "notes": "md5:6739a279016ab2ae4deaccdb075b4126",
+      "inUse": false,
+      "set": "almanac-stickers",
+      "variant": "default",
+      "tags": [
+        "almanac",
+        "stickers"
+      ],
+      "usedBy": [],
+      "part": "clock-change",
+      "critiqueScore": null,
+      "palette": "streetwear-night+almanac-accent",
+      "genCount": 1
+    },
+    {
+      "id": "icon.almanac-stickers.equinox",
+      "path": "assets/art/icons/unused/almanac-stickers/equinox.png",
+      "category": "icons",
+      "type": "icon",
+      "theme": "streetwear",
+      "placement": "hud",
+      "camera": "flat-ui",
+      "size": {
+        "w": 32,
+        "h": 32
+      },
+      "status": "resource",
+      "source": "pixellab",
+      "diskBytes": 668,
+      "decodedBytes": 4096,
+      "format": "png32",
+      "notes": "md5:770e2295e27b41abef0b73b182927ccd",
+      "inUse": false,
+      "set": "almanac-stickers",
+      "variant": "default",
+      "tags": [
+        "almanac",
+        "stickers"
+      ],
+      "usedBy": [],
+      "part": "equinox",
+      "critiqueScore": null,
+      "palette": "streetwear-night+almanac-accent",
+      "genCount": 3
+    },
+    {
+      "id": "icon.almanac-stickers.first-snow",
+      "path": "assets/art/icons/unused/almanac-stickers/first-snow.png",
+      "category": "icons",
+      "type": "icon",
+      "theme": "streetwear",
+      "placement": "hud",
+      "camera": "flat-ui",
+      "size": {
+        "w": 32,
+        "h": 32
+      },
+      "status": "resource",
+      "source": "pixellab",
+      "diskBytes": 474,
+      "decodedBytes": 4096,
+      "format": "png32",
+      "notes": "md5:947975b780fc1278455c22616c333555",
+      "inUse": false,
+      "set": "almanac-stickers",
+      "variant": "default",
+      "tags": [
+        "almanac",
+        "stickers"
+      ],
+      "usedBy": [],
+      "part": "first-snow",
+      "critiqueScore": null,
+      "palette": "streetwear-night+almanac-accent",
+      "genCount": 1
+    },
+    {
+      "id": "icon.almanac-stickers.friday-13th",
+      "path": "assets/art/icons/unused/almanac-stickers/friday-13th.png",
+      "category": "icons",
+      "type": "icon",
+      "theme": "streetwear",
+      "placement": "hud",
+      "camera": "flat-ui",
+      "size": {
+        "w": 32,
+        "h": 32
+      },
+      "status": "resource",
+      "source": "pixellab",
+      "diskBytes": 474,
+      "decodedBytes": 4096,
+      "format": "png32",
+      "notes": "md5:9cd7925bc603e4b39d69d2af474fc9da",
+      "inUse": false,
+      "set": "almanac-stickers",
+      "variant": "default",
+      "tags": [
+        "almanac",
+        "stickers"
+      ],
+      "usedBy": [],
+      "part": "friday-13th",
+      "critiqueScore": null,
+      "palette": "streetwear-night+almanac-accent",
+      "genCount": 1
+    },
+    {
+      "id": "icon.almanac-stickers.full-moon",
+      "path": "assets/art/icons/unused/almanac-stickers/full-moon.png",
+      "category": "icons",
+      "type": "icon",
+      "theme": "streetwear",
+      "placement": "hud",
+      "camera": "flat-ui",
+      "size": {
+        "w": 32,
+        "h": 32
+      },
+      "status": "resource",
+      "source": "pixellab",
+      "diskBytes": 584,
+      "decodedBytes": 4096,
+      "format": "png32",
+      "notes": "md5:c25561712ab108e7dee9859f39c18f62",
+      "inUse": false,
+      "set": "almanac-stickers",
+      "variant": "default",
+      "tags": [
+        "almanac",
+        "stickers"
+      ],
+      "usedBy": [],
+      "part": "full-moon",
+      "critiqueScore": null,
+      "palette": "streetwear-night+almanac-accent",
+      "genCount": 2
+    },
+    {
+      "id": "icon.almanac-stickers.glow-30",
+      "path": "assets/art/icons/unused/almanac-stickers/glow-30.png",
+      "category": "icons",
+      "type": "icon",
+      "theme": "streetwear",
+      "placement": "hud",
+      "camera": "flat-ui",
+      "size": {
+        "w": 32,
+        "h": 32
+      },
+      "status": "resource",
+      "source": "pixellab",
+      "diskBytes": 498,
+      "decodedBytes": 4096,
+      "format": "png32",
+      "notes": "md5:b9c79587d2e2a2ba7091b990db90fa0a",
+      "inUse": false,
+      "set": "almanac-stickers",
+      "variant": "default",
+      "tags": [
+        "almanac",
+        "stickers"
+      ],
+      "usedBy": [],
+      "part": "glow-30",
+      "critiqueScore": null,
+      "palette": "streetwear-night+almanac-accent",
+      "genCount": 1
+    },
+    {
+      "id": "icon.almanac-stickers.half-year",
+      "path": "assets/art/icons/unused/almanac-stickers/half-year.png",
+      "category": "icons",
+      "type": "icon",
+      "theme": "streetwear",
+      "placement": "hud",
+      "camera": "flat-ui",
+      "size": {
+        "w": 32,
+        "h": 32
+      },
+      "status": "resource",
+      "source": "pixellab",
+      "diskBytes": 469,
+      "decodedBytes": 4096,
+      "format": "png32",
+      "notes": "md5:226839022a1fd914dff1443084ceb851",
+      "inUse": false,
+      "set": "almanac-stickers",
+      "variant": "default",
+      "tags": [
+        "almanac",
+        "stickers"
+      ],
+      "usedBy": [],
+      "part": "half-year",
+      "critiqueScore": null,
+      "palette": "streetwear-night+almanac-accent",
+      "genCount": 1
+    },
+    {
+      "id": "icon.almanac-stickers.month01",
+      "path": "assets/art/icons/unused/almanac-stickers/month01.png",
+      "category": "icons",
+      "type": "icon",
+      "theme": "streetwear",
+      "placement": "hud",
+      "camera": "flat-ui",
+      "size": {
+        "w": 32,
+        "h": 32
+      },
+      "status": "resource",
+      "source": "pixellab",
+      "diskBytes": 549,
+      "decodedBytes": 4096,
+      "format": "png32",
+      "notes": "md5:1f1c29210ced5d6a53464f14d3b32f6a",
+      "inUse": false,
+      "set": "almanac-stickers",
+      "variant": "default",
+      "tags": [
+        "almanac",
+        "stickers"
+      ],
+      "usedBy": [],
+      "part": "month01",
+      "critiqueScore": null,
+      "palette": "streetwear-night+almanac-accent",
+      "genCount": 1
+    },
+    {
+      "id": "icon.almanac-stickers.month02",
+      "path": "assets/art/icons/unused/almanac-stickers/month02.png",
+      "category": "icons",
+      "type": "icon",
+      "theme": "streetwear",
+      "placement": "hud",
+      "camera": "flat-ui",
+      "size": {
+        "w": 32,
+        "h": 32
+      },
+      "status": "resource",
+      "source": "pixellab",
+      "diskBytes": 359,
+      "decodedBytes": 4096,
+      "format": "png32",
+      "notes": "md5:d3d3ee7c2ae6c0c18b38ca4183a72cbd",
+      "inUse": false,
+      "set": "almanac-stickers",
+      "variant": "default",
+      "tags": [
+        "almanac",
+        "stickers"
+      ],
+      "usedBy": [],
+      "part": "month02",
+      "critiqueScore": null,
+      "palette": "streetwear-night+almanac-accent",
+      "genCount": 1
+    },
+    {
+      "id": "icon.almanac-stickers.month03",
+      "path": "assets/art/icons/unused/almanac-stickers/month03.png",
+      "category": "icons",
+      "type": "icon",
+      "theme": "streetwear",
+      "placement": "hud",
+      "camera": "flat-ui",
+      "size": {
+        "w": 32,
+        "h": 32
+      },
+      "status": "resource",
+      "source": "pixellab",
+      "diskBytes": 429,
+      "decodedBytes": 4096,
+      "format": "png32",
+      "notes": "md5:70ff73464a2a1aca6aa691741d35f421",
+      "inUse": false,
+      "set": "almanac-stickers",
+      "variant": "default",
+      "tags": [
+        "almanac",
+        "stickers"
+      ],
+      "usedBy": [],
+      "part": "month03",
+      "critiqueScore": null,
+      "palette": "streetwear-night+almanac-accent",
+      "genCount": 2
+    },
+    {
+      "id": "icon.almanac-stickers.month04",
+      "path": "assets/art/icons/unused/almanac-stickers/month04.png",
+      "category": "icons",
+      "type": "icon",
+      "theme": "streetwear",
+      "placement": "hud",
+      "camera": "flat-ui",
+      "size": {
+        "w": 32,
+        "h": 32
+      },
+      "status": "resource",
+      "source": "pixellab",
+      "diskBytes": 365,
+      "decodedBytes": 4096,
+      "format": "png32",
+      "notes": "md5:f4a3edeac66cdd477699d20e6a591af0",
+      "inUse": false,
+      "set": "almanac-stickers",
+      "variant": "default",
+      "tags": [
+        "almanac",
+        "stickers"
+      ],
+      "usedBy": [],
+      "part": "month04",
+      "critiqueScore": null,
+      "palette": "streetwear-night+almanac-accent",
+      "genCount": 3
+    },
+    {
+      "id": "icon.almanac-stickers.month05",
+      "path": "assets/art/icons/unused/almanac-stickers/month05.png",
+      "category": "icons",
+      "type": "icon",
+      "theme": "streetwear",
+      "placement": "hud",
+      "camera": "flat-ui",
+      "size": {
+        "w": 32,
+        "h": 32
+      },
+      "status": "resource",
+      "source": "pixellab",
+      "diskBytes": 668,
+      "decodedBytes": 4096,
+      "format": "png32",
+      "notes": "md5:0d0208d721f8aa12c7f61bdf2e78cc3d",
+      "inUse": false,
+      "set": "almanac-stickers",
+      "variant": "default",
+      "tags": [
+        "almanac",
+        "stickers"
+      ],
+      "usedBy": [],
+      "part": "month05",
+      "critiqueScore": null,
+      "palette": "streetwear-night+almanac-accent",
+      "genCount": 1
+    },
+    {
+      "id": "icon.almanac-stickers.month06",
+      "path": "assets/art/icons/unused/almanac-stickers/month06.png",
+      "category": "icons",
+      "type": "icon",
+      "theme": "streetwear",
+      "placement": "hud",
+      "camera": "flat-ui",
+      "size": {
+        "w": 32,
+        "h": 32
+      },
+      "status": "resource",
+      "source": "pixellab",
+      "diskBytes": 529,
+      "decodedBytes": 4096,
+      "format": "png32",
+      "notes": "md5:3e882dcba5a2adb3b153cbf054834a3e",
+      "inUse": false,
+      "set": "almanac-stickers",
+      "variant": "default",
+      "tags": [
+        "almanac",
+        "stickers"
+      ],
+      "usedBy": [],
+      "part": "month06",
+      "critiqueScore": null,
+      "palette": "streetwear-night+almanac-accent",
+      "genCount": 3
+    },
+    {
+      "id": "icon.almanac-stickers.month07",
+      "path": "assets/art/icons/unused/almanac-stickers/month07.png",
+      "category": "icons",
+      "type": "icon",
+      "theme": "streetwear",
+      "placement": "hud",
+      "camera": "flat-ui",
+      "size": {
+        "w": 32,
+        "h": 32
+      },
+      "status": "resource",
+      "source": "pixellab",
+      "diskBytes": 507,
+      "decodedBytes": 4096,
+      "format": "png32",
+      "notes": "md5:99ea941b70a2da71fa3225dabf7e11db",
+      "inUse": false,
+      "set": "almanac-stickers",
+      "variant": "default",
+      "tags": [
+        "almanac",
+        "stickers"
+      ],
+      "usedBy": [],
+      "part": "month07",
+      "critiqueScore": null,
+      "palette": "streetwear-night+almanac-accent",
+      "genCount": 1
+    },
+    {
+      "id": "icon.almanac-stickers.month08",
+      "path": "assets/art/icons/unused/almanac-stickers/month08.png",
+      "category": "icons",
+      "type": "icon",
+      "theme": "streetwear",
+      "placement": "hud",
+      "camera": "flat-ui",
+      "size": {
+        "w": 32,
+        "h": 32
+      },
+      "status": "resource",
+      "source": "pixellab",
+      "diskBytes": 682,
+      "decodedBytes": 4096,
+      "format": "png32",
+      "notes": "md5:9e39710e944722e0ab7e7686b27f9e4e",
+      "inUse": false,
+      "set": "almanac-stickers",
+      "variant": "default",
+      "tags": [
+        "almanac",
+        "stickers"
+      ],
+      "usedBy": [],
+      "part": "month08",
+      "critiqueScore": null,
+      "palette": "streetwear-night+almanac-accent",
+      "genCount": 1
+    },
+    {
+      "id": "icon.almanac-stickers.month09",
+      "path": "assets/art/icons/unused/almanac-stickers/month09.png",
+      "category": "icons",
+      "type": "icon",
+      "theme": "streetwear",
+      "placement": "hud",
+      "camera": "flat-ui",
+      "size": {
+        "w": 32,
+        "h": 32
+      },
+      "status": "resource",
+      "source": "pixellab",
+      "diskBytes": 434,
+      "decodedBytes": 4096,
+      "format": "png32",
+      "notes": "md5:634871462d419bd6a82f53a646f9efc3",
+      "inUse": false,
+      "set": "almanac-stickers",
+      "variant": "default",
+      "tags": [
+        "almanac",
+        "stickers"
+      ],
+      "usedBy": [],
+      "part": "month09",
+      "critiqueScore": null,
+      "palette": "streetwear-night+almanac-accent",
+      "genCount": 1
+    },
+    {
+      "id": "icon.almanac-stickers.month10",
+      "path": "assets/art/icons/unused/almanac-stickers/month10.png",
+      "category": "icons",
+      "type": "icon",
+      "theme": "streetwear",
+      "placement": "hud",
+      "camera": "flat-ui",
+      "size": {
+        "w": 32,
+        "h": 32
+      },
+      "status": "resource",
+      "source": "pixellab",
+      "diskBytes": 553,
+      "decodedBytes": 4096,
+      "format": "png32",
+      "notes": "md5:d14beca80872baae6369b4c79b7f267f",
+      "inUse": false,
+      "set": "almanac-stickers",
+      "variant": "default",
+      "tags": [
+        "almanac",
+        "stickers"
+      ],
+      "usedBy": [],
+      "part": "month10",
+      "critiqueScore": null,
+      "palette": "streetwear-night+almanac-accent",
+      "genCount": 1
+    },
+    {
+      "id": "icon.almanac-stickers.month11",
+      "path": "assets/art/icons/unused/almanac-stickers/month11.png",
+      "category": "icons",
+      "type": "icon",
+      "theme": "streetwear",
+      "placement": "hud",
+      "camera": "flat-ui",
+      "size": {
+        "w": 32,
+        "h": 32
+      },
+      "status": "resource",
+      "source": "pixellab",
+      "diskBytes": 591,
+      "decodedBytes": 4096,
+      "format": "png32",
+      "notes": "md5:49d59bdf67c27dc049d61792b6a9660a",
+      "inUse": false,
+      "set": "almanac-stickers",
+      "variant": "default",
+      "tags": [
+        "almanac",
+        "stickers"
+      ],
+      "usedBy": [],
+      "part": "month11",
+      "critiqueScore": null,
+      "palette": "streetwear-night+almanac-accent",
+      "genCount": 1
+    },
+    {
+      "id": "icon.almanac-stickers.month12",
+      "path": "assets/art/icons/unused/almanac-stickers/month12.png",
+      "category": "icons",
+      "type": "icon",
+      "theme": "streetwear",
+      "placement": "hud",
+      "camera": "flat-ui",
+      "size": {
+        "w": 32,
+        "h": 32
+      },
+      "status": "resource",
+      "source": "pixellab",
+      "diskBytes": 725,
+      "decodedBytes": 4096,
+      "format": "png32",
+      "notes": "md5:9753150d6bead2815abf59e46422e265",
+      "inUse": false,
+      "set": "almanac-stickers",
+      "variant": "default",
+      "tags": [
+        "almanac",
+        "stickers"
+      ],
+      "usedBy": [],
+      "part": "month12",
+      "critiqueScore": null,
+      "palette": "streetwear-night+almanac-accent",
+      "genCount": 1
+    },
+    {
+      "id": "icon.almanac-stickers.one-year-ago",
+      "path": "assets/art/icons/unused/almanac-stickers/one-year-ago.png",
+      "category": "icons",
+      "type": "icon",
+      "theme": "streetwear",
+      "placement": "hud",
+      "camera": "flat-ui",
+      "size": {
+        "w": 32,
+        "h": 32
+      },
+      "status": "resource",
+      "source": "pixellab",
+      "diskBytes": 325,
+      "decodedBytes": 4096,
+      "format": "png32",
+      "notes": "md5:8c87e948e63fe3ce6338037e9bd58cbf",
+      "inUse": false,
+      "set": "almanac-stickers",
+      "variant": "default",
+      "tags": [
+        "almanac",
+        "stickers"
+      ],
+      "usedBy": [],
+      "part": "one-year-ago",
+      "critiqueScore": null,
+      "palette": "streetwear-night+almanac-accent",
+      "genCount": 2
+    },
+    {
+      "id": "icon.almanac-stickers.payday-friday",
+      "path": "assets/art/icons/unused/almanac-stickers/payday-friday.png",
+      "category": "icons",
+      "type": "icon",
+      "theme": "streetwear",
+      "placement": "hud",
+      "camera": "flat-ui",
+      "size": {
+        "w": 32,
+        "h": 32
+      },
+      "status": "resource",
+      "source": "pixellab",
+      "diskBytes": 622,
+      "decodedBytes": 4096,
+      "format": "png32",
+      "notes": "md5:e2319886cfec134005c211c61ea0dd63",
+      "inUse": false,
+      "set": "almanac-stickers",
+      "variant": "default",
+      "tags": [
+        "almanac",
+        "stickers"
+      ],
+      "usedBy": [],
+      "part": "payday-friday",
+      "critiqueScore": null,
+      "palette": "streetwear-night+almanac-accent",
+      "genCount": 2
+    },
+    {
+      "id": "icon.almanac-stickers.pick-100",
+      "path": "assets/art/icons/unused/almanac-stickers/pick-100.png",
+      "category": "icons",
+      "type": "icon",
+      "theme": "streetwear",
+      "placement": "hud",
+      "camera": "flat-ui",
+      "size": {
+        "w": 32,
+        "h": 32
+      },
+      "status": "resource",
+      "source": "pixellab",
+      "diskBytes": 659,
+      "decodedBytes": 4096,
+      "format": "png32",
+      "notes": "md5:a91cfb9297bd648eb45e5eabe7bbcee5",
+      "inUse": false,
+      "set": "almanac-stickers",
+      "variant": "default",
+      "tags": [
+        "almanac",
+        "stickers"
+      ],
+      "usedBy": [],
+      "part": "pick-100",
+      "critiqueScore": null,
+      "palette": "streetwear-night+almanac-accent",
+      "genCount": 2
+    },
+    {
+      "id": "icon.almanac-stickers.small-moment",
+      "path": "assets/art/icons/unused/almanac-stickers/small-moment.png",
+      "category": "icons",
+      "type": "icon",
+      "theme": "streetwear",
+      "placement": "hud",
+      "camera": "flat-ui",
+      "size": {
+        "w": 32,
+        "h": 32
+      },
+      "status": "resource",
+      "source": "pixellab",
+      "diskBytes": 698,
+      "decodedBytes": 4096,
+      "format": "png32",
+      "notes": "md5:da5bfbc59a98466b4921930d2491f35b",
+      "inUse": false,
+      "set": "almanac-stickers",
+      "variant": "default",
+      "tags": [
+        "almanac",
+        "stickers"
+      ],
+      "usedBy": [],
+      "part": "small-moment",
+      "critiqueScore": null,
+      "palette": "streetwear-night+almanac-accent",
+      "genCount": 1
     },
     {
       "id": "icon.currency.streetwear.cur-caps",
@@ -20224,6 +22894,99 @@
         "src/play/generated-play-sheets.ts"
       ],
       "part": "core"
+    },
+    {
+      "id": "ui.almanac-frames.complete",
+      "path": "assets/art/ui/unused/almanac-frames/complete.png",
+      "category": "ui",
+      "type": "ui",
+      "theme": "streetwear",
+      "placement": "hud",
+      "camera": "flat-ui",
+      "size": {
+        "w": 192,
+        "h": 256
+      },
+      "status": "resource",
+      "source": "pixellab",
+      "diskBytes": 1768,
+      "decodedBytes": 196608,
+      "format": "png32",
+      "notes": "md5:bf3d8d50bd444fd32ef7586b4097c6b4",
+      "inUse": false,
+      "set": "almanac-frames",
+      "variant": "default",
+      "tags": [
+        "almanac",
+        "frames"
+      ],
+      "usedBy": [],
+      "part": "complete",
+      "critiqueScore": null,
+      "palette": "streetwear-night+almanac-accent",
+      "genCount": 10
+    },
+    {
+      "id": "ui.almanac-frames.event",
+      "path": "assets/art/ui/unused/almanac-frames/event.png",
+      "category": "ui",
+      "type": "ui",
+      "theme": "streetwear",
+      "placement": "hud",
+      "camera": "flat-ui",
+      "size": {
+        "w": 192,
+        "h": 256
+      },
+      "status": "resource",
+      "source": "pixellab",
+      "diskBytes": 2153,
+      "decodedBytes": 196608,
+      "format": "png32",
+      "notes": "md5:3012e2a36bf7eef812f4ae866f103ebb",
+      "inUse": false,
+      "set": "almanac-frames",
+      "variant": "default",
+      "tags": [
+        "almanac",
+        "frames"
+      ],
+      "usedBy": [],
+      "part": "event",
+      "critiqueScore": null,
+      "palette": "streetwear-night+almanac-accent",
+      "genCount": 10
+    },
+    {
+      "id": "ui.almanac-frames.plain",
+      "path": "assets/art/ui/unused/almanac-frames/plain.png",
+      "category": "ui",
+      "type": "ui",
+      "theme": "streetwear",
+      "placement": "hud",
+      "camera": "flat-ui",
+      "size": {
+        "w": 192,
+        "h": 256
+      },
+      "status": "resource",
+      "source": "pixellab",
+      "diskBytes": 1708,
+      "decodedBytes": 196608,
+      "format": "png32",
+      "notes": "md5:6008a7345036343d0582eeb6940f2edd",
+      "inUse": false,
+      "set": "almanac-frames",
+      "variant": "default",
+      "tags": [
+        "almanac",
+        "frames"
+      ],
+      "usedBy": [],
+      "part": "plain",
+      "critiqueScore": null,
+      "palette": "streetwear-night+almanac-accent",
+      "genCount": 10
     },
     {
       "id": "ui.frames.streetwear.frame-base",
