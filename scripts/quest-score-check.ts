@@ -5,8 +5,9 @@
  * Pins: the spec's worked example; misclick, flip-flop, chaotic, for-fun,
  * undone, contradiction, the limits (3 axes / |Δ| 0.08 / 7 days / 30 days) and
  * decay fixtures; then the sim harness: 1,000 random runs per registered
- * campaign (apply-rate < 5%, skipped for isSample) and a consistent player who
- * must apply at least one axis. Two harness campaigns (built here, validated
+ * campaign (each target axis applied in ≤ 12% of random runs, mean random
+ * |Δ| ≤ 0.02, emci 2026-10-28; skipped for isSample) and a consistent player
+ * who must apply at least one axis. Two harness campaigns (built here, validated
  * clean) prove the walker against the exact random odds.
  */
 import assert from 'node:assert/strict';
@@ -340,16 +341,38 @@ function simulate(c: QuestCampaign, pick: Picker, rand: () => number): QuestPick
 }
 
 const SIM_RUNS = 1000;
+/**
+ * Sim target (emci 2026-10-28, option A; the spec's "< 5% of random runs" can't be met by any
+ * valid campaign): for every target axis, random runs apply it at most 12% of the time, and the
+ * mean random |Δ| over all (run, target axis) pairs stays at or under 0.02.
+ */
+const SIM_TARGET = { maxAxisRate: 0.12, maxMeanDelta: 0.02 } as const;
 function simulateCampaign(c: QuestCampaign, seed: number) {
   const rand = mulberry32(seed);
   let applied = 0;
+  let deltaSum = 0;
+  const perAxis = new Map<TraitAxis, number>(c.targetAxes.map((a) => [a, 0]));
   for (let i = 0; i < SIM_RUNS; i += 1) {
-    if (scoreRun({ campaign: c, picks: simulate(c, randomPicker, rand), mode: 'me', now: NOW, tracks: [] }).apply.length > 0) applied += 1;
+    const r = scoreRun({ campaign: c, picks: simulate(c, randomPicker, rand), mode: 'me', now: NOW, tracks: [] });
+    if (r.apply.length > 0) applied += 1;
+    for (const v of r.apply) {
+      if (perAxis.has(v.axis)) perAxis.set(v.axis, perAxis.get(v.axis)! + 1);
+      deltaSum += Math.abs(v.delta ?? 0);
+    }
   }
   const poles = Object.fromEntries(c.targetAxes.map((a, i) => [a, i % 2 === 0 ? 1 : -1])) as Partial<Record<TraitAxis, 1 | -1>>;
   const steady = scoreRun({ campaign: c, picks: simulate(c, consistentPicker(poles), rand), mode: 'me', now: NOW, tracks: [] });
-  return { rate: applied / SIM_RUNS, steadyApplied: steady.apply.length };
+  return {
+    rate: applied / SIM_RUNS,
+    axisRate: Math.max(...[...perAxis.values()].map((n) => n / SIM_RUNS)),
+    meanDelta: deltaSum / (SIM_RUNS * c.targetAxes.length),
+    steadyApplied: steady.apply.length,
+  };
 }
+const meetsTarget = (s: ReturnType<typeof simulateCampaign>) =>
+  s.axisRate <= SIM_TARGET.maxAxisRate && s.meanDelta <= SIM_TARGET.maxMeanDelta;
+const simLine = (id: string, s: ReturnType<typeof simulateCampaign>) =>
+  `${id}: worst axis ${(s.axisRate * 100).toFixed(1)}% of random runs, mean |Δ| ${s.meanDelta.toFixed(4)}, any axis ${(s.rate * 100).toFixed(1)}%`;
 
 // 10a. Registered campaigns.
 for (const c of QUEST_CAMPAIGNS) {
@@ -357,10 +380,10 @@ for (const c of QUEST_CAMPAIGNS) {
     ok(`sims: ${c.id} skipped (isSample)`);
     continue;
   }
-  const { rate, steadyApplied } = simulateCampaign(c, 4242);
-  assert.ok(rate < 0.05, `${c.id}: ${(rate * 100).toFixed(1)}% of ${SIM_RUNS} random runs apply an axis (must be under 5%)`);
-  assert.ok(steadyApplied >= 1, `${c.id}: a consistent run applied nothing`);
-  ok(`sims: ${c.id} random apply-rate ${(rate * 100).toFixed(1)}%, consistent run applies ${steadyApplied}`);
+  const s = simulateCampaign(c, 4242);
+  assert.ok(meetsTarget(s), `sims: ${simLine(c.id, s)} (must be ≤ ${SIM_TARGET.maxAxisRate * 100}% per axis and ≤ ${SIM_TARGET.maxMeanDelta})`);
+  assert.ok(s.steadyApplied >= 1, `${c.id}: a consistent run applied nothing`);
+  ok(`sims: ${simLine(c.id, s)}; consistent run applies ${s.steadyApplied}`);
 }
 
 // 10b. Harness campaigns: a 12-scene path, 3 axes × 4 primaries over 4 chapters.
@@ -391,14 +414,14 @@ const axisOdds = (choices: number) => {
 for (const neutral of [false, true]) {
   const c = harness(neutral);
   assert.deepEqual(validateCampaign(c).errors, [], `${c.id} must validate`);
-  const { rate, steadyApplied } = simulateCampaign(c, 2027);
+  const s = simulateCampaign(c, 2027);
   const expected = 1 - (1 - axisOdds(neutral ? 4 : 2)) ** 3;
-  assert.ok(Math.abs(rate - expected) < 0.04, `${c.id}: sim ${rate} vs exact ${expected.toFixed(3)}`);
-  assert.equal(steadyApplied, 3, `${c.id}: a consistent player applies all 3 target axes`);
-  ok(`sims: ${c.id} random apply-rate ${(rate * 100).toFixed(1)}% (exact ${(expected * 100).toFixed(1)}%), consistent run applies 3`);
+  assert.ok(Math.abs(s.rate - expected) < 0.04, `${c.id}: sim ${s.rate} vs exact ${expected.toFixed(3)}`);
+  assert.ok(Math.abs(s.axisRate - axisOdds(neutral ? 4 : 2)) < 0.04, `${c.id}: worst axis ${s.axisRate} vs exact ${axisOdds(neutral ? 4 : 2).toFixed(3)}`);
+  assert.equal(s.steadyApplied, 3, `${c.id}: a consistent player applies all 3 target axes`);
+  // The target bites: 2-choice primaries (62.5% per axis) fail it, 1-per-pole + 2 neutral (10.2%) pass.
+  assert.equal(meetsTarget(s), neutral, `${c.id}: ${neutral ? 'must meet' : 'must miss'} the sim target`);
+  ok(`sims: ${simLine(c.id, s)} (exact any-axis ${(expected * 100).toFixed(1)}%); ${neutral ? 'meets' : 'misses'} the target as expected`);
 }
-// NOTE (R10 notes in docs/ato-build-progress.md): with paths ≤ 12 scenes and 4 primaries per axis,
-// the spec's thresholds cannot reach a < 5% random apply-rate (≈ 27% here, ≈ 9% at the 3-primary minimum); emci decides
-// before PHASE-18 whether the target or the thresholds move. Nothing here is weakened to hide it.
 
 console.log(`quest-score: all checks passed (SCORE.maxDelta ${SCORE.maxDelta}, ${SIM_RUNS} sims per campaign)`);
