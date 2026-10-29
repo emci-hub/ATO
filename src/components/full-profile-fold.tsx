@@ -306,6 +306,7 @@ export function FullProfileFold({
                   me={me}
                   axis={axis}
                   lastDepthAt={lastDepth}
+                  hasGameTrack={trackFor(tracks, axis, 'game') != null}
                   onClose={() => setDiving(null)}
                   onUpdated={onUpdated}
                 />

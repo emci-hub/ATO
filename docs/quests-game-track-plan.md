@@ -132,5 +132,9 @@ S4 DONE locally (2026-10-29, not pushed, wave116 still NOT applied): wave116 §8
 7-day-per-axis Apply cooldown (so re-answering and re-Applying works) but keeps the runs (history, analytics) and leaves the 30-day-per-campaign rule alone
 (it decides which runs count, not a trait number). Scenario picks (`game` track) are untouched. `check:quest-apply` pins this, and that Start Fresh calls
 `questApplier.clearStamps()` (drops the phone's 7-day stamps and "From your quests" list, then signals `quest-change.ts`; reviewer-found). Told-vs-played reads scenario picks only (comment on `trackFor`). Privacy draft + store pack mention the opt-in, undoable hint and
-the device-only "Include Quests" view. Phone check still owed for S3's two dots and the switch row (see PROJECT_CONTEXT). D6 stays a separate later change.
-PLAN COMPLETE except D6 and the phone check.
+the device-only "Include Quests" view. Phone check still owed for S3's two dots and the switch row (see PROJECT_CONTEXT).
+D6 DONE locally (2026-10-29, emci ok, not pushed, `wave118_game_pick_no_me.sql` written and NOT applied; independent of wave115/116): `_trait_write` mode 'game' no longer writes
+`me.<axis>`, `trait_sources` or `trait_touched_at` (any of the 16 axes); it still moves the `game` track and writes one `self_game` history row (now holding the game-track value). Existing `me` values are not touched. Client: `pickScenarioAxis` /
+`resolveScenario` take an optional `played` list (no live caller yet: the weekly scenario card is not mounted), `DepthDive` takes `hasGameTrack`. Pinned by `check:trait-checkpoint` section 6 and `check:scenario`.
+Known effect: an extra axis filled only by a scenario pick leaves `me` empty, so Full Profile shows it as unanswered and profile snapshots / `_profile_changed` no longer move on picks. Phone check owed after wave118 is applied.
+PLAN COMPLETE except the phone checks and applying wave115, wave116, wave118.
