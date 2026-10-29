@@ -102,6 +102,11 @@ for (const [label, fg] of [
   const ratio = contrastRatio(fg, '#1A1B20');
   assert.ok(ratio != null && ratio >= 4.5, `poster ${label} ${fg} on #1A1B20 = ${ratio?.toFixed(2)}`);
 }
+// The sender's share image (ShareCard) draws the same still sky from the sender's own tracks.
+const cardSrc = fs.readFileSync(path.resolve(__dirname, '../src/components/share-card.tsx'), 'utf8');
+assert.match(cardSrc, /variant="poster"/);
+assert.match(cardSrc, /accent=\{accent\.dark\}/);
+assert.match(fs.readFileSync(path.resolve(__dirname, '../src/components/identity-card.tsx'), 'utf8'), /shape: traitShapePoints\(me, tracks\), tracks \}/);
 // The ring is decorative (the stars and line carry the meaning), so it has no contrast floor;
 // the star colour (the sender's accent.light) is what must read on the field.
 // The poster draws the stars in accent.dark (the brighter pair); sweep every hue show_up can give.
