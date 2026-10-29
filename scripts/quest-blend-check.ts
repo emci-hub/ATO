@@ -5,7 +5,8 @@
  * (`report?.value ?? me`) for all 16 axes; the cap, the room rule and the 0.8 / 0.2 limit;
  * no report row = no blend and no label; non-Quest axes ignored; deterministic. Source scan:
  * no share / identity / hero / holo / almanac file uses the blend, and the profile's share
- * `content.tracks` stays the raw array. (S3 adds the profile screens that may import it.)
+ * `content.tracks` stays the raw array. S3: only trait-bands-fold and full-profile-fold may use the
+ * blend; only those, the switch row, its store and the sign-out reset may touch the switch.
  */
 import assert from 'node:assert/strict';
 import { readdirSync, readFileSync, statSync } from 'node:fs';
@@ -115,7 +116,7 @@ const walk = (dir: string): string[] =>
     const p = join(dir, n);
     return statSync(p).isDirectory() ? walk(p) : /\.(ts|tsx)$/.test(n) ? [p] : [];
   });
-const BLEND = /\beffectiveValue\b|QUEST_BLEND_|\bEffectiveValue\b/;
+const BLEND = /\beffectiveValue\b|QUEST_BLEND_|\bEffectiveValue\b|\bwithQuestDot\b|\bquestValue\b/;
 const fenced = [
   ...['share-card', 'share-poster', 'identity-card', 'home-hero', 'holo-card'].map((n) => join(SRC, 'components', `${n}.tsx`)),
   ...walk(join(SRC, 'components', 'almanac')),
@@ -130,6 +131,47 @@ for (const f of fenced) {
   assert.ok(!BLEND.test(readFileSync(f, 'utf8')), `${f} must not use the Quest blend`);
 }
 ok(`${fenced.length} share / identity / hero / holo / almanac files never use the blend`);
+
+// S3: only the profile screens may use the blend or read the "Include Quests" switch. Anything
+// else under src/ (insights, AI, Circle, push, snapshots, share, almanac...) fails here.
+const norm = (f: string) => f.replace(/\\/g, '/').slice(SRC.replace(/\\/g, '/').length + 1);
+const BLEND_USERS = new Set([
+  'lib/trait-stability.ts', // defines it
+  'components/trait-bands-fold.tsx', // profile: "How you move" bands
+  'components/full-profile-fold.tsx', // profile: Full Profile
+  'lib/trait-bands.ts', // only the optional `questValue` field on the band type
+]);
+const SWITCH = /include-store|useIncludeQuests|includeQuestsKey|resetIncludeQuestsCache/;
+const SWITCH_USERS = new Set([
+  'lib/quests/include-store.ts', // defines it
+  'lib/local-account-data.ts', // resets the in-memory copy at sign-out
+  'components/trait-bands-fold.tsx',
+  'components/full-profile-fold.tsx',
+  'components/quest-blend-toggle.tsx', // the switch row on the You tab
+]);
+const all = walk(SRC);
+for (const f of all) {
+  const text = readFileSync(f, 'utf8');
+  const name = norm(f);
+  if (BLEND.test(text)) assert.ok(BLEND_USERS.has(name), `${name} must not use the Quest blend (profile screens only)`);
+  if (SWITCH.test(text)) assert.ok(SWITCH_USERS.has(name), `${name} must not read the Include Quests switch`);
+}
+// Full Profile reaches the blend through withQuestDot (trait-bands-fold), so it is allowed but not required to name it.
+assert.ok(BLEND.test(read('components/trait-bands-fold.tsx')), 'trait-bands-fold should use effectiveValue');
+assert.ok(/withQuestDot/.test(read('components/full-profile-fold.tsx')), 'Full Profile uses withQuestDot');
+ok(`blend used only by the two profile folds; switch read only by ${SWITCH_USERS.size} files`);
+
+// The blend only runs through withQuestDot, which returns the band untouched when the switch is off.
+const bandsSrc = read('components/trait-bands-fold.tsx');
+assert.ok(/if \(!includeQuests\) return band;/.test(bandsSrc), 'withQuestDot must do nothing while the switch is off');
+assert.ok(/effective\.blended/.test(bandsSrc), 'the second dot shows only when the blend moved the value');
+assert.ok(/useIncludeQuests\(me\.id\)/.test(bandsSrc) && /useIncludeQuests\(me\.id\)/.test(read('components/full-profile-fold.tsx')), 'both profile screens read the switch');
+assert.ok(/useQuestChange\(\)/.test(read('components/full-profile-fold.tsx')) && /\[me\.id, me\.updated_at, epoch\]/.test(read('components/full-profile-fold.tsx')), 'Full Profile refetches on a Quest change (fix 8)');
+assert.ok(/bumpQuestChange/.test(read('lib/quests/apply.ts')) && (read('lib/quests/apply.ts').match(/changed\(\)/g) ?? []).length >= 2, 'Quest Apply and Undo signal a change (fix 8)');
+assert.ok(!/bumpAccountDataEpoch/.test(read('lib/quests/apply.ts')), 'Apply/Undo must not bump the account-data epoch (it resets Questions, Legends and the buddy)');
+assert.ok(/ato\.quests\.include\.v1:/.test(read('lib/quests/include-store.ts')), 'switch key is ato.quests.include.v1:<uid>');
+assert.ok(/resetIncludeQuestsCache\(\)/.test(read('lib/local-account-data.ts')), 'sign-out resets the in-memory switch');
+ok('second dot gated on the switch + blended; epoch bumped on Apply/Undo; switch key and sign-out reset pinned');
 
 assert.ok(
   /tracks: tracksOwned \? tracks : \[\]/.test(read('app/(tabs)/you.tsx')),

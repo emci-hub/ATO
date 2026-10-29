@@ -235,8 +235,16 @@ function parseStamps(raw: string | null): AppliedStamps {
   }
 }
 
-export function createQuestApplier(deps: { kv: KV; rpc: Rpc; now?: () => Date }) {
+export function createQuestApplier(deps: { kv: KV; rpc: Rpc; now?: () => Date; onChange?: () => void }) {
   const { kv, rpc } = deps;
+  /** Fires after the server accepted an Apply or an Undo (also from flush), so profile screens refetch. */
+  const changed = () => {
+    try {
+      deps.onChange?.();
+    } catch (err) {
+      console.log('[quests] onChange skipped:', err instanceof Error ? err.message : err);
+    }
+  };
   const now = deps.now ?? (() => new Date());
 
   // Read-then-write on the phone runs one at a time, in call order.
@@ -301,6 +309,7 @@ export function createQuestApplier(deps: { kv: KV; rpc: Rpc; now?: () => Date })
         s.runs[job.runId] = { axes: job.axes.map((w) => w.axis), at };
         await writeStamps(s);
       });
+      changed();
       return { status: 'saved', counts, applied: job.axes };
     } catch (err) {
       return fail(err);
@@ -340,6 +349,7 @@ export function createQuestApplier(deps: { kv: KV; rpc: Rpc; now?: () => Date })
         await writeStamps(s);
       }
     });
+    changed();
     return { status: 'undone' };
   }
 
@@ -406,4 +416,12 @@ const supabaseRpc: Rpc = async (fn, args) => {
   return { data, error };
 };
 
-export const questApplier = createQuestApplier({ kv: asyncStorageKV, rpc: supabaseRpc });
+export const questApplier = createQuestApplier({
+  kv: asyncStorageKV,
+  rpc: supabaseRpc,
+  // Fix 8: the full profile refetches on this signal, so it never shows a stale combined value.
+  // (Not the account-data epoch: that one resets Questions, Legends and the buddy.)
+  onChange: () => {
+    void import('@/lib/quests/quest-change').then((m) => m.bumpQuestChange());
+  },
+});

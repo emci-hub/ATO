@@ -19,6 +19,7 @@ import { ProfileCharacter } from '@/components/profile-character';
 import { ProfileFillFold } from '@/components/profile-fill-fold';
 import { FromYourQuests } from '@/components/quests/from-your-quests';
 import { ShapeCard } from '@/components/shape-card';
+import { QuestBlendToggle } from '@/components/quest-blend-toggle';
 import { TraitBandsFold } from '@/components/trait-bands-fold';
 import { TraitConstellation } from '@/components/trait-constellation';
 import { ThemedText } from '@/components/themed-text';
@@ -233,6 +234,7 @@ export default function YouScreen() {
           {me ? (
             <View style={styles.traitsBlock} onLayout={markSection('traits')}>
               <TraitBandsFold me={me} tracks={tracks} />
+              <QuestBlendToggle userId={me.id} tracks={tracks} questsOn={questsOn} />
               <ProfileFillFold tracks={tracks} />
               <ChangeCard userId={me.id} />
             </View>

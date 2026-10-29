@@ -5,10 +5,13 @@ import { InfoReveal, quoted } from '@/components/info-reveal';
 import { AxisTaps } from '@/components/axis-taps';
 import { DepthDive } from '@/components/depth-dive';
 import { SettingsFold } from '@/components/settings-fold';
-import { TraitBandVisual } from '@/components/trait-bands-fold';
+import { TraitBandVisual, withQuestDot } from '@/components/trait-bands-fold';
 import { ThemedPressable } from '@/components/themed-pressable';
 import { ThemedText } from '@/components/themed-text';
 import { Spacing } from '@/constants/theme';
+import { useAccountDataEpoch } from '@/lib/account-data-epoch';
+import { useIncludeQuests } from '@/lib/quests/include-store';
+import { useQuestChange } from '@/lib/quests/quest-change';
 import { AXIS_POLE_NAME, AXIS_POLES, AXIS_SHORT_NAME, POLE_COPY_REVIEWED } from '@/lib/axis-poles';
 import { axisConcept } from '@/lib/concept-explainers';
 import { SHAPED_BY_MIDDLE, YOUR_SIDE_LEAD, shapedByRow, showsUpInLine } from '@/lib/shaped-by';
@@ -55,6 +58,9 @@ export function FullProfileFold({
   onUpdated: () => void | Promise<void>;
 }) {
   const state = traitStateFromRow(me);
+  // Refetch when a Quest Apply / Undo, or a dev jump / Preview, changes the account's tracks.
+  const epoch = `${useAccountDataEpoch()}:${useQuestChange()}`;
+  const [includeQuests] = useIncludeQuests(me.id);
   const [editing, setEditing] = useState<TraitAxis | null>(null);
   const [busy, setBusy] = useState(false);
   const [openShift, setOpenShift] = useState<TraitAxis | null>(null);
@@ -112,7 +118,7 @@ export function FullProfileFold({
     return () => {
       cancelled = true;
     };
-  }, [me.id, me.updated_at]);
+  }, [me.id, me.updated_at, epoch]);
 
   async function save(axis: TraitAxis, value: number) {
     if (busy) return;
@@ -200,7 +206,11 @@ export function FullProfileFold({
               ) : null}
               {filled ? (
                 <TraitBandVisual
-                  band={{ axis, value, low: phrases.low, high: phrases.high }}
+                  band={withQuestDot(
+                    { axis, value, low: phrases.low, high: phrases.high },
+                    tracks,
+                    includeQuests,
+                  )}
                 />
               ) : (
                 <ThemedText type="small" themeColor="textSecondary">

@@ -119,4 +119,12 @@ S2 DONE locally (2026-10-29, not pushed): `effectiveValue(tracks, axis, includeQ
 `{value, label, blended}` type (never a `TraitTrack`); cap ±0.15, offset scaled by `min(1, 2·room)`, held in 0.2–0.8 unless the report is
 already outside it; no report row = no blend and no label; 10 Quest axes only. `check:quest-blend` pins it (and is in the gate). Its source
 scan keeps the blend out of share-card/poster, identity-card, home-hero, holo-card and almanac/*, and `you.tsx` share `content.tracks` raw.
-No screen or toggle yet. S3 is next (toggle + two-dot band; it adds the profile screens that may import the blend); S4 after.
+S3 DONE locally (2026-10-29, not pushed, not verified on device): "Include Quests" switch (`quests/include-store.ts`, key
+`ato.quests.include.v1:<uid>`, off by default, device only, wiped at sign-out, off in Preview, row on the You tab under the bands with the
+reset said in its copy). `TraitBandsFold` and `FullProfileFold` show a second open dot via `withQuestDot` only when the switch is on and
+`effectiveValue(...).blended`; no numbers; VoiceOver says positions; empty state "No Quest results yet". Quest Apply/Undo fire a
+separate signal (`quests/quest-change.ts`, via `createQuestApplier` `onChange`) and Full Profile refetches on it (fix 8). Deliberately NOT the
+account-data epoch: reviewer found that bump resets Questions, Legends and the buddy. The row also stays visible while the switch is on
+even if Quests is turned off remotely. `check:quest-blend` now scans all of `src/`:
+only those two folds may use the blend, only they, the switch row, its store and the sign-out reset may touch the switch.
+S4 is next (`start_fresh` clearing Quest numbers, `quest_runs` cooldowns, told-vs-played note, privacy wording, NOW.md, PROJECT_CONTEXT.md).
