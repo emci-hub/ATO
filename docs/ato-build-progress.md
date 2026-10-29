@@ -39,7 +39,7 @@ Stage D Quests
 - [x] PHASE-18 Style guide + The Drowned Lantern  ⚑ copy OK (built; emci's copy read still to come)
 - [ ] PHASE-19 The Masquerade  ⚑ copy OK
 - [ ] PHASE-20 Last Train Home  ⚑ copy OK
-- [ ] PHASE-21 Art 2: Masquerade + City + shared VFX (PixelLab)  ⚑ art OK
+- [x] PHASE-21 Art 2: Masquerade + City + shared VFX (PixelLab)  ⚑ art OK (emci 2026-10-29)
 - [ ] PHASE-22 Atlas build + art integration
 - [ ] PHASE-23 Quests entry points + tutorial + You
 Stage E Polish & release
@@ -171,4 +171,6 @@ Stage E Polish & release
   - Credits: 319 generations (2698.95 -> 2379.95), inside the 500 emci approved (181 left); the table is `art-src/quests/credits.md`. Weak spots (the bridge emblem at 22, symmetric cave ceilings on two Lantern ending cards, ending cards stay close to their composed layers) are in `critique.md`.
   - ⚑ emci approves the three contact sheets (art OK). Not run: the app (no `src/`, `assets/` or `package.json` change, so no gate beyond the art files).
 
-Blocked on: ⚑ art OK (emci looks at the Masquerade, City and shared contact sheets of PHASE-21), ⚑ copy OK (emci reads the Lantern, Masquerade and Last Train Home copy) and ⚑ apply wave116 (emci, Supabase SQL editor). 11h still needs emci's look at the samples and a phone check.
+- 2026-10-29 emci: **art OK Masquerade + City + shared** (the three PHASE-21 contact sheets). PHASE-21 ticked.
+
+Blocked on: ⚑ copy OK (emci reads the Lantern, Masquerade and Last Train Home copy) and ⚑ apply wave116 (emci, Supabase SQL editor). 11h still needs emci's look at the samples and a phone check.
