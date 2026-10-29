@@ -36,7 +36,7 @@ Stage D Quests
 - [x] PHASE-15 Art 1: style lock + Lantern set (PixelLab)
 - [x] PHASE-16 Quests UI v3
 - [x] PHASE-17 Server, Apply, Undo, flags  ⚑ wave116 (built; emci applies wave116)
-- [ ] PHASE-18 Style guide + The Drowned Lantern  ⚑ copy OK
+- [x] PHASE-18 Style guide + The Drowned Lantern  ⚑ copy OK (built; emci's copy read still to come)
 - [ ] PHASE-19 The Masquerade  ⚑ copy OK
 - [ ] PHASE-20 Last Train Home  ⚑ copy OK
 - [ ] PHASE-21 Art 2: Masquerade + City + shared VFX (PixelLab)  ⚑ art OK
@@ -147,4 +147,11 @@ Stage E Polish & release
   - Known, not fixed: an `unknown` server error is final (not queued); a huge s/g maps to `unknown`; cancelled entries count against the 20-entry queue; the local as-me evidence stamp (run-store, PHASE-14) is still written on finish even when the server stored the run as for fun (mirror only). Undo is offered on the Said screen only (24 h on the server).
   - Gate green: typecheck + lint + 207 offline checks. Not seen on a phone. Live `check:delete-account` not run (needs wave116 applied).
 
-Blocked on: ⚑ apply wave116 (emci, Supabase SQL editor). 11h still needs emci's look at the samples and a phone check.
+- 2026-10-29 PHASE-18 (Style guide + The Drowned Lantern), same branch, committed locally, NOT pushed, no OTA. Mini red-team: (1) the validator needs 3 primaries per axis on EVERY path and caps paths at 12, so with 4 axes every path is exactly 12 scenes and all of them primary; (2) a closed secret-scene gate would leave a path at 11, so the secret scene has an ordinary twin (its `next` is the twin, its own choices jump past it); (3) PHASE-13 sim cap: every primary has a neutral choice beside the two poles (canon S1 "Rook leads" tags autonomy -1 at 0.4, so S1 got a 4th neutral); (4) content ids match `^[a-z0-9][a-z0-9_-]{0,63}$` (probe: 0 bad); (5) copy fence + no moral pole.
+  - Files: `docs/quests-style-guide.md` (NEW), `src/lib/quests/content/lantern.ts` (NEW: 16 scenes, 128 paths, all 12 long, 3 checks, 4 endings, all reachable), `content/index.ts` (registers `lantern`; `sample-lantern` stays as the fixture source and the `isSample` dev-only entry).
+  - Sims: worst axis 5.5% of random runs (cap 12%), mean |Δ| 0.0020, a consistent run applies 3 axes. Gate green: typecheck + lint + 207 offline checks. Reviewer PASS (no critical); its 7 warnings fixed once (gave_map variant vs fee, winch bell, lantern pickup line, reward balance between poles, pole-framing lines, continuity nits, guide wording).
+  - Decisions: endings read flags from the finale (`daylight` / `long_road`): Rook's Lantern = trusted_rook + daylight, The Toll Paid Forward = gave_map + long_road, The Singing Deep = daylight, The Long Way Home = fallback. Canon S1-S5 labels, tags and ending lines kept; ids are `lantern_s<position>…` (S5 is now `lantern_s12_way`). Fail scenes: `s4b_toll_wet`, `s6b_cold_shore`, `s9b_gantry_slick`.
+  - Logged, not fixed: the validator does not check the id pattern yet (`validate.ts` is not in PHASE-18's files); suggest adding it in PHASE-19 with a broken fixture. Art `tint`/`props` are written but unused until PHASE-22. Not played on a phone.
+  - ⚑ emci reads the Lantern copy (`src/lib/quests/content/lantern.ts`). The campaign shows in release builds only once wave116 is applied and the flags are on (PHASE-17).
+
+Blocked on: ⚑ copy OK (emci reads the Lantern copy) and ⚑ apply wave116 (emci, Supabase SQL editor). 11h still needs emci's look at the samples and a phone check.
