@@ -3,6 +3,7 @@ import { router } from 'expo-router';
 import { Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 
+import { QuestsMoreRow } from '@/components/quests/entry-card';
 import { ThemedText } from '@/components/themed-text';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
@@ -90,6 +91,9 @@ export function NavMoreSheet({
                 </ThemedText>
               </Pressable>
             ))}
+
+            {/* Quests (PHASE-23): hidden while quests_enabled is off. Mounted only while the sheet is open. */}
+            <QuestsMoreRow onClose={onClose} rowStyle={styles.row} pressedStyle={styles.pressed} labelStyle={styles.rowLabel} />
 
             {/* "Open Divecore" shows only when Play is not already a bar slot (IA phase P3). */}
             {moreIds.includes('play') ? (

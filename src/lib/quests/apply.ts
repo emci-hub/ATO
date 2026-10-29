@@ -377,6 +377,8 @@ export function createQuestApplier(deps: { kv: KV; rpc: Rpc; now?: () => Date })
 
     /** The 7-day mirror for scoreRun (`lastAppliedAt`). */
     lastAppliedAt: () => inTurn(async () => (await readStamps()).axes),
+    /** Applied runs on this phone, by server run id (PHASE-23: "From your quests" and its Undo). */
+    appliedRuns: () => inTurn(async () => (await readStamps()).runs),
     queued: () => inTurn(readQueue),
   };
 }

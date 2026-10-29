@@ -100,10 +100,30 @@ export const UI_COPY = {
   saidUndoHint: 'Takes this back off your profile. You can undo for 24 hours.',
   saidUndone: 'Undone. Your profile is back where it was.',
   saidApplyOff: 'Adding to your profile is paused for now. The story still counts as played.',
+  entryTitle: 'Quests: short story adventures',
+  entryMeta: '{found} of {total} endings found',
+  entryMetaNone: 'Your choices do the talking.',
+  entryOpen: 'Open Quests',
+  moreRow: 'Quests',
+  fromTitle: 'From your quests',
+  fromEmpty: 'Play a quest; nothing is saved unless you tick it.',
+  fromRow: '{axes} · {date}',
+  fromUndoLabel: 'Undo {axes}',
+  fromWorking: 'Undoing…',
+  tutorialStep: '{n} of {total}',
+  tutorialNext: 'Next',
+  tutorialDone: 'Got it',
   devFlagsServer: 'Quests flags: from the server',
   devFlagsOn: 'Quests flags: forced on',
   devFlagsOff: 'Quests flags: forced off',
 } as const;
+
+/** The first-run cards (PHASE-23), shown once. */
+export const TUTORIAL_CARDS = [
+  { title: 'Choices shape the story', body: 'Pick what you would really do. The story bends around it.' },
+  { title: 'Hold to choose', body: 'Tap to look, hold to commit. You can rewind once per chapter.' },
+  { title: 'Nothing is saved unless you tick it', body: 'At the end you decide what, if anything, goes on your profile.' },
+] as const;
 
 /** One sentence per Save / Undo error code (src/lib/quests/apply.ts QUEST_ERROR_CODES). */
 export const QUEST_ERROR_COPY = {

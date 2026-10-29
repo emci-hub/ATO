@@ -12,6 +12,7 @@ import { TodayFocusCard } from '@/components/insights/today-focus-card';
 import { FlipCard } from '@/components/flip-card';
 import { InsightCollection } from '@/components/insight-collection';
 import { Appear, SkeletonCard } from '@/components/motion';
+import { QuestsEntryCard } from '@/components/quests/entry-card';
 import { SpectrumSection } from '@/components/spectrum-slider';
 import { ThemedPressable } from '@/components/themed-pressable';
 import { NAV_PIXEL_HEADER_INSET } from '@/components/nav-pixel';
@@ -308,6 +309,7 @@ export default function InsightsScreen() {
               {userId ? <InsightCollection userId={userId} shownTitle={shownTitle} /> : null}
 
               {/* QUESTS_CARD_SLOT */}
+              <QuestsEntryCard />
             </>
           )}
         </ScrollView>

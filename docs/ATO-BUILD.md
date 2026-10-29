@@ -67,7 +67,7 @@ Stage D Quests
 - [ ] PHASE-20 Last Train Home  ⚑ copy OK
 - [ ] PHASE-21 Art 2: Masquerade + City + shared VFX (PixelLab)  ⚑ art OK
 - [x] PHASE-22 Atlas build + art integration
-- [ ] PHASE-23 Quests entry points + tutorial + You
+- [x] PHASE-23 Quests entry points + tutorial + You
 Stage E Polish & release
 - [ ] PHASE-24 Per-mode polish (G5)
 - [ ] PHASE-25 Quests QA + playtest  ⚑ playtest

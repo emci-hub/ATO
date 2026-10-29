@@ -5,6 +5,7 @@ import Animated, { FadeIn, FadeInDown, useAnimatedStyle, useSharedValue, withSpr
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ContinueButton } from '@/components/quests/dialogue';
+import { QuestsFirstRun } from '@/components/quests/first-run';
 import { Glass } from '@/components/quests/glass';
 import { useMotionReduced } from '@/hooks/use-motion-reduced';
 import { MaxContentWidth } from '@/constants/theme';
@@ -178,6 +179,7 @@ export default function QuestSelectScreen() {
             : null}
         </View>
       </ScrollView>
+      <QuestsFirstRun enabled={shown.length > 0} />
     </SafeAreaView>
   );
 }

@@ -17,6 +17,7 @@ import { Appear, SkeletonCard } from '@/components/motion';
 import { NAV_PIXEL_HEADER_INSET } from '@/components/nav-pixel';
 import { ProfileCharacter } from '@/components/profile-character';
 import { ProfileFillFold } from '@/components/profile-fill-fold';
+import { FromYourQuests } from '@/components/quests/from-your-quests';
 import { ShapeCard } from '@/components/shape-card';
 import { TraitBandsFold } from '@/components/trait-bands-fold';
 import { TraitConstellation } from '@/components/trait-constellation';
@@ -33,6 +34,7 @@ import { atoTokenBalanceOf } from '@/lib/ato-tokens';
 import { isFullProfileDone } from '@/lib/full-profile-gate';
 import { fetchHomeBootstrap } from '@/lib/home-bootstrap';
 import { aiConsentFor } from '@/lib/me';
+import { useQuestFlags } from '@/lib/quests/flags';
 import { useMeContext } from '@/lib/me-context';
 import { isTabUnlocked } from '@/lib/nav/nav-order';
 import { SETTINGS_TITLE } from '@/lib/polish-copy';
@@ -121,7 +123,11 @@ export default function YouScreen() {
 
   // `?section=` (see lib/you-sections) scrolls to that block once the tracks have
   // landed (the blocks lay out after the skeleton is replaced). Unknown: ignored.
-  const wantedSection = parseSection(params.section);
+  // R22: `section=quests` with Quests off (or not read yet) is ignored, like an unknown key.
+  const { flags: questFlags } = useQuestFlags();
+  const questsOn = questFlags?.enabled === true;
+  const parsedSection = parseSection(params.section);
+  const wantedSection = parsedSection === 'quests' && !questsOn ? null : parsedSection;
   const scrollToSection = useCallback(() => {
     if (!wantedSection || !tracksReady) return;
     const y = sectionY.current[wantedSection];
@@ -229,6 +235,13 @@ export default function YouScreen() {
               <TraitBandsFold me={me} tracks={tracks} />
               <ProfileFillFold tracks={tracks} />
               <ChangeCard userId={me.id} />
+            </View>
+          ) : null}
+
+          {/* "From your quests" (PHASE-23): below Your traits; hidden while Quests is off. */}
+          {me && questsOn ? (
+            <View onLayout={markSection('quests')}>
+              <FromYourQuests onUndone={() => void reloadTracks()} />
             </View>
           ) : null}
 
