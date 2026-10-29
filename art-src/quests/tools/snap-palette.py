@@ -23,7 +23,7 @@ for d in ('heroes', 'npcs'):
     os.makedirs(Q + d + '/snapped', exist_ok=True)
     for f in glob.glob(Q + d + '/*.png'):
         b = os.path.basename(f)
-        if not any(k in b for k in ('-idle-', '-talk-', '-react-', '-rot-east')) or 'check' in b or 'compare' in b:
+        if not any(k in b for k in ('-idle-', '-talk-', '-react-', '-rot-east', '-walk-', '-triumph-')) or 'check' in b or 'compare' in b:
             continue
         a = np.array(Image.open(f).convert('RGBA'))
         m = a[..., 3] >= 128

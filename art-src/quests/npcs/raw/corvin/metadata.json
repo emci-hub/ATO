@@ -1,0 +1,54 @@
+{
+  "group_id": "e627d93d-2e85-45d0-9a63-e308bfc92ace",
+  "states": [
+    {
+      "character": {
+        "id": "44161e62-4a16-41de-b31c-5eacad5203a0",
+        "name": "Idle",
+        "prompt": "Corvin, a lean charming human man at a masquerade, a small orange fox mask pushed up on his forehead, dark teal tailcoat, waistcoat with gold buttons, messy dark hair, a sly grin, no tail, no fur, no animal ears",
+        "size": {
+          "width": 64,
+          "height": 64
+        },
+        "template_id": "mannequin",
+        "directions": 8,
+        "view": "side",
+        "created_at": "2026-10-29T16:16:57.735620+00:00"
+      },
+      "folder": "Idle",
+      "frames": {
+        "rotations": {
+          "south": "Idle/rotations/south.png",
+          "south-east": "Idle/rotations/south-east.png",
+          "east": "Idle/rotations/east.png",
+          "north-east": "Idle/rotations/north-east.png",
+          "north": "Idle/rotations/north.png",
+          "north-west": "Idle/rotations/north-west.png",
+          "west": "Idle/rotations/west.png",
+          "south-west": "Idle/rotations/south-west.png"
+        },
+        "animations": {
+          "corvin_idle": {
+            "east": [
+              "Idle/animations/corvin_idle/east/frame_000.png",
+              "Idle/animations/corvin_idle/east/frame_001.png",
+              "Idle/animations/corvin_idle/east/frame_002.png",
+              "Idle/animations/corvin_idle/east/frame_003.png"
+            ]
+          },
+          "corvin_talk": {
+            "east": [
+              "Idle/animations/corvin_talk/east/frame_000.png",
+              "Idle/animations/corvin_talk/east/frame_001.png",
+              "Idle/animations/corvin_talk/east/frame_002.png",
+              "Idle/animations/corvin_talk/east/frame_003.png",
+              "Idle/animations/corvin_talk/east/frame_004.png"
+            ]
+          }
+        }
+      }
+    }
+  ],
+  "export_version": "3.1",
+  "export_date": "2026-10-29T16:24:28.790853"
+}

@@ -31,5 +31,15 @@ Lantern 4101 · NPC 4401+n · icons 4501 · VFX 4501–4506 · hero anims 4701+ 
 - Tools not used / rejected: `vfx_workbench` (31x23 canvas auto-fit, white specks), so VFX and the drip are `vfx/gen-vfx.py`.
 - Rebuild the sheet and scores: `tools/build-sheet.py`, `tools/write-params.py`.
 
+## What worked in PHASE-21 (2026-10-29)
+- Far plates: same Pro recipe as Lantern (`style_image` = `refs/dive-ground.png`, hex palette, `no_background:false`, seeds 4201 / 4301); all 10 passed first try. Mid layers: pixflux `no_background`, forced palette, "foreground only ... edges, empty open centre".
+- Props: pixflux 32x32..64x48, "strict flat side/front elevation"; a vague prompt gives a blank shape (phone, white tablecloth), so name the contents.
+- Small icons (24x24): `create_image_pixen` (1 gen, square multiples of 4 below 32); no palette input, snap afterwards. Emblems: "simple bold game icon of ..., flat colours, centered".
+- NPCs: `create_character` v3 64 px (2 gens, 8 directions), idle = template `breathing-idle`, talk = custom v3 4f with "always facing right, strict side profile". Say "human" and "no tail, no fur" when a prop animal (a fox mask) is in the prompt. Portraits: Pro 64x64 with the front sprite as `reference_images`.
+- animate_image: 6/8 frames at 48x96 / 96x48 / 194x24 cost 1 gen; it returns frame_count + 1 images (index 0 = the input), download with `?index=N`. For a loop pass the same first frame as `last_frame_url`. Tiny or tileable ambients are better as scripts.
+- Ending cards: compose far + mid + hero + NPCs (`tools/compose-endings.py`), then pixflux img2img at strength 650 (size must be divisible by 4: 192x116).
+- Heroes: template `walking-8-frames` 1 gen per direction at an 88 canvas; the template drifts the feet 3 rows, so `tools/install-heroes.py` puts every frame on one baseline. Custom 6f triumph costs 1-2 gens depending on the grown canvas (104-124).
+- Tools: `install-npcs.py`, `install-heroes.py`, `install-misc.py`, `compose-endings.py`, `write-params-21.py`, `build-sheets-21.py`.
+
 ## Rubric (0–4 each, pass ≥22/28, no criterion below 2; 2 fix rounds then placeholder + log)
 1 silhouette · 2 value contrast / focal point · 3 palette lock · 4 clean pixels · 5 light and shading · 6 scale and camera (side view, ground line, 64 px hero) · 7 style match to refs (animations: no boiling, stable volume, foot contact)
