@@ -126,6 +126,8 @@ function RootNavigator() {
               <Stack.Screen name="week" />
               <Stack.Screen name="settings" />
               <Stack.Screen name="roll" />
+              <Stack.Screen name="quest/index" />
+              <Stack.Screen name="quest/[id]" />
               <Stack.Screen name="chat" />
               <Stack.Screen name="dev-lab" />
             </Stack.Protected>
