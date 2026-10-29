@@ -1,4 +1,5 @@
 import { LANTERN } from '@/lib/quests/content/lantern';
+import { LAST_TRAIN } from '@/lib/quests/content/last-train';
 import { MASQUERADE } from '@/lib/quests/content/masquerade';
 import { SAMPLE_LANTERN } from '@/lib/quests/content/sample-lantern';
 import type { QuestCampaign } from '@/lib/quests/types';
@@ -8,6 +9,6 @@ import type { QuestCampaign } from '@/lib/quests/types';
  * (broken fixtures, save and apply checks); `isSample` keeps it off players' screens.
  * Content ids must match ^[a-z0-9][a-z0-9_-]{0,63}$ or the server refuses the run.
  */
-export const QUEST_CAMPAIGNS: readonly QuestCampaign[] = [LANTERN, MASQUERADE, SAMPLE_LANTERN];
+export const QUEST_CAMPAIGNS: readonly QuestCampaign[] = [LANTERN, MASQUERADE, LAST_TRAIN, SAMPLE_LANTERN];
 
 export const campaignById = (id: string): QuestCampaign | undefined => QUEST_CAMPAIGNS.find((c) => c.id === id);

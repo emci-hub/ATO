@@ -13,6 +13,11 @@ export const QUEST_LOCATION_KEYS: readonly string[] = [
   'masquerade.servants-stair',
   'masquerade.library',
   'masquerade.garden-maze',
+  'city.cancelled-platform',
+  'city.night-street',
+  'city.rooftop',
+  'city.diner',
+  'city.last-bus-stop',
 ];
 
 /** Ending art keys (same stub rule). */
@@ -25,4 +30,8 @@ export const QUEST_ENDING_ART_KEYS: readonly string[] = [
   'masquerade.ending-quiet-exit',
   'masquerade.ending-unmasked-together',
   'masquerade.ending-clock-twice',
+  'city.ending-night-bus-crew',
+  'city.ending-sunrise-walk',
+  'city.ending-diner-dawn',
+  'city.ending-first-train',
 ];
