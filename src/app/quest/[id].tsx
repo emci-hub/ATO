@@ -43,6 +43,9 @@ import type { TraitTrack } from '@/lib/trait-stability';
 import { fetchTraitTracks } from '@/lib/trait-tracks-store';
 import type { TraitAxis } from '@/lib/traits';
 
+/** The stage, top bar and text column share this width; wider screens (iPad) letterbox the plate. */
+const STAGE_MAX_WIDTH = Math.min(MaxContentWidth, 600);
+
 /** The hold animation plays this long before the choice lands (the ring already filled for a hold). */
 const COMMIT_BEAT_MS = 260;
 
@@ -322,8 +325,10 @@ export default function QuestRunScreen() {
   const campaign = campaignById(campaignId);
   const rm = useMotionReduced();
   const insets = useSafeAreaInsets();
-  const { height } = useWindowDimensions();
+  const { width, height } = useWindowDimensions();
   const plate = plateHeight(height);
+  const stageWidth = Math.min(width, STAGE_MAX_WIDTH);
+  const { flags: questFlags } = useQuestFlags();
 
   const [typing, setTyping] = useState<{ npc: boolean } | null>(null);
   const [hopKey, setHopKey] = useState(0);
@@ -428,6 +433,14 @@ export default function QuestRunScreen() {
       </View>
     );
   }
+  // A deep link, a saved run or a stale list must not play a hidden quest; null flags (still loading) do not block.
+  if (questFlags && !questsVisible(questFlags, campaign.id)) {
+    return (
+      <View style={styles.root}>
+        <Centered title={UI_COPY.unavailableTitle} body={UI_COPY.unavailableBody} onClose={close} />
+      </View>
+    );
+  }
   if (devErrors.length > 0) {
     return (
       <View style={styles.root}>
@@ -456,8 +469,9 @@ export default function QuestRunScreen() {
 
   return (
     <View style={styles.root}>
-      <View>
+      <View style={{ width: stageWidth, alignSelf: 'center' }}>
         <Stage
+          maxWidth={STAGE_MAX_WIDTH}
           location={location}
           tint={scene?.art.tint}
           cast={scene?.art.cast}
@@ -594,7 +608,7 @@ const styles = StyleSheet.create({
   stats: { paddingTop: 14, paddingBottom: 6 },
   panel: { flex: 1 },
   panelScroll: { alignItems: 'center', paddingTop: 12, paddingBottom: 24 },
-  column: { width: '100%', maxWidth: Math.min(MaxContentWidth, 600), paddingHorizontal: QT_SPACE.gutter, gap: QT_SPACE.cardGap },
+  column: { width: '100%', maxWidth: STAGE_MAX_WIDTH, paddingHorizontal: QT_SPACE.gutter, gap: QT_SPACE.cardGap },
   choices: { marginTop: 4 },
   sticky: {
     alignItems: 'center',

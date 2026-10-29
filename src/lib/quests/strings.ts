@@ -40,6 +40,8 @@ export const UI_COPY = {
   loading: 'Loading your story…',
   errorTitle: 'This story could not load',
   errorBody: 'Pick another quest, or come back later.',
+  unavailableTitle: 'This quest is resting',
+  unavailableBody: 'It is not open right now. Come back later.',
   contentInvalid: 'Content check failed (dev only): {first}',
   close: 'Close',
   closeHint: 'Leaves the story. Your place is saved.',

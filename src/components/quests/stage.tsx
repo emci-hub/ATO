@@ -116,6 +116,8 @@ export interface StageProps {
   assemble?: boolean;
   /** Hides the loops (an overlay such as the chapter card is up). */
   paused?: boolean;
+  /** Caps the stage width (iPad): the plate is letterboxed inside it. */
+  maxWidth?: number;
 }
 
 function Particle({
@@ -213,8 +215,10 @@ export function Stage({
   rewindKey = 0,
   assemble = false,
   paused = false,
+  maxWidth = Infinity,
 }: StageProps) {
-  const { width } = useWindowDimensions();
+  const { width: windowWidth } = useWindowDimensions();
+  const width = Math.min(windowWidth, maxWidth);
   const rm = useMotionReduced();
   const active = useMotionActive() && !paused;
   const pal = paletteFor(location);
@@ -310,7 +314,7 @@ export function Stage({
   const endBox = isEnding ? frameBox(`end.${location}`, Math.max(ART_PX, height / 116, width / 192)) : null;
 
   return (
-    <View style={[styles.stage, { height }]} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
+    <View style={[styles.stage, { height, width }]} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
       {/* key: a new location is a new plate that fades in over 500 ms (300 under Reduce Motion). */}
       <Animated.View key={location} entering={assemble ? undefined : fade} style={StyleSheet.absoluteFill}>
         {isEnding && endBox ? (

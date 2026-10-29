@@ -44,7 +44,7 @@ Stage D Quests
 - [ ] PHASE-23 Quests entry points + tutorial + You
 Stage E Polish & release
 - [ ] PHASE-24 Per-mode polish (G5)
-- [ ] PHASE-25 Quests QA + playtest  ⚑ playtest
+- [ ] PHASE-25 Quests QA + playtest  ⚑ playtest  (QA done 2026-10-29, see docs/quests-playtest.md; open: emci's playtest, scoring 5% vs 12% decision, T node count on device)
 - [ ] PHASE-26 Whole-app a11y + states
 - [ ] PHASE-27 Regression QA + release  ⚑ wording, flags, OTA
 ```

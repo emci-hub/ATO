@@ -242,6 +242,20 @@ ok('the screen drives the run only through the reducer and the store', () => {
   assert.match(sources['src/app/quest/[id].tsx'], /await dispatch\(\{ type: 'commit' \}\)/);
 });
 
+ok('iPad: stage and top bar are capped at the 600 column (plate letterboxed)', () => {
+  const screen = sources['src/app/quest/[id].tsx'];
+  assert.match(screen, /const STAGE_MAX_WIDTH = Math\.min\(MaxContentWidth, 600\);/);
+  assert.match(screen, /<Stage\s+maxWidth=\{STAGE_MAX_WIDTH\}/);
+  assert.match(screen, /style=\{\{ width: stageWidth, alignSelf: 'center' \}\}/);
+  assert.match(sources['src/components/quests/stage.tsx'], /const width = Math\.min\(windowWidth, maxWidth\);/);
+});
+
+ok('flags off: the run screen refuses a hidden quest (kill switch and per-campaign hide)', () => {
+  const screen = sources['src/app/quest/[id].tsx'];
+  assert.match(screen, /questFlags && !questsVisible\(questFlags, campaign\.id\)/);
+  assert.match(screen, /UI_COPY\.unavailableTitle/);
+});
+
 ok('samples are listed in development only', () => {
   assert.match(sources['src/app/quest/index.tsx'], /__DEV__ \|\| !c\.isSample/);
 });
