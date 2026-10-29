@@ -28,6 +28,7 @@ import {
   undoChangeSession,
 } from '@/lib/questions/bank-sets-server';
 import { isPremiumGated, premiumPriceFor } from '@/lib/questions/premium-gate';
+import { questApplier } from '@/lib/quests/apply';
 import { controlBorderColor } from '@/lib/theme/chrome';
 import { trackFor, type TraitTrack } from '@/lib/trait-stability';
 import { TRAIT_AXES, traitStateFromRow, type TraitAxis } from '@/lib/traits';
@@ -198,6 +199,7 @@ export function BankFinishFold({
     setNote(null);
     try {
       await startFresh(keepHistory);
+      await questApplier.clearStamps(); // the Quest numbers were cleared too: drop the phone's stamps, Full Profile refetches
       await onUpdated();
       await onReload();
     } catch (err) {

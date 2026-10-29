@@ -56,6 +56,8 @@ Summary:
   Photos/Videos, Contacts, Messages, Browsing/Search History, Purchases, Advertising Data, Sensitive Info, Payment Info,
   Phone Number, Audio).
 - `ios.privacyManifests` in `app.json` already matches this table (checked by `check:floor`).
+- Quests (2026-10-29): label unchanged. A Quest hint is Other User Content already declared; it is opt-in (Apply), undoable
+  (24 h), cleared by Start Fresh, and the "Include Quests" profile view is device-only (off by default, never uploaded).
 
 ## 4. Export compliance
 

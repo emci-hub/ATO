@@ -296,6 +296,14 @@ async function main() {
     assert.equal(server.writes, 2, 'the same Save again writes nothing (run id used once)');
     assert.equal(kv.map.has(QUEST_APPLY_QUEUE_KEY), false, 'nothing left queued');
     assert.deepEqual(Object.keys((await ap.lastAppliedAt())).sort(), ['openness', 'playfulness'], '7-day mirror stamped');
+    // Start Fresh: the phone's mirror (7-day stamps + "From your quests" list) is dropped and the profile is told.
+    let signalled = 0;
+    const ap2 = createQuestApplier({ kv, rpc: server.rpcFor('u1'), onChange: () => { signalled += 1; } });
+    assert.equal(Object.keys(await ap2.appliedRuns()).length, 1, 'the run is listed before Start Fresh');
+    await ap2.clearStamps();
+    assert.deepEqual(await ap2.lastAppliedAt(), {}, 'no 7-day cooldown stamps after Start Fresh');
+    assert.deepEqual(await ap2.appliedRuns(), {}, 'no applied runs listed after Start Fresh');
+    assert.equal(signalled, 1, 'clearStamps tells the profile screens');
     ok('Save records then applies once; a repeat Save makes no second write');
   }
 
@@ -586,6 +594,27 @@ async function main() {
       }
     }
     assert.doesNotMatch(code, /ai_provider_log/, 'wave116 no longer names ai_provider_log (wave115 drops it)');
+    // start_fresh also clears the Quest numbers (emci 2026-10-29, decision 4): wave101's body with exactly two changes.
+    {
+      const startFresh = (src: string) => {
+        const s = src.indexOf('create or replace function public.start_fresh(');
+        assert.ok(s >= 0, 'start_fresh is defined');
+        return src.slice(s, src.indexOf('\n$$;', s));
+      };
+      const w101 = read('supabase/migrations/wave101_under18_server_gate.sql').replace(/--[^\n]*/g, '');
+      const mine = startFresh(code);
+      assert.match(mine, /delete from public\.trait_tracks where user_id = uid and track in \('report', 'quest'\);/, 'start_fresh deletes the quest track with the report track');
+      assert.match(mine, /update public\.quest_runs set undone_at = now\(\)\n\s+where user_id = uid and applied_at is not null and undone_at is null;/, 'start_fresh marks applied runs undone (frees the 7-day cooldown, keeps the runs)');
+      assert.doesNotMatch(mine, /delete from public\.quest_runs/, 'run history is kept');
+      assert.doesNotMatch(mine, /track = 'game'|'game'/, 'scenario picks (game track) are untouched');
+      const back = mine
+        .replace("track in ('report', 'quest')", "track = 'report'")
+        .replace(/  update public\.quest_runs set undone_at = now\(\)\n.*\n/, '');
+      assert.equal(back, startFresh(w101), 'start_fresh = wave101 + the two Quest changes, nothing else');
+      assert.match(code, /revoke all on function public\.start_fresh\(boolean\) from public, anon;\s*grant execute on function public\.start_fresh\(boolean\) to authenticated;/);
+      const finishFold = read('src/components/bank-finish-fold.tsx');
+      assert.match(finishFold, /await startFresh\(keepHistory\);\n\s+await questApplier\.clearStamps\(\);/, 'the phone drops its Quest stamps and signals the Full Profile after Start Fresh');
+    }
     // R11
     for (const name of ['record_quest_run', 'apply_quest_result', 'undo_quest_result']) {
       const f = fn(name);

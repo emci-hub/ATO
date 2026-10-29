@@ -127,4 +127,10 @@ separate signal (`quests/quest-change.ts`, via `createQuestApplier` `onChange`) 
 account-data epoch: reviewer found that bump resets Questions, Legends and the buddy. The row also stays visible while the switch is on
 even if Quests is turned off remotely. `check:quest-blend` now scans all of `src/`:
 only those two folds may use the blend, only they, the switch row, its store and the sign-out reset may touch the switch.
-S4 is next (`start_fresh` clearing Quest numbers, `quest_runs` cooldowns, told-vs-played note, privacy wording, NOW.md, PROJECT_CONTEXT.md).
+S4 DONE locally (2026-10-29, not pushed, wave116 still NOT applied): wave116 §8 restates `start_fresh` = wave101 body + two changes (`trait_tracks`
+`track in ('report','quest')`; `quest_runs` rows with `applied_at` and no `undone_at` get `undone_at = now()`). Cooldown decision: Start Fresh frees the
+7-day-per-axis Apply cooldown (so re-answering and re-Applying works) but keeps the runs (history, analytics) and leaves the 30-day-per-campaign rule alone
+(it decides which runs count, not a trait number). Scenario picks (`game` track) are untouched. `check:quest-apply` pins this, and that Start Fresh calls
+`questApplier.clearStamps()` (drops the phone's 7-day stamps and "From your quests" list, then signals `quest-change.ts`; reviewer-found). Told-vs-played reads scenario picks only (comment on `trackFor`). Privacy draft + store pack mention the opt-in, undoable hint and
+the device-only "Include Quests" view. Phone check still owed for S3's two dots and the switch row (see PROJECT_CONTEXT). D6 stays a separate later change.
+PLAN COMPLETE except D6 and the phone check.

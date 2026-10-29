@@ -682,4 +682,77 @@ $$;
 revoke execute on function public.count_user_rows(uuid) from public, anon, authenticated;
 grant execute on function public.count_user_rows(uuid) to service_role;
 
+-- 8. start_fresh also clears the Quest numbers (emci 2026-10-29, decision 4) ------------------------
+-- start_fresh(boolean) · source: wave101_under18_server_gate.sql (body unchanged except the two marked
+-- changes). (a) the quest track goes with the report track. trait_history is already deleted for every
+-- source, self_quest included. (b) Applied runs are marked undone, so the 7-day-per-axis cooldown (R09)
+-- does not block Applying again once the person has re-answered. The runs themselves stay (history and
+-- analytics); the 30-day-per-campaign rule in record_quest_run is about which runs count, not a trait
+-- number, and is left alone.
+create or replace function public.start_fresh(p_keep_history boolean default true)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  uid uuid := auth.uid();
+  v_snapshot uuid;
+begin
+  perform public.require_adult();  -- wave101: 18+ only (docs/under18-server.md)
+  if uid is null then
+    raise exception 'not authenticated' using errcode = '28000';
+  end if;
+  perform 1 from public.me where id = uid for update;
+  if not public._bank_all_done(uid) then
+    raise exception 'start fresh opens after all 25 sets' using errcode = 'P0001';
+  end if;
+
+  -- PREMIUM GATE: null = free. When a price is set, spend it here (same lock).
+  if public._bank_premium_price('start_fresh') is not null then
+    raise exception 'premium tokens required' using errcode = 'P0042';
+  end if;
+
+  if coalesce(p_keep_history, true) then
+    insert into public.trait_profile_snapshots (user_id, reason, profile)
+      values (uid, 'start_fresh', public._profile_payload(uid))
+      returning id into v_snapshot;
+  else
+    -- Wipe: every saved card goes. One payload-free marker stays so wave85's
+    -- serve_bank_set still knows this account started fresh (no re-earning).
+    delete from public.trait_profile_snapshots where user_id = uid;
+    insert into public.trait_profile_snapshots (user_id, reason, profile)
+      values (uid, 'start_fresh', '{}'::jsonb)
+      returning id into v_snapshot;
+  end if;
+
+  -- HARD DELETE (emci 2026-10-06), exactly as wave85.
+  delete from public.trait_answers where user_id = uid;
+  delete from public.trait_tracks where user_id = uid and track in ('report', 'quest');
+  delete from public.trait_history where user_id = uid;
+  update public.quest_runs set undone_at = now()
+   where user_id = uid and applied_at is not null and undone_at is null;
+  delete from public.trait_flags where user_id = uid;
+  delete from public.question_packs p
+   where p.user_id = uid and (p.set_no is not null or p.kind = 'bank_retest')
+     and exists (select 1 from public.question_items i
+                  where i.pack_id = p.id and i.answered_option is null and i.skipped_at is null);
+
+  update public.me
+    set
+      openness = null, conscientiousness = null, extraversion = null, agreeableness = null,
+      steadiness = null, attachment_anxiety = null, attachment_avoidance = null,
+      conflict_assertiveness = null, conflict_cooperativeness = null,
+      autonomy = null, competence = null, relatedness = null,
+      growth_mindset = null, locus_of_control = null, self_efficacy = null, playfulness = null,
+      trait_sources = '{}'::jsonb,
+      trait_touched_at = '{}'::jsonb
+    where id = uid;
+
+  return jsonb_build_object('ok', true, 'snapshot_id', v_snapshot, 'kept_history', coalesce(p_keep_history, true));
+end;
+$$;
+revoke all on function public.start_fresh(boolean) from public, anon;
+grant execute on function public.start_fresh(boolean) to authenticated;
+
 commit;

@@ -390,6 +390,14 @@ export function createQuestApplier(deps: { kv: KV; rpc: Rpc; now?: () => Date; o
     /** Applied runs on this phone, by server run id (PHASE-23: "From your quests" and its Undo). */
     appliedRuns: () => inTurn(async () => (await readStamps()).runs),
     queued: () => inTurn(readQueue),
+    /**
+     * Start Fresh clears the Quest numbers on the server and marks applied runs undone, so the phone's
+     * mirror (7-day stamps, "From your quests" list) goes too. Profile screens refetch on `onChange`.
+     */
+    clearStamps: async () => {
+      await inTurn(() => quiet(() => kv.removeItem(QUEST_APPLIED_KEY), undefined));
+      changed();
+    },
   };
 }
 

@@ -387,7 +387,8 @@ export function reportTracks(rows: readonly TraitTrack[]): TraitTrack[] {
  * divergence (The Story via `sage-story-fold.tsx`, Talk via
  * `formatDivergenceNote`), and gut-call deliberately never counts toward
  * "settled"/Categories/Title (report-track only). Do not wire it into a band
- * or fold.
+ * or fold. Quest results live on their own `quest` track (wave116, S1), so
+ * told-vs-played reads scenario picks only; a Quest never makes a gap here.
  */
 export function trackFor(
   rows: readonly TraitTrack[],
