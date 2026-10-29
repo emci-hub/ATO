@@ -3,12 +3,13 @@ import type { TraitAxis } from '@/lib/traits';
 
 /**
  * Last Train Home (ATO-BUILD PHASE-20). Written to docs/quests-style-guide.md, same shape as the Lantern and
- * the Masquerade: 12 positions, every one a primary scene, so every path is exactly 12 scenes. Three target
- * axes cannot fill 12 positions evenly at 3 each, so each axis gets 4 primaries (4 + 4 + 4).
+ * the Masquerade: 12 positions, every path is exactly 12 scenes. Chapter 1 is the warm-up (no primary axis, its
+ * choices still carry tags); chapters 2 to 4 give each of the three target axes exactly 3 primaries (3 + 3 + 3),
+ * which keeps the false-apply rate under 5% (PHASE-25: with 4 primaries a 3-of-4 lean applied about 10%).
  * Four scenes are twins at a position (three check fails and the secret scene's ordinary twin).
  * Copy lives only in this file. Cast pronouns: Mara she, Theo he, Dee they.
  *
- *   ch1  1 board (locus_of_control)  2 vending (conscientiousness)  3 busker (extraversion, check)
+ *   ch1  1 board  2 vending  3 busker (check)   (no primary axis)
  *   ch2  4 umbrella | 4b downpour (conscientiousness)  5 cab (locus_of_control, check)
  *        6 cart | 6b cart_closing (extraversion)
  *   ch3  7 roof (secret) | 7b stop_map (locus_of_control)  8 diner (conscientiousness, check)
@@ -53,7 +54,6 @@ const SCENES: QuestScene[] = [
   {
     id: 'last_train_s1_board',
     chapter: 1,
-    primaryAxis: 'locus_of_control',
     lines: [
       nar('The departure board flickers and shows one word: CANCELLED. It is 00:40, and the last train home is not coming.', 'CANCELLED'),
       nar('Around you, a dozen people hold up their phones like small lanterns.'),
@@ -90,7 +90,6 @@ const SCENES: QuestScene[] = [
   {
     id: 'last_train_s2_vending',
     chapter: 1,
-    primaryAxis: 'conscientiousness',
     lines: [
       nar('A vending machine hums by the stairs. Your phone says 9 percent, and the machine has one working charge cable.', 'vending machine'),
       nar('A woman in scrubs sits beside it, eyes closed, one hand on the cable.'),
@@ -132,7 +131,6 @@ const SCENES: QuestScene[] = [
   {
     id: 'last_train_s3_busker',
     chapter: 1,
-    primaryAxis: 'extraversion',
     lines: [
       nar('Outside the station, a busker called Theo plays to nobody under a streetlight. His case holds three coins and half a granola bar.', 'busker'),
       say('Theo', 'Last train gone? Sit. I have a song for that.'),

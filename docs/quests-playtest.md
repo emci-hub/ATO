@@ -16,7 +16,7 @@ Legend: ✅ verified offline (check or code) · 📱 needs a phone/iPad look by 
 | Perf: 1 frame callback | ✅ | ✅ | ✅ | Pinned. |
 | Perf: 60 fps | 📱 | 📱 | 📱 | Profile T `night-street` + `rooftop`, L `singing-lake`. |
 | Perf: ≤ 60 nodes | 📱 | 📱 | ⚠ 📱 | Not measured. Estimate for T rain scenes is ~70–80 (8 rain sprites + 20 particles + layers). Measure in React DevTools; if over, cut rain to 4 sprites and particles to 10. |
-| Scoring sims on real content, < 5 % false apply (worst axis) | ⚠ 5.5 % | ✅ 3.7 % | ⚠ 10.7 % | `check:quest-score` enforces a relaxed 12 % per axis / 0.02 mean (emci 2026-10-28), so it is green. Spec says 5 %: **emci defers (12 % target) or asks for a retune of T (Opus) and a nudge of L.** |
+| Scoring sims on real content, < 5 % false apply (worst axis) | ⚠ 5.5 % | ✅ 3.7 % | ✅ 3.8 % | `check:quest-score` enforces a relaxed 12 % per axis / 0.02 mean (emci 2026-10-28). **T retuned 2026-10-29** (was 10.7 %): chapter 1's three scenes lost their primary axis, so each axis has exactly 3 primaries (a 3-of-4 lean used to apply by chance); consistent run still applies 3. L is 0.5 pt over the 5 % spec: emci defers or asks for a nudge. |
 | Save migration (old save + bumped contentVersion) | ✅ | ✅ | ✅ | `check:quest-run` fixtures (redirect, version bump, unknown id restarts chapter with a notice, endings kept). All 3 are still contentVersion 1, so no real bump has run yet. |
 | Offline Apply then retry | ✅ 📱 | ✅ 📱 | ✅ 📱 | `check:quest-apply` (queue, same run id, dedupe, flush). Try airplane mode once on a phone. |
 | Flags off | ✅ | ✅ | ✅ | Entry points were already gated. **Fixed this phase**: the run route `/quest/<id>` still played when `quests_enabled` was off or the campaign was in `quests_disabled_campaigns`; it now shows "This quest is resting". Pinned. |
@@ -61,5 +61,5 @@ understand it was optional.
 
 ## 3. Accept status
 
-All rows are ✅ or 📱 (emci looks on a device) except two ⚠ that need an explicit emci decision: scoring 5 % vs 12 %,
+All rows are ✅ or 📱 (emci looks on a device) except two ⚠ that need an explicit emci decision: Lantern scoring at 5.5 % vs the 5 % spec,
 and the T node count. Neither is silently deferred.
