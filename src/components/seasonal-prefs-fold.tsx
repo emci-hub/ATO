@@ -125,7 +125,9 @@ export function SeasonalPrefsFold() {
       <View>
         <View style={styles.row}>
           <View style={styles.rowText}>
-            <ThemedText type="smallBold">Hemisphere</ThemedText>
+            <ThemedText type="smallBold" accessibilityRole="header">
+              Hemisphere
+            </ThemedText>
             <ThemedText type="small" themeColor="textSecondary">
               Sets which season is which. Worked out from your time zone.
             </ThemedText>
@@ -200,6 +202,7 @@ const styles = StyleSheet.create({
     gap: Spacing.three,
     paddingVertical: Spacing.two,
     paddingHorizontal: Spacing.three,
+    minHeight: 44,
   },
   rowText: {
     flex: 1,
@@ -213,6 +216,8 @@ const styles = StyleSheet.create({
   segment: {
     flex: 1,
     alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 44,
     paddingVertical: Spacing.two,
     borderWidth: StyleSheet.hairlineWidth,
     borderRadius: Spacing.two,

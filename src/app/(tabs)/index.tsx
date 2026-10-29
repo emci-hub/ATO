@@ -393,7 +393,9 @@ export default function HomeScreen() {
               small line under it. */}
           <View style={styles.header}>
             <View style={styles.headerTop}>
-              <ThemedText type="subtitle">{HOME_TITLE}</ThemedText>
+              <ThemedText type="subtitle" accessibilityRole="header">
+                {HOME_TITLE}
+              </ThemedText>
               {/* Settings live on their own screen (IA phase P1). */}
               <Pressable
                 accessibilityRole="button"

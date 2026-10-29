@@ -156,17 +156,19 @@ Update: ${Updates.updateId ?? 'original build'}`);
               style={({ pressed }) => [styles.backButton, pressed && styles.pressed]}>
               <ThemedText type="link">‹ Back</ThemedText>
             </Pressable>
-            <ThemedText type="subtitle">{SETTINGS_TITLE}</ThemedText>
+            <ThemedText type="subtitle" accessibilityRole="header">
+              {SETTINGS_TITLE}
+            </ThemedText>
           </View>
 
-          <ThemedText type="code" themeColor="textSecondary" style={styles.sectionHead}>
+          <ThemedText type="code" themeColor="textSecondary" style={styles.sectionHead} accessibilityRole="header">
             Appearance
           </ThemedText>
           <AppearancePicker />
 
           {me ? (
             <>
-              <ThemedText type="code" themeColor="textSecondary" style={styles.sectionHead}>
+              <ThemedText type="code" themeColor="textSecondary" style={styles.sectionHead} accessibilityRole="header">
                 Profile details
               </ThemedText>
               <CityPicker
@@ -181,13 +183,13 @@ Update: ${Updates.updateId ?? 'original build'}`);
             </>
           ) : null}
 
-          <ThemedText type="code" themeColor="textSecondary" style={styles.sectionHead}>
+          <ThemedText type="code" themeColor="textSecondary" style={styles.sectionHead} accessibilityRole="header">
             Notifications
           </ThemedText>
           <NotificationPrefsFold />
           <SeasonalPrefsFold />
 
-          <ThemedText type="code" themeColor="textSecondary" style={styles.sectionHead}>
+          <ThemedText type="code" themeColor="textSecondary" style={styles.sectionHead} accessibilityRole="header">
             Privacy &amp; AI
           </ThemedText>
           <SettingsFold title="ATO's AI" defaultOpen>
@@ -224,7 +226,7 @@ Update: ${Updates.updateId ?? 'original build'}`);
             </View>
           </SettingsFold>
 
-          <ThemedText type="code" themeColor="textSecondary" style={styles.sectionHead}>
+          <ThemedText type="code" themeColor="textSecondary" style={styles.sectionHead} accessibilityRole="header">
             Help &amp; legal
           </ThemedText>
           {/* One static helpline row (emci 2026-10-14). Never generated. */}
@@ -245,7 +247,7 @@ Update: ${Updates.updateId ?? 'original build'}`);
           ) : null}
           <LegalLinks />
 
-          <ThemedText type="code" themeColor="textSecondary" style={styles.sectionHead}>
+          <ThemedText type="code" themeColor="textSecondary" style={styles.sectionHead} accessibilityRole="header">
             Account
           </ThemedText>
           <Pressable
@@ -277,14 +279,14 @@ Update: ${Updates.updateId ?? 'original build'}`);
             </ThemedText>
           </Pressable>
 
-          <ThemedText type="code" themeColor="textSecondary" style={styles.sectionHead}>
+          <ThemedText type="code" themeColor="textSecondary" style={styles.sectionHead} accessibilityRole="header">
             About
           </ThemedText>
           <RunningUpdateLine />
 
           {showDeveloper ? (
             <>
-              <ThemedText type="code" themeColor="textSecondary" style={styles.sectionHead}>
+              <ThemedText type="code" themeColor="textSecondary" style={styles.sectionHead} accessibilityRole="header">
                 Developer
               </ThemedText>
               {canSeeHub ? (
@@ -384,6 +386,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingVertical: Spacing.two,
+    minHeight: 44,
   },
   signOutButton: {
     borderRadius: Spacing.three,

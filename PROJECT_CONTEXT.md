@@ -638,6 +638,7 @@ One flag controls all of these: `PRE_LAUNCH_DEV` in `src/lib/dev-mode.ts`. **`np
 
 ## Decisions log
 
+- 2026-10-29 PHASE-26 OFFLINE HALF (branch `phase-11c-almanac-content`, local, not pushed, no OTA): code audit of Settings, You, tab bar/More, Your reveals, Home, Insights, Legends, Quests; report `docs/qa-a11y-report.md`. Fixed: header roles on titles/section heads, More sheet Close/dismiss/"Edit tab bar" VoiceOver action, 44 pt rows (Settings AI switch, Seasonal fold, Legends chips/link), Legends tile label fixed line height, Legends load-error state, Try-today haptic through the map. Open for emci: tab bar full width on iPad (keep or cap?), all 📱 rows (VoiceOver order, XXL, 375×667, iPad, Reduce Motion recording). PHASE-25 playtest is still open. emci said "its good on phone" (scope unnamed). Stale progress boxes for PHASE-19/20/23/24 ticked.
 - 2026-10-21 CIRCLE RESULTS (emci): phone check of the live OTA `3d169cfc` PASSED; the 1.1 ASC review notes are updated to say "Circle tab" (open item closed). Decision: Circle STAYS under More, the default bar stays Home / Insights / Questions / Explore (don't re-ask).
 - 2026-10-21 CIRCLE TOOLS MOVED TO THE TAB (emci): Add by @handle, Requests, Blocked, the ⋯ menu (Message · Compare strengths ·
   Report · Block · Remove, two taps for Block/Remove, six fixed report reasons) and the support line now live in the Circle tab

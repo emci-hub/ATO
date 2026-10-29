@@ -42,13 +42,25 @@ export function NavMoreSheet({
         <View style={styles.backdrop}>
         {/* Flex spacer above the sheet — not absoluteFill, so row taps never
             hit the dismiss layer. */}
-        <Pressable style={styles.backdropDismiss} onPress={onClose} accessibilityLabel="Dismiss More" />
+        <Pressable
+          style={styles.backdropDismiss}
+          onPress={onClose}
+          accessibilityRole="button"
+          accessibilityLabel="Dismiss More"
+        />
         <SafeAreaView
           edges={['bottom']}
           style={[styles.sheet, { backgroundColor: theme.background, borderColor: controlBorderColor(theme) }]}>
           <View style={styles.header}>
-            <ThemedText type="smallBold">More</ThemedText>
-            <Pressable hitSlop={8} onPress={onClose}>
+            <ThemedText type="smallBold" accessibilityRole="header">
+              More
+            </ThemedText>
+            <Pressable
+              hitSlop={8}
+              onPress={onClose}
+              accessibilityRole="button"
+              accessibilityLabel="Close More"
+              style={styles.closeButton}>
               <ThemedText type="small" themeColor="textSecondary">
                 Close
               </ThemedText>
@@ -61,6 +73,12 @@ export function NavMoreSheet({
                 key={id}
                 accessibilityRole="button"
                 accessibilityLabel={`Open ${NAV_TABS[id].label}`}
+                accessibilityActions={[{ name: 'edit', label: 'Edit tab bar' }]}
+                onAccessibilityAction={(event) => {
+                  if (event.nativeEvent.actionName !== 'edit') return;
+                  onClose();
+                  setTimeout(startEditing, MODAL_FADE_MS);
+                }}
                 onPress={() => {
                   // Push first so closing the Modal cannot unmount before
                   // the tab navigator receives the route.
@@ -140,6 +158,10 @@ const styles = StyleSheet.create({
   },
   backdropDismiss: {
     flex: 1,
+  },
+  closeButton: {
+    minHeight: 44,
+    justifyContent: 'center',
   },
   sheet: {
     borderTopLeftRadius: Spacing.four,

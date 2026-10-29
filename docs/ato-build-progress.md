@@ -37,15 +37,15 @@ Stage D Quests
 - [x] PHASE-16 Quests UI v3
 - [x] PHASE-17 Server, Apply, Undo, flags  ⚑ wave116 (built; emci applies wave116)
 - [x] PHASE-18 Style guide + The Drowned Lantern  ⚑ copy OK (built; emci's copy read still to come)
-- [ ] PHASE-19 The Masquerade  ⚑ copy OK
-- [ ] PHASE-20 Last Train Home  ⚑ copy OK
+- [x] PHASE-19 The Masquerade  ⚑ copy OK
+- [x] PHASE-20 Last Train Home  ⚑ copy OK
 - [x] PHASE-21 Art 2: Masquerade + City + shared VFX (PixelLab)  ⚑ art OK (emci 2026-10-29)
 - [x] PHASE-22 Atlas build + art integration
-- [ ] PHASE-23 Quests entry points + tutorial + You
+- [x] PHASE-23 Quests entry points + tutorial + You
 Stage E Polish & release
-- [ ] PHASE-24 Per-mode polish (G5)
+- [x] PHASE-24 Per-mode polish (G5)  (built; open: holo-card/hall-rings frames, 5-mode screenshots, Reduce Motion recording, SharePoster `tracks` wiring)
 - [ ] PHASE-25 Quests QA + playtest  ⚑ playtest  (QA done 2026-10-29, see docs/quests-playtest.md; open: emci's playtest, scoring 5% vs 12% decision, T node count on device)
-- [ ] PHASE-26 Whole-app a11y + states
+- [ ] PHASE-26 Whole-app a11y + states  (offline half done 2026-10-29, see docs/qa-a11y-report.md; open: 📱 rows, tab bar on iPad call)
 - [ ] PHASE-27 Regression QA + release  ⚑ wording, flags, OTA
 ```
 

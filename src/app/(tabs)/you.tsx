@@ -182,7 +182,9 @@ export default function YouScreen() {
           keyboardShouldPersistTaps="handled"
           contentContainerStyle={styles.scrollContent}>
           <View style={styles.header}>
-            <ThemedText type="subtitle">You</ThemedText>
+            <ThemedText type="subtitle" accessibilityRole="header">
+              You
+            </ThemedText>
           </View>
 
           {/* Constellation header (PHASE-05): the same tracks as a field of stars. Its own

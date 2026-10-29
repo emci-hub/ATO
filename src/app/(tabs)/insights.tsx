@@ -194,7 +194,7 @@ export default function InsightsScreen() {
           contentInsetAdjustmentBehavior="never">
           <View style={styles.header}>
             <View style={styles.titleRow}>
-              <ThemedText type="subtitle" style={styles.flexText}>
+              <ThemedText type="subtitle" style={styles.flexText} accessibilityRole="header">
                 {INSIGHTS_TITLE}
               </ThemedText>
               <TokenChip />
