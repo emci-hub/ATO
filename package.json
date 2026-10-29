@@ -272,6 +272,7 @@
     "check:quest-score": "tsx ./scripts/quest-score-check.ts",
     "check:quest-run": "tsx ./scripts/quest-run-check.ts",
     "check:quest-ui": "tsx ./scripts/quest-ui-check.ts",
+    "check:quest-apply": "tsx ./scripts/quest-apply-check.ts",
     "check:almanac-bank": "tsx ./scripts/almanac-bank-check.ts",
     "load:almanac": "tsx ./scripts/load-almanac.ts",
     "check:insights-g3": "tsx ./scripts/insights-g3-check.ts",

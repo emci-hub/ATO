@@ -19,10 +19,12 @@ import { useMotionReduced } from '@/hooks/use-motion-reduced';
 import { useSession } from '@/hooks/use-session';
 import { AXIS_SHORT_NAME } from '@/lib/axis-poles';
 import { haptic } from '@/lib/motion-tokens';
+import { axisWrites, questApplier, recordArgs, serverRunId, type QuestErrorCode } from '@/lib/quests/apply';
 import { campaignById } from '@/lib/quests/content';
+import { applyAllowed, questsVisible, useQuestFlags } from '@/lib/quests/flags';
 import { RUN, picksOf, resolveScene, rewindTarget, sceneLines, type ActiveRun, type RunMode } from '@/lib/quests/run';
 import { runStore, endingsFound, type QuestProgress } from '@/lib/quests/run-store';
-import { SAID_COPY, UI_COPY, fmt } from '@/lib/quests/strings';
+import { QUEST_ERROR_COPY, SAID_COPY, UI_COPY, fmt } from '@/lib/quests/strings';
 import { scoreRun } from '@/lib/quests/score';
 import { QT, QT_RADIUS, QT_SPACE, QT_TYPE, plateHeight } from '@/lib/quests/theme';
 import { useQuestRun } from '@/lib/quests/use-run';
@@ -46,7 +48,21 @@ const COMMIT_BEAT_MS = 260;
 
 const wait = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 
-/** "What your choices said": up to three cards, nothing pre-ticked, Save stubbed until PHASE-17. */
+type SaveState =
+  | { kind: 'idle' }
+  | { kind: 'saving' }
+  | { kind: 'saved' }
+  | { kind: 'queued' }
+  | { kind: 'undone' }
+  | { kind: 'error'; code: QuestErrorCode };
+
+/**
+ * "What your choices said": up to three cards, nothing pre-ticked. Save records
+ * the run on the server and applies the ticked cards (PHASE-17, wave116); a
+ * Save that can't reach the server waits in the phone's queue. After a Save,
+ * Undo takes it back (24 h, server-checked). Apply switched off: the cards
+ * stay readable, the ticks don't work, and a kind note says why.
+ */
 function SaidView({
   run,
   campaign,
@@ -61,16 +77,25 @@ function SaidView({
   const insets = useSafeAreaInsets();
   const { session } = useSession();
   const userId = session?.user.id;
+  const { flags } = useQuestFlags();
   const [tracks, setTracks] = useState<TraitTrack[] | null>(null);
   const [progress, setProgress] = useState<QuestProgress | null>(null);
+  const [stamps, setStamps] = useState<Partial<Record<TraitAxis, string>> | null>(null);
   const [ticked, setTicked] = useState<ReadonlySet<TraitAxis>>(new Set());
   const [notMe, setNotMe] = useState<ReadonlySet<TraitAxis>>(new Set());
   const [confirm, setConfirm] = useState(false);
+  const [save, setSave] = useState<SaveState>({ kind: 'idle' });
+  const [undoError, setUndoError] = useState<QuestErrorCode | null>(null);
+  const busy = useRef(false);
   const now = useMemo(() => new Date(), []);
+  const serverId = useMemo(() => serverRunId(run.runId), [run.runId]);
 
   useEffect(() => {
     let alive = true;
     runStore.loadProgress().then((p) => alive && setProgress(p));
+    questApplier.lastAppliedAt().then((a) => alive && setStamps(a));
+    // An earlier Save that waited for a connection goes through now.
+    void questApplier.flush();
     (userId ? fetchTraitTracks(userId) : Promise.resolve([] as TraitTrack[]))
       .then((t) => alive && setTracks(t))
       .catch(() => alive && setTracks([]));
@@ -79,19 +104,19 @@ function SaidView({
     };
   }, [userId]);
 
-  const model = useMemo(() => {
-    if (!tracks || !progress) return null;
-    return saidModel(
-      scoreRun({
-        campaign,
-        picks: picksOf(run),
-        mode: run.mode,
-        now,
-        tracks,
-        priorEvidenceRuns: progress.evidence[campaign.id] ?? [],
-      }),
-    );
-  }, [campaign, run, now, tracks, progress]);
+  const score = useMemo(() => {
+    if (!tracks || !progress || !stamps) return null;
+    return scoreRun({
+      campaign,
+      picks: picksOf(run),
+      mode: run.mode,
+      now,
+      tracks,
+      lastAppliedAt: stamps,
+      priorEvidenceRuns: progress.evidence[campaign.id] ?? [],
+    });
+  }, [campaign, run, now, tracks, progress, stamps]);
+  const model = useMemo(() => (score ? saidModel(score) : null), [score]);
 
   const toggle = (set: ReadonlySet<TraitAxis>, axis: TraitAxis): ReadonlySet<TraitAxis> => {
     const next = new Set(set);
@@ -100,8 +125,76 @@ function SaidView({
     return next;
   };
 
+  const loaded = !!model && !!flags;
   const hasCards = !!model && model.cards.length > 0;
-  const ready = hasCards ? canSave(ticked, notMe) : true;
+  const applyOn = !!flags && applyAllowed(flags, campaign.id);
+  const canApply = hasCards && applyOn;
+  const ready = canApply ? canSave(ticked, notMe) : true;
+  const settled = save.kind !== 'idle' && save.kind !== 'saving';
+
+  const onSave = async () => {
+    if (busy.current || !score || !flags) return;
+    busy.current = true;
+    try {
+      // Quests switched off: nothing goes to the server.
+      if (!questsVisible(flags, campaign.id)) {
+        onFinish();
+        return;
+      }
+      const axes = canApply ? axisWrites(score.apply, ticked, notMe) : [];
+      setSave({ kind: 'saving' });
+      // Apply switched off: the run is recorded as for fun, so it never uses up the 30-day slot.
+      const record = { ...recordArgs(run), p_for_fun: run.mode === 'fun' || !applyOn };
+      const out = await questApplier.save({ runId: serverId, record, axes });
+      // A run with nothing to apply is only recorded: finish straight away, whatever the answer.
+      if (axes.length === 0) {
+        onFinish();
+        return;
+      }
+      if (out.status === 'saved') {
+        haptic.success();
+        setSave({ kind: 'saved' });
+      } else if (out.status === 'queued') setSave({ kind: 'queued' });
+      else setSave({ kind: 'error', code: out.code });
+    } finally {
+      busy.current = false;
+    }
+  };
+
+  const onUndo = async () => {
+    if (busy.current) return;
+    busy.current = true;
+    try {
+      setUndoError(null);
+      const out = await questApplier.undo(serverId);
+      if (out.status === 'undone') setSave({ kind: 'undone' });
+      else setUndoError(out.code);
+    } finally {
+      busy.current = false;
+    }
+  };
+
+  const status =
+    save.kind === 'saved'
+      ? UI_COPY.saidSaved
+      : save.kind === 'queued'
+        ? UI_COPY.saidQueued
+        : save.kind === 'undone'
+          ? UI_COPY.saidUndone
+          : save.kind === 'error'
+            ? QUEST_ERROR_COPY[save.code]
+            : hasCards && flags && !applyOn
+              ? UI_COPY.saidApplyOff
+              : null;
+
+  const label =
+    save.kind === 'saving'
+      ? UI_COPY.saidSaving
+      : settled || !canApply
+        ? UI_COPY.saidDone
+        : ready
+          ? UI_COPY.saidSave
+          : UI_COPY.saidTickFirst;
 
   return (
     <>
@@ -126,6 +219,7 @@ function SaidView({
                   index={i}
                   ticked={ticked.has(card.axis) && !notMe.has(card.axis)}
                   notMe={notMe.has(card.axis)}
+                  applyOff={!applyOn || save.kind !== 'idle'}
                   onTick={() => setTicked((s) => toggle(s, card.axis))}
                   onNotMe={() => setNotMe((s) => toggle(s, card.axis))}
                 />
@@ -141,26 +235,50 @@ function SaidView({
               ) : null}
             </>
           )}
+          {status ? (
+            <Text style={styles.status} accessibilityLiveRegion="polite">
+              {status}
+            </Text>
+          ) : null}
+          {save.kind === 'saved' || save.kind === 'queued' ? (
+            <>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={UI_COPY.saidUndo}
+                accessibilityHint={UI_COPY.saidUndoHint}
+                onPress={onUndo}
+                style={styles.messing}
+              >
+                <Text style={styles.messingText}>{UI_COPY.saidUndo}</Text>
+              </Pressable>
+              {undoError ? (
+                <Text style={styles.sub} accessibilityLiveRegion="polite">
+                  {QUEST_ERROR_COPY[undoError]}
+                </Text>
+              ) : null}
+            </>
+          ) : null}
           <Text style={styles.ethics}>{UI_COPY.saidEthics}</Text>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel={UI_COPY.saidMessing}
-            onPress={() => setConfirm(true)}
-            style={styles.messing}
-          >
-            <Text style={styles.messingText}>{UI_COPY.saidMessing}</Text>
-          </Pressable>
+          {save.kind === 'idle' ? (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={UI_COPY.saidMessing}
+              onPress={() => setConfirm(true)}
+              style={styles.messing}
+            >
+              <Text style={styles.messingText}>{UI_COPY.saidMessing}</Text>
+            </Pressable>
+          ) : null}
         </View>
       </ScrollView>
 
       <View style={[styles.sticky, { paddingBottom: insets.bottom + 12 }]}>
         <View style={styles.column}>
           <ContinueButton
-            label={hasCards ? (ready ? UI_COPY.saidSave : UI_COPY.saidTickFirst) : UI_COPY.saidDone}
-            disabled={model === null || !ready}
-            onPress={onFinish}
+            label={label}
+            disabled={!loaded || save.kind === 'saving' || (!settled && !ready)}
+            onPress={settled ? onFinish : onSave}
           />
-          {__DEV__ && hasCards ? <Text style={styles.note}>{UI_COPY.saidSaveStub}</Text> : null}
         </View>
       </View>
 
@@ -487,8 +605,8 @@ const styles = StyleSheet.create({
   saidTitle: { ...QT_TYPE.h1, color: QT.text },
   sub: { ...QT_TYPE.small, color: QT.sub },
   label: { ...QT_TYPE.label, color: QT.sub },
-  note: { ...QT_TYPE.small, color: QT.sub, textAlign: 'center' },
   ethics: { ...QT_TYPE.small, color: QT.sub, textAlign: 'center', marginTop: 4 },
+  status: { ...QT_TYPE.small, color: QT.text, textAlign: 'center' },
   notEnough: { gap: 4 },
   messing: { minHeight: 44, alignItems: 'center', justifyContent: 'center' },
   messingText: { ...QT_TYPE.ui, color: QT.sky },

@@ -93,7 +93,37 @@ export const UI_COPY = {
   messingBody: 'Nothing from it will be kept.',
   messingConfirm: 'Throw it away',
   messingKeep: 'Keep it',
-  saidSaveStub: 'Saving arrives in the next update.',
+  saidSaving: 'Saving…',
+  saidSaved: 'Saved. Your answers still count most.',
+  saidQueued: 'Saved on this phone. It goes through next time you’re online.',
+  saidUndo: 'Undo',
+  saidUndoHint: 'Takes this back off your profile. You can undo for 24 hours.',
+  saidUndone: 'Undone. Your profile is back where it was.',
+  saidApplyOff: 'Adding to your profile is paused for now. The story still counts as played.',
+  devFlagsServer: 'Quests flags: from the server',
+  devFlagsOn: 'Quests flags: forced on',
+  devFlagsOff: 'Quests flags: forced off',
+} as const;
+
+/** One sentence per Save / Undo error code (src/lib/quests/apply.ts QUEST_ERROR_CODES). */
+export const QUEST_ERROR_COPY = {
+  not_signed_in: 'Sign in again to save this story.',
+  quests_disabled: 'Quests are paused for now, so this run wasn’t saved.',
+  apply_disabled: 'Adding to your profile is paused for now. The story still counts as played.',
+  campaign_disabled: 'This story is paused for now, so this run wasn’t saved.',
+  bad_input: 'Something in this run didn’t look right, so it wasn’t saved.',
+  run_not_found: 'We couldn’t find this run to save it.',
+  run_taken: 'This run was already saved somewhere else.',
+  run_used: 'This run was already taken back, so it can’t be saved again.',
+  not_evidence: 'You played this story as yourself recently, so this run counts as for fun.',
+  too_many_axes: 'Pick three cards or fewer.',
+  axis_not_allowed: 'One of these cards can’t be added from a story.',
+  axis_cooldown: 'One of these was added in the last 7 days. Try again after that.',
+  not_applied: 'There’s nothing to undo for this run.',
+  undo_expired: 'Undo only works for 24 hours after saving.',
+  offline: 'You’re offline. It goes through next time you’re online.',
+  not_ready: 'Saving stories isn’t switched on yet.',
+  unknown: 'That didn’t save. Try again in a moment.',
 } as const;
 
 /** Limits the validator enforces (numbers, not copy). */

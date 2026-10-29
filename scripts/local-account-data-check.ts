@@ -101,6 +101,10 @@ for (const wiped of [
   'ato.quests.run.v1', // PHASE-14: the saved Quests run
   'ato.quests.progress.v1', // PHASE-14: endings found + as-me evidence stamps
   'ato.quests.tutorial.v1', // PHASE-23's tutorial flag (key fixed in PHASE-14)
+  'ato.quests.apply-queue.v1', // PHASE-17: Saves waiting for a connection (no user id; a new account never inherits them)
+  'ato.quests.applied.v1', // PHASE-17: 7-day Apply mirror
+  'ato.quests.devflags.v1', // PHASE-17: dev-only flag override
+  'ato.quests.flags.v1', // PHASE-17: last server flags, for offline
   'ato.questions.answeredOption.full-profile:abc.v1',
   'ato.questions.categoryPage.full-profile:abc.v1',
   'ato.profile.fullUnlock.seen.abc.v1',

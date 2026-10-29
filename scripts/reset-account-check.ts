@@ -149,7 +149,7 @@ ok('the dev sign-up reset and the delete-account count cover the six newer table
   const reset97 = w97.slice(w97.indexOf('create or replace function public.reset_my_account()'), w97.indexOf('create or replace function public.reset_dev_test_user()'));
   const dev97 = w97.slice(w97.indexOf('create or replace function public.reset_dev_test_user()'), w97.indexOf('create or replace function public.count_user_rows'));
   const count97 = w97.slice(w97.indexOf('create or replace function public.count_user_rows'));
-  assert.deepEqual(resetFiles.slice(-2), ['wave97_circle_visits.sql', 'wave103_drop_crisis_plumbing.sql'], 'wave97 holds the reset_my_account that wave103 restates (wave103 is the newest, not applied)');
+  assert.deepEqual(resetFiles.slice(-3), ['wave97_circle_visits.sql', 'wave103_drop_crisis_plumbing.sql', 'wave116_quest_runs.sql'], 'wave97 holds the reset_my_account that wave103 restates; wave116 (PHASE-17, not applied) is the newest');
   const reset97Full = reset97.slice(0, reset97.indexOf('$$;'));
   for (const t of ['circle_gifts', 'circle_visit_share']) {
     assert.match(reset97, new RegExp(`delete from public\\.${t} where user_id = uid or peer_id = uid;`), `Reset account wipes ${t} both ways (everything shared)`);
@@ -168,11 +168,42 @@ ok('the dev sign-up reset and the delete-account count cover the six newer table
   const strip = (s: string) => s.split('\n').filter((l) => !/circle_|Divecore Circle visits|friends' switches/.test(l)).join('\n');
   assert.equal(strip(reset97Full), body90, 'reset_my_account = wave90 + the two Circle deletes, nothing else changed');
   // wave103 (not applied) = wave97 minus the one crisis_flags delete, nothing else.
+  const w103 = read('supabase/migrations/wave103_drop_crisis_plumbing.sql');
+  const at103 = w103.indexOf('create or replace function public.reset_my_account()');
+  const reset103 = w103.slice(at103, w103.indexOf('$$;', at103));
   assert.match(reset97Full, /delete from public\.crisis_flags where user_id = uid;/, 'wave97 still deletes crisis_flags (the table is live until wave103)');
-  assert.doesNotMatch(resetFn, /crisis_flags/, 'wave103 reset_my_account no longer touches the dropped table');
+  assert.doesNotMatch(reset103, /crisis_flags/, 'wave103 reset_my_account no longer touches the dropped table');
+  assert.doesNotMatch(resetFn, /crisis_flags/, 'the newest reset_my_account does not either');
   const noCrisisLine = (s: string) => s.split('\n').filter((l) => !/crisis_flags/.test(l)).join('\n');
-  assert.equal(resetFn, noCrisisLine(reset97Full), 'wave103 reset_my_account = wave97 minus the crisis_flags line');
+  assert.equal(reset103, noCrisisLine(reset97Full), 'wave103 reset_my_account = wave97 minus the crisis_flags line');
   ok('wave97: circle_gifts + circle_visit_share wiped by Reset (both ways), cleared by the dev reset, counted for delete-account');
+}
+
+// --- wave116: Quests runs (PHASE-17, R12): wiped by Reset, cleared by the dev reset, counted for delete-account ---
+{
+  const w116 = read('supabase/migrations/wave116_quest_runs.sql');
+  const fnBody = (src: string, head: string) => {
+    const s = src.indexOf(head);
+    assert.ok(s >= 0, `${head} found`);
+    return src.slice(s, src.indexOf('$$;', s));
+  };
+  const noQuestLine = (s: string) => s.split('\n').filter((l) => !/quest_runs/.test(l)).join('\n');
+  const w103 = read('supabase/migrations/wave103_drop_crisis_plumbing.sql');
+  const w104 = read('supabase/migrations/wave104_circle_safety.sql');
+  const w108 = read('supabase/migrations/wave108_circle_chat.sql');
+  const reset116 = fnBody(w116, 'create or replace function public.reset_my_account()');
+  const dev116 = fnBody(w116, 'create or replace function public.reset_dev_test_user()');
+  const count116 = fnBody(w116, 'create or replace function public.count_user_rows(');
+  assert.match(reset116, /delete from public\.quest_runs where user_id = uid; get diagnostics n = row_count; v_rows := v_rows \+ n;/, 'Reset account wipes quest_runs');
+  assert.match(dev116, /delete from public\.quest_runs where user_id = v_dev_id;/, 'the dev sign-up reset clears quest_runs');
+  assert.match(count116, /from public\.quest_runs where user_id = p_user_id/, 'delete-account counts quest_runs');
+  assert.ok(!('quest_runs' in KEEP), 'quest_runs is never on the KEEP list');
+  assert.match(w116, /create table public\.quest_runs \([\s\S]*?user_id uuid not null references auth\.users \(id\) on delete cascade,/, 'quest_runs cascades with the account');
+  // Each body = its source + the one quest_runs line, nothing else changed.
+  assert.equal(noQuestLine(reset116), fnBody(w103, 'create or replace function public.reset_my_account()'), 'reset_my_account = wave103 + quest_runs');
+  assert.equal(noQuestLine(dev116), fnBody(w104, 'create or replace function public.reset_dev_test_user()'), 'reset_dev_test_user = wave104 + quest_runs');
+  assert.equal(noQuestLine(count116), fnBody(w108, 'create or replace function public.count_user_rows('), 'count_user_rows = wave108 + quest_runs');
+  ok('wave116: quest_runs wiped by Reset, cleared by the dev reset, counted for delete-account; bodies = sources + one line');
 }
 
 // --- client -------------------------------------------------------------------------------

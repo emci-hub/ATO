@@ -41,7 +41,7 @@ const countBody = newestSql.slice(
   newestSql.indexOf('create or replace function public.count_user_rows('),
   newestSql.indexOf('$$;', newestSql.indexOf('create or replace function public.count_user_rows(')),
 );
-assert.equal(newestCountFile, 'wave108_circle_chat.sql', 'wave108 holds the newest count_user_rows');
+assert.equal(newestCountFile, 'wave116_quest_runs.sql', 'wave116 (PHASE-17, not applied) holds the newest count_user_rows');
 assert.match(newestSql, /revoke execute on function public\.count_user_rows\(uuid\) from public, anon, authenticated;/);
 assert.match(newestSql, /grant execute on function public\.count_user_rows\(uuid\) to service_role;/);
 ok(`newest count_user_rows is ${newestCountFile}; service_role only`);
@@ -118,6 +118,18 @@ ok('the four missed tables, shared-content authors, referrals and dev grants are
   for (const t of ['chat_keys', 'chat_restrictions']) assert.match(countBody, new RegExp(`from public\\.${t} where user_id = p_user_id`));
   assert.match(countBody, /from public\.chat_messages where sender_id = p_user_id or recipient_id = p_user_id/);
   ok('wave108 keeps every table wave106 counted and adds the chat tables');
+}
+
+// wave116 = wave108's body + quest_runs (nothing dropped).
+{
+  const w108 = read('wave108_circle_chat.sql');
+  const s = w108.indexOf('create or replace function public.count_user_rows(');
+  const old = w108.slice(s, w108.indexOf('$$;', s));
+  const terms = (b: string) => [...b.matchAll(/from (?:public|auth)\.([a-z_0-9]+) where/g)].map((m) => m[1]!);
+  const lost = terms(old).filter((t) => !terms(countBody).includes(t));
+  assert.deepEqual(lost, [], `wave116 dropped tables from the proof: ${lost.join(', ')}`);
+  assert.match(countBody, /from public\.quest_runs where user_id = p_user_id/);
+  ok('wave116 keeps every table wave108 counted and adds quest_runs');
 }
 
 // --- nothing blocks the delete ------------------------------------------------------------------

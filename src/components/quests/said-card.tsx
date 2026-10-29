@@ -28,7 +28,8 @@ export const SAID_STAGGER_MS = 400;
  * (Medium haptic), the phrase the player kept picking, the evidence line, a
  * consistency bar that fills over 600 ms, a ☐ Apply tick (never pre-ticked)
  * and "Not me" (the card dims and folds away over 200 ms). Reduce Motion:
- * the card fades and the emblem simply appears.
+ * the card fades and the emblem simply appears. `applyOff` (the Apply switch
+ * is off, or the run is saved) leaves the tick shown but not tappable.
  */
 export function SaidCard({
   card,
@@ -37,6 +38,7 @@ export function SaidCard({
   notMe,
   onTick,
   onNotMe,
+  applyOff = false,
 }: {
   card: SaidCardModel;
   index: number;
@@ -44,6 +46,7 @@ export function SaidCard({
   notMe: boolean;
   onTick: () => void;
   onNotMe: () => void;
+  applyOff?: boolean;
 }) {
   const rm = useMotionReduced();
   const delay = index * SAID_STAGGER_MS;
@@ -124,13 +127,13 @@ export function SaidCard({
             <Pressable
               accessibilityRole="checkbox"
               accessibilityLabel={`${UI_COPY.saidApply}: ${name}`}
-              accessibilityState={{ checked: ticked, disabled: notMe }}
-              disabled={notMe}
+              accessibilityState={{ checked: ticked, disabled: notMe || applyOff }}
+              disabled={notMe || applyOff}
               onPress={() => {
                 haptic.press();
                 onTick();
               }}
-              style={[styles.action, notMe && styles.off]}
+              style={[styles.action, (notMe || applyOff) && styles.off]}
             >
               <Text style={[styles.box, ticked && styles.boxOn]}>{ticked ? '☑' : '☐'}</Text>
               <Text style={styles.actionText}>{UI_COPY.saidApply}</Text>
@@ -138,6 +141,8 @@ export function SaidCard({
             <Pressable
               accessibilityRole="button"
               accessibilityLabel={notMe ? `${UI_COPY.saidNotMeUndo}: ${name}` : `${UI_COPY.saidNotMe}: ${name}`}
+              accessibilityState={{ disabled: applyOff }}
+              disabled={applyOff}
               onPress={() => {
                 haptic.press();
                 onNotMe();

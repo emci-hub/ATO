@@ -52,6 +52,11 @@ const NOT_LIVE = new Set([
   // overlap / event override) and adds daily_pick_event_total; both start with require_adult(),
   // pinned by scripts/daily-pick-check.ts.
   'wave117_almanac.sql',
+  // PHASE-17 (2026-10-28, NOT applied): Quests runs. Its app functions (record_quest_run,
+  // apply_quest_result, undo_quest_result) start with require_adult() after the null-uid check, pinned
+  // by scripts/quest-apply-check.ts; it restates reset_my_account / reset_dev_test_user /
+  // count_user_rows (wave103/104/108 + one quest_runs line), pinned by check:reset-account.
+  'wave116_quest_runs.sql',
 ]);
 
 /** Apply order of the migrations that existed when wave101 was written (git history order). */
