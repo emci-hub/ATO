@@ -102,3 +102,12 @@ The red team found 2 blockers and 4 high issues. **This section replaces §2–�
 3. Two dots, no numbers (proposal).
 4. `start_fresh` also clears the Quest numbers (proposal: yes).
 5. D6 (scenario picks stop writing the original `me` column, any of 16 axes): separate change, ask later.
+
+### Decisions (emci, 2026-10-29): all five proposals accepted
+1. Cap ±0.15; a game signal never takes the combined value past 0.8 / below 0.2 unless the report is already there.
+2. Toggle on this device only (`ato.quests.include.v1:<uid>`), resets to off at sign-out and in Preview.
+3. Band shows two dots (questions / with Quests), no numbers.
+4. `start_fresh` also clears the Quest numbers (and decide `quest_runs` cooldowns in S4).
+5. D6 (scenario picks writing the original `me` column, any of 16 axes) is a separate later change; ask then.
+
+State: S1 not started. S2–S4 wait for S1.
