@@ -272,6 +272,7 @@
     "check:quests": "tsx ./scripts/quests-check.ts",
     "check:quest-atlas": "tsx ./scripts/quest-atlas-check.ts",
     "check:quest-score": "tsx ./scripts/quest-score-check.ts",
+    "check:quest-blend": "tsx ./scripts/quest-blend-check.ts",
     "check:quest-run": "tsx ./scripts/quest-run-check.ts",
     "check:quest-ui": "tsx ./scripts/quest-ui-check.ts",
     "check:quest-apply": "tsx ./scripts/quest-apply-check.ts",

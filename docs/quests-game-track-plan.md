@@ -114,4 +114,9 @@ State: S1 DONE locally (2026-10-29, not pushed, wave116 still NOT applied): wave
 (constraints re-added, `ai_provider_log` lines removed); phone parser/type/Said preview/almanac filter updated; `check:quest-apply` pins the
 constraint, the exact `self_quest` Undo and "restated bodies name no dropped table". Not done in S1: `start_fresh` is not restated in wave116
 (wave101's version clears only the report track and all history), so clearing Quest numbers on start_fresh moves to S4 with the `quest_runs`
-cooldown decision. S2 is next; S3–S4 wait for S2.
+cooldown decision.
+S2 DONE locally (2026-10-29, not pushed): `effectiveValue(tracks, axis, includeQuests, fallback)` in `trait-stability.ts` returns its own
+`{value, label, blended}` type (never a `TraitTrack`); cap ±0.15, offset scaled by `min(1, 2·room)`, held in 0.2–0.8 unless the report is
+already outside it; no report row = no blend and no label; 10 Quest axes only. `check:quest-blend` pins it (and is in the gate). Its source
+scan keeps the blend out of share-card/poster, identity-card, home-hero, holo-card and almanac/*, and `you.tsx` share `content.tracks` raw.
+No screen or toggle yet. S3 is next (toggle + two-dot band; it adds the profile screens that may import the blend); S4 after.

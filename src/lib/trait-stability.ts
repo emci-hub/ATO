@@ -2,6 +2,7 @@
  * Per-axis EWMA tracks. Self-report and gut-call never mix.
  * Completeness is stability-weighted, not a raw fill count.
  */
+import { QUEST_AXES } from '@/lib/quests/types';
 import { MIXED_TRAIT_LINE } from '@/lib/questions/staged-intake-copy';
 import { containsFrameworkTerm } from '@/lib/voice/framework-fence';
 import {
@@ -394,6 +395,56 @@ export function trackFor(
   track: TraitTrackKind,
 ): TraitTrack | null {
   return rows.find((row) => row.axis === axis && row.track === track) ?? null;
+}
+
+/** Most a Quest run history can move the combined (display-only) value. */
+export const QUEST_BLEND_CAP = 0.15;
+/** A game signal never takes the combined value past these, unless the report is already there. */
+export const QUEST_BLEND_CEILING = 0.8;
+export const QUEST_BLEND_FLOOR = 0.2;
+
+/**
+ * Display-only value for one axis (quests-game-track-plan §5, fixes 5-7). It is its own
+ * type on purpose: NEVER a `TraitTrack`, so it cannot ride the shared `tracks` prop into a
+ * share card, snapshot, Circle compare or AI input (`check:quest-blend` scans for that).
+ * `value` is what the profile screen shows; `label` is 'Questions' only when a report row
+ * exists (no report row = nothing to compare, no blend). `blended` is true only when a
+ * Quest row actually moved the value.
+ */
+export interface EffectiveValue {
+  value: number | null;
+  label: 'Questions' | null;
+  blended: boolean;
+}
+
+/**
+ * Base = report value (or `fallback`, the `me` column, when there is no report row: the
+ * value the screen shows today). With `includeQuests`, the 10 Quest axes add
+ * `clamp(quest - 0.5, ±CAP)`, scaled by the room left toward the pole it pushes, and held
+ * inside 0.2..0.8 unless the report is already outside it. Pure and deterministic.
+ */
+export function effectiveValue(
+  tracks: readonly TraitTrack[],
+  axis: TraitAxis,
+  includeQuests: boolean,
+  fallback: number | null = null,
+): EffectiveValue {
+  const report = trackFor(tracks, axis, 'report');
+  const base = report ? report.value : fallback;
+  const label = report ? 'Questions' : null;
+  const quest = trackFor(tracks, axis, 'quest');
+  if (!includeQuests || !report || !quest || !(QUEST_AXES as readonly TraitAxis[]).includes(axis)) {
+    return { value: base, label, blended: false };
+  }
+  const offset = Math.max(-QUEST_BLEND_CAP, Math.min(QUEST_BLEND_CAP, quest.value - 0.5));
+  const room = offset >= 0 ? 1 - report.value : report.value;
+  const moved = report.value + offset * Math.min(1, room * 2);
+  const value =
+    offset >= 0
+      ? Math.min(moved, Math.max(report.value, QUEST_BLEND_CEILING))
+      : Math.max(moved, Math.min(report.value, QUEST_BLEND_FLOOR));
+  const result = clamp01(value);
+  return { value: result, label, blended: result !== report.value };
 }
 
 /**
