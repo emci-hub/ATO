@@ -98,6 +98,9 @@ for (const wiped of [
   'ato.almanac.badges.v1', // PHASE-11e: cosmetic seasonal badges earned on this phone
   'ato.insights.collection.v2', // PHASE-11e: Insights seen + per-event decks (v1 is read once, then left to the sign-out wipe)
   'ato.insights.collection.v1',
+  'ato.quests.run.v1', // PHASE-14: the saved Quests run
+  'ato.quests.progress.v1', // PHASE-14: endings found + as-me evidence stamps
+  'ato.quests.tutorial.v1', // PHASE-23's tutorial flag (key fixed in PHASE-14)
   'ato.questions.answeredOption.full-profile:abc.v1',
   'ato.questions.categoryPage.full-profile:abc.v1',
   'ato.profile.fullUnlock.seen.abc.v1',
