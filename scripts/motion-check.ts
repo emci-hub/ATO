@@ -170,7 +170,8 @@ assert.ok(starPhase(0) >= 0 && starPhase(0) < 1);
 assert.notEqual(starPhase(1), starPhase(2));
 ok('twinkle phases are fixed per axis and spread out');
 
-assert.deepEqual(Object.keys(VARIANT_MOTION).sort(), ['badge', 'header', 'hero', 'mini']);
+assert.deepEqual(Object.keys(VARIANT_MOTION).sort(), ['badge', 'header', 'hero', 'mini', 'poster']);
+assert.equal(VARIANT_MOTION.poster.live || VARIANT_MOTION.poster.halos, false, 'the poster sky is drawn still');
 assert.equal(VARIANT_MOTION.hero.live && VARIANT_MOTION.header.live, true);
 assert.equal(VARIANT_MOTION.mini.live || VARIANT_MOTION.badge.live, false, 'mini and badge sit still');
 const full = constellationModel(TRAIT_AXES.map((a) => track(a, 0.5, 0.5)), 240);

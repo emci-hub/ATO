@@ -8,6 +8,7 @@ import { ConflictStyleCard } from '@/components/daily-insights/conflict-style-ca
 import { SuperpowerCard } from '@/components/daily-insights/superpower-card';
 import { TryTodayCard } from '@/components/daily-insights/try-today-card';
 import { InsightsStoryCard } from '@/components/insights/insights-story-card';
+import { GlowPulse } from '@/components/glow-pulse';
 import { TodayFocusCard } from '@/components/insights/today-focus-card';
 import { FlipCard } from '@/components/flip-card';
 import { InsightCollection } from '@/components/insight-collection';
@@ -172,14 +173,16 @@ export default function InsightsScreen() {
 
   const focusCard =
     userId && window ? (
-      <TodayFocusCard
-        userId={userId}
-        tracks={tracks}
-        todayYmd={window.todayYmd}
-        todayDay={window.todayDay}
-        showTryToday={focusTry}
-        onInsightShown={onInsightShown}
-      />
+      <GlowPulse>
+        <TodayFocusCard
+          userId={userId}
+          tracks={tracks}
+          todayYmd={window.todayYmd}
+          todayDay={window.todayDay}
+          showTryToday={focusTry}
+          onInsightShown={onInsightShown}
+        />
+      </GlowPulse>
     ) : null;
 
   return (

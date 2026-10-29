@@ -63,6 +63,7 @@ export function TraitConstellation({
   ghostTracks,
   forceReduceMotion = false,
   accent,
+  ring,
 }: {
   tracks: readonly TraitTrack[];
   size: number;
@@ -74,11 +75,13 @@ export function TraitConstellation({
   forceReduceMotion?: boolean;
   /** Replaces the mode's accent (the Almanac's season tint on Home). */
   accent?: string;
+  /** Replaces the mode's ring colour (the fixed-palette share poster). */
+  ring?: string;
 }) {
   const model = useMemo(() => constellationModel(tracks, size, variant), [tracks, size, variant]);
   if (model.count === 0) {
     // Too small to hold the card (mini, badge): leave the space empty.
-    return variant === 'mini' || variant === 'badge' ? null : <EmptyConstellation size={size} />;
+    return variant === 'mini' || variant === 'badge' || variant === 'poster' ? null : <EmptyConstellation size={size} />;
   }
   return (
     <Sky
@@ -89,6 +92,7 @@ export function TraitConstellation({
       ghostTracks={ghostTracks}
       forceReduceMotion={forceReduceMotion}
       accent={accent}
+      ring={ring}
     />
   );
 }
@@ -119,6 +123,7 @@ function Sky({
   ghostTracks,
   forceReduceMotion,
   accent: accentOverride,
+  ring,
 }: {
   model: ConstellationModel;
   size: number;
@@ -127,6 +132,7 @@ function Sky({
   ghostTracks?: readonly TraitTrack[];
   forceReduceMotion: boolean;
   accent?: string;
+  ring?: string;
 }) {
   const theme = useTheme();
   const accent = accentOverride ?? theme.accent;
@@ -210,14 +216,14 @@ function Sky({
       accessibilityLabel={model.label}
       style={{ width: size, height: size }}>
       <Animated.View style={[StyleSheet.absoluteFill, enterStyle]}>
-        <Animated.View style={[StyleSheet.absoluteFill, breath]}>
+        <Animated.View style={[StyleSheet.absoluteFill, variant === 'poster' ? null : breath]}>
           <Svg width={size} height={size}>
             <Circle
               cx={model.geo.cx}
               cy={model.geo.cy}
               r={model.geo.outer}
               fill="none"
-              stroke={theme.border}
+              stroke={ring ?? theme.border}
               strokeWidth={0.75}
               strokeOpacity={0.5}
             />
@@ -227,7 +233,7 @@ function Sky({
                 fill="none"
                 stroke={accent}
                 strokeOpacity={0.55}
-                strokeWidth={variant === 'mini' ? 1 : 1.5}
+                strokeWidth={variant === 'mini' ? 1 : variant === 'poster' ? 2 : 1.5}
                 strokeLinejoin="round"
                 strokeDasharray={[lineLen, lineLen]}
               />

@@ -31,6 +31,25 @@ export function QuestGrowthBars({
   );
 }
 
+/**
+ * Quest-mode bars for Home's sky (PHASE-24), from the tracks Home already has:
+ * how many of the 16 stars are lit and how many of those have turned gold.
+ * Only a count of the reader's own sky; no trait is named.
+ */
+export function QuestSkyBars({ lit, gold, total }: { lit: number; gold: number; total: number }) {
+  const theme = useTheme();
+  if (!theme.hpMpBars || total <= 0) return null;
+  return (
+    <View
+      accessible
+      accessibilityLabel={`${lit} of ${total} stars lit, ${gold} settled`}
+      style={styles.wrap}>
+      <Meter label="LIT" fill={theme.accentTertiary} value={Math.min(1, lit / total)} track={theme.backgroundSelected} />
+      <Meter label="SET" fill={theme.accentSecondary} value={Math.min(1, gold / total)} track={theme.backgroundSelected} />
+    </View>
+  );
+}
+
 function Meter({
   label,
   fill,

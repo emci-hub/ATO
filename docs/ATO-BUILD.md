@@ -69,7 +69,7 @@ Stage D Quests
 - [x] PHASE-22 Atlas build + art integration
 - [x] PHASE-23 Quests entry points + tutorial + You
 Stage E Polish & release
-- [ ] PHASE-24 Per-mode polish (G5)
+- [ ] PHASE-24 Per-mode polish (G5) — code built 2026-10-29, checks green; open: 5-mode screenshots, Reduce Motion recording, wiring `tracks` into a sender share path
 - [ ] PHASE-25 Quests QA + playtest  ⚑ playtest
 - [ ] PHASE-26 Whole-app a11y + states
 - [ ] PHASE-27 Regression QA + release  ⚑ wording, flags, OTA
