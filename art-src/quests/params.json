@@ -1,0 +1,905 @@
+{
+ "style_card": "art-src/quests/STYLE.md",
+ "rubric": [
+  "silhouette",
+  "value",
+  "palette",
+  "pixels",
+  "light",
+  "scale_camera",
+  "style"
+ ],
+ "assets": {
+  "far-1-gate": {
+   "file": "lantern/wip/far-1-gate.png",
+   "tool": "create_image_pro",
+   "seed": 4101,
+   "scores": {
+    "silhouette": 3,
+    "value": 3,
+    "palette": 4,
+    "pixels": 3,
+    "light": 3,
+    "scale_camera": 3,
+    "style": 3
+   },
+   "total": 22,
+   "status": "pass",
+   "gens": 10,
+   "note": "approved style anchor plate (test 02)"
+  },
+  "far-2-fork": {
+   "file": "lantern/wip/far-2-fork.png",
+   "tool": "create_image_pro",
+   "seed": 4101,
+   "scores": {
+    "silhouette": 3,
+    "value": 3,
+    "palette": 4,
+    "pixels": 3,
+    "light": 4,
+    "scale_camera": 3,
+    "style": 3
+   },
+   "total": 23,
+   "status": "pass",
+   "gens": 10,
+   "note": "real fork, glow right"
+  },
+  "far-3-bridge": {
+   "file": "lantern/wip/far-3-bridge.png",
+   "tool": "create_image_pro",
+   "seed": 4101,
+   "scores": {
+    "silhouette": 3,
+    "value": 3,
+    "palette": 4,
+    "pixels": 3,
+    "light": 3,
+    "scale_camera": 3,
+    "style": 3
+   },
+   "total": 22,
+   "status": "pass",
+   "gens": 10,
+   "note": "bridge, lantern post, cyan below"
+  },
+  "far-4-lake": {
+   "file": "lantern/wip/far-4-lake.png",
+   "tool": "create_image_pro",
+   "seed": 4101,
+   "scores": {
+    "silhouette": 3,
+    "value": 3,
+    "palette": 4,
+    "pixels": 3,
+    "light": 3,
+    "scale_camera": 3,
+    "style": 3
+   },
+   "total": 22,
+   "status": "pass",
+   "gens": 10,
+   "note": "cyan lake in a dome; floor band is stone"
+  },
+  "far-5-daylight": {
+   "file": "lantern/wip/far-5-daylight.png",
+   "tool": "create_image_pro",
+   "seed": 4101,
+   "scores": {
+    "silhouette": 3,
+    "value": 3,
+    "palette": 4,
+    "pixels": 3,
+    "light": 4,
+    "scale_camera": 3,
+    "style": 3
+   },
+   "total": 23,
+   "status": "pass",
+   "gens": 10,
+   "note": "warm daylight shaft, ending-card light"
+  },
+  "mid-1-rockarch": {
+   "file": "lantern/wip/mid-1-rockarch.png",
+   "tool": "create_image_pixflux",
+   "seed": 4102,
+   "scores": {
+    "silhouette": 3,
+    "value": 3,
+    "palette": 4,
+    "pixels": 3,
+    "light": 3,
+    "scale_camera": 3,
+    "style": 3
+   },
+   "total": 22,
+   "status": "pass",
+   "gens": 1,
+   "note": "edge arches, empty centre (fresh generation, no init)"
+  },
+  "mid-2-fork": {
+   "file": "lantern/wip/mid-2-fork.png",
+   "tool": "create_image_pixflux",
+   "seed": 4101,
+   "scores": {
+    "silhouette": 3,
+    "value": 3,
+    "palette": 4,
+    "pixels": 3,
+    "light": 3,
+    "scale_camera": 3,
+    "style": 3
+   },
+   "total": 22,
+   "status": "pass",
+   "gens": 1,
+   "note": "beam + rope left, rock right"
+  },
+  "mid-3-bridge": {
+   "file": "lantern/wip/mid-3-bridge.png",
+   "tool": "create_image_pixflux",
+   "seed": 4101,
+   "scores": {
+    "silhouette": 3,
+    "value": 3,
+    "palette": 4,
+    "pixels": 3,
+    "light": 3,
+    "scale_camera": 3,
+    "style": 3
+   },
+   "total": 22,
+   "status": "pass",
+   "gens": 1,
+   "note": "rope posts both edges (thin, subtle)"
+  },
+  "mid-4-lake": {
+   "file": "lantern/wip/mid-4-lake-r4.png",
+   "tool": "create_image_pixflux",
+   "seed": 4104,
+   "scores": {
+    "silhouette": 3,
+    "value": 3,
+    "palette": 4,
+    "pixels": 3,
+    "light": 3,
+    "scale_camera": 3,
+    "style": 3
+   },
+   "total": 22,
+   "status": "pass",
+   "gens": 5,
+   "note": "fix round 2: flat side-view crystal spikes; r1 filled the frame, r2 was isometric, r3 black blocks"
+  },
+  "mid-5-daylight": {
+   "file": "lantern/wip/mid-5-daylight.png",
+   "tool": "create_image_pixflux",
+   "seed": 4101,
+   "scores": {
+    "silhouette": 3,
+    "value": 3,
+    "palette": 4,
+    "pixels": 3,
+    "light": 3,
+    "scale_camera": 3,
+    "style": 3
+   },
+   "total": 22,
+   "status": "pass",
+   "gens": 1,
+   "note": "fallen beams + rocks at the edges"
+  },
+  "prop-lantern": {
+   "file": "lantern/wip/prop-lantern.png",
+   "tool": "create_image_pixflux",
+   "seed": 4101,
+   "scores": {
+    "silhouette": 3,
+    "value": 3,
+    "palette": 4,
+    "pixels": 3,
+    "light": 3,
+    "scale_camera": 3,
+    "style": 3
+   },
+   "total": 22,
+   "status": "pass",
+   "gens": 1,
+   "note": "32x32 (min canvas; spec 12x16 is below the 32x32 minimum area): atlas can crop"
+  },
+  "prop-rope-bridge": {
+   "file": "lantern/wip/prop-rope-bridge.png",
+   "tool": "create_image_pixflux",
+   "seed": 4101,
+   "scores": {
+    "silhouette": 3,
+    "value": 3,
+    "palette": 4,
+    "pixels": 3,
+    "light": 3,
+    "scale_camera": 3,
+    "style": 3
+   },
+   "total": 22,
+   "status": "pass",
+   "gens": 1,
+   "note": "64x32"
+  },
+  "prop-raft": {
+   "file": "lantern/wip/prop-raft.png",
+   "tool": "create_image_pixflux",
+   "seed": 4101,
+   "scores": {
+    "silhouette": 3,
+    "value": 2,
+    "palette": 4,
+    "pixels": 3,
+    "light": 3,
+    "scale_camera": 2,
+    "style": 3
+   },
+   "total": 20,
+   "status": "placeholder",
+   "gens": 5,
+   "note": "top-down 3/4 view, wrong camera; fix r1 (flat elevation, 2 seeds) came back too thin/messy; fix r2 (flat side view, logs + pole, seeds 4104/4105) still thin: placeholder after 2 rounds"
+  },
+  "prop-mine-cart": {
+   "file": "lantern/wip/prop-mine-cart.png",
+   "tool": "create_image_pixflux",
+   "seed": 4101,
+   "scores": {
+    "silhouette": 3,
+    "value": 3,
+    "palette": 4,
+    "pixels": 3,
+    "light": 3,
+    "scale_camera": 3,
+    "style": 3
+   },
+   "total": 22,
+   "status": "pass",
+   "gens": 1,
+   "note": "48x40"
+  },
+  "prop-glow-crystal": {
+   "file": "lantern/wip/prop-crystal-r2.png",
+   "tool": "create_image_pixflux",
+   "seed": 4102,
+   "scores": {
+    "silhouette": 3,
+    "value": 3,
+    "palette": 4,
+    "pixels": 3,
+    "light": 3,
+    "scale_camera": 3,
+    "style": 3
+   },
+   "total": 22,
+   "status": "pass",
+   "gens": 3,
+   "note": "fix r1: flat spikes on a rock (r0 was isometric)"
+  },
+  "prop-ration-crate": {
+   "file": "lantern/wip/prop-crate-r4.png",
+   "tool": "create_image_pixflux",
+   "seed": 4104,
+   "scores": {
+    "silhouette": 3,
+    "value": 3,
+    "palette": 4,
+    "pixels": 3,
+    "light": 3,
+    "scale_camera": 3,
+    "style": 3
+   },
+   "total": 22,
+   "status": "pass",
+   "gens": 5,
+   "note": "fix round 2: flat front view (r0 3/4 box, r1 frame-like); low contrast brown on brown"
+  },
+  "ground-1-gate": {
+   "file": "lantern/wip/ground-1-r3.png",
+   "tool": "create_image_pro",
+   "seed": 4102,
+   "scores": {
+    "silhouette": 2,
+    "value": 3,
+    "palette": 4,
+    "pixels": 3,
+    "light": 3,
+    "scale_camera": 2,
+    "style": 2
+   },
+   "total": 19,
+   "status": "placeholder",
+   "gens": 21,
+   "note": "placeholder: 3 tries (pixflux perspective tiles; Pro r1 near-black; Pro r3 has a white band on top). The far plate carries its own floor band"
+  },
+  "ground-2-fork": {
+   "file": "lantern/wip/ground-2-r2.png",
+   "tool": "create_image_pro",
+   "seed": 4101,
+   "scores": {
+    "silhouette": 3,
+    "value": 3,
+    "palette": 4,
+    "pixels": 3,
+    "light": 3,
+    "scale_camera": 3,
+    "style": 3
+   },
+   "total": 22,
+   "status": "pass",
+   "gens": 11,
+   "note": "fix round: Pro with the far plate as reference_images; rubble floor in the plate colours"
+  },
+  "ground-3-bridge": {
+   "file": "lantern/wip/ground-3-r3.png",
+   "tool": "create_image_pro",
+   "seed": 4102,
+   "scores": {
+    "silhouette": 3,
+    "value": 3,
+    "palette": 4,
+    "pixels": 3,
+    "light": 3,
+    "scale_camera": 3,
+    "style": 3
+   },
+   "total": 22,
+   "status": "pass",
+   "gens": 21,
+   "note": "fix round 2 (r1 was white); brown planks"
+  },
+  "ground-4-lake": {
+   "file": "lantern/wip/ground-4-r2.png",
+   "tool": "create_image_pro",
+   "seed": 4101,
+   "scores": {
+    "silhouette": 3,
+    "value": 3,
+    "palette": 4,
+    "pixels": 3,
+    "light": 3,
+    "scale_camera": 3,
+    "style": 3
+   },
+   "total": 22,
+   "status": "pass",
+   "gens": 12,
+   "note": "fix round: dark shore stones"
+  },
+  "ground-5-daylight": {
+   "file": "lantern/wip/ground-5-r2.png",
+   "tool": "create_image_pro",
+   "seed": 4101,
+   "scores": {
+    "silhouette": 3,
+    "value": 3,
+    "palette": 4,
+    "pixels": 3,
+    "light": 3,
+    "scale_camera": 3,
+    "style": 3
+   },
+   "total": 22,
+   "status": "pass",
+   "gens": 11,
+   "note": "fix round: warm rubble floor"
+  },
+  "npc-rook": {
+   "file": "npcs/snapped/rook-rot-east.png",
+   "tool": "create_character v3 (64)",
+   "seed": null,
+   "scores": {
+    "silhouette": 4,
+    "value": 3,
+    "palette": 4,
+    "pixels": 4,
+    "light": 4,
+    "scale_camera": 4,
+    "style": 4
+   },
+   "total": 27,
+   "status": "pass",
+   "gens": 4,
+   "note": "v3 has no palette input, so frames are snapped afterwards in CIELAB (tools/snap-palette.py; the RGB-distance snap dulled them, LAB keeps hue); originals beside the snapped/ folder. Idle (template, 4f) + talk (v3, 4f+ref frame), east only"
+  },
+  "npc-vey": {
+   "file": "npcs/snapped/vey-rot-east.png",
+   "tool": "create_character v3 (64)",
+   "seed": null,
+   "scores": {
+    "silhouette": 4,
+    "value": 3,
+    "palette": 4,
+    "pixels": 4,
+    "light": 4,
+    "scale_camera": 4,
+    "style": 4
+   },
+   "total": 27,
+   "status": "pass",
+   "gens": 4,
+   "note": "same as Rook"
+  },
+  "portrait-rook": {
+   "file": "npcs/rook-portrait.png",
+   "tool": "create_image_pro",
+   "seed": 4401,
+   "scores": {
+    "silhouette": 4,
+    "value": 4,
+    "palette": 4,
+    "pixels": 4,
+    "light": 4,
+    "scale_camera": 3,
+    "style": 4
+   },
+   "total": 27,
+   "status": "pass",
+   "gens": 11,
+   "note": "with the sprite as reference (first try without it: wrong person, 20/28 fail); 16 candidates, #1 picked"
+  },
+  "portrait-vey": {
+   "file": "npcs/vey-portrait.png",
+   "tool": "create_image_pro",
+   "seed": 4402,
+   "scores": {
+    "silhouette": 4,
+    "value": 4,
+    "palette": 4,
+    "pixels": 4,
+    "light": 4,
+    "scale_camera": 3,
+    "style": 4
+   },
+   "total": 27,
+   "status": "pass",
+   "gens": 11,
+   "note": "same; #0 picked"
+  },
+  "icon-stat-supplies": {
+   "file": "icons/stat-supplies.png",
+   "tool": "create_image_pro",
+   "seed": 4506,
+   "scores": {
+    "silhouette": 3,
+    "value": 3,
+    "palette": 4,
+    "pixels": 3,
+    "light": 3,
+    "scale_camera": 3,
+    "style": 3
+   },
+   "total": 22,
+   "status": "pass",
+   "gens": 10,
+   "note": "16x16, picked from 64 candidates"
+  },
+  "icon-stat-heart": {
+   "file": "icons/stat-heart.png",
+   "tool": "create_image_pro",
+   "seed": 4506,
+   "scores": {
+    "silhouette": 3,
+    "value": 3,
+    "palette": 4,
+    "pixels": 3,
+    "light": 3,
+    "scale_camera": 3,
+    "style": 3
+   },
+   "total": 22,
+   "status": "pass",
+   "gens": 10,
+   "note": "16x16, picked from 64 candidates"
+  },
+  "icon-stat-laurel": {
+   "file": "icons/stat-laurel.png",
+   "tool": "create_image_pro",
+   "seed": 4506,
+   "scores": {
+    "silhouette": 3,
+    "value": 3,
+    "palette": 4,
+    "pixels": 3,
+    "light": 3,
+    "scale_camera": 3,
+    "style": 3
+   },
+   "total": 22,
+   "status": "pass",
+   "gens": 20,
+   "note": "16x16, picked from 64 candidates (fix round 1: simplified prompt, max_colors 8)"
+  },
+  "icon-u3-explore": {
+   "file": "icons/u3-explore.png",
+   "tool": "create_image_pro",
+   "seed": 4506,
+   "scores": {
+    "silhouette": 3,
+    "value": 3,
+    "palette": 4,
+    "pixels": 3,
+    "light": 3,
+    "scale_camera": 3,
+    "style": 3
+   },
+   "total": 22,
+   "status": "pass",
+   "gens": 10,
+   "note": "16x16, picked from 64 candidates"
+  },
+  "icon-u3-ledger": {
+   "file": "icons/u3-ledger.png",
+   "tool": "create_image_pro",
+   "seed": 4506,
+   "scores": {
+    "silhouette": 3,
+    "value": 3,
+    "palette": 4,
+    "pixels": 3,
+    "light": 3,
+    "scale_camera": 3,
+    "style": 3
+   },
+   "total": 22,
+   "status": "pass",
+   "gens": 20,
+   "note": "16x16, picked from 64 candidates (fix round 1: simplified prompt, max_colors 8)"
+  },
+  "icon-u3-quote": {
+   "file": "icons/u3-quote.png",
+   "tool": "create_image_pro",
+   "seed": 4506,
+   "scores": {
+    "silhouette": 3,
+    "value": 3,
+    "palette": 4,
+    "pixels": 3,
+    "light": 3,
+    "scale_camera": 3,
+    "style": 3
+   },
+   "total": 22,
+   "status": "pass",
+   "gens": 10,
+   "note": "16x16, picked from 64 candidates"
+  },
+  "icon-u3-swords": {
+   "file": "icons/u3-swords.png",
+   "tool": "create_image_pro",
+   "seed": 4506,
+   "scores": {
+    "silhouette": 3,
+    "value": 3,
+    "palette": 4,
+    "pixels": 3,
+    "light": 3,
+    "scale_camera": 3,
+    "style": 3
+   },
+   "total": 22,
+   "status": "pass",
+   "gens": 20,
+   "note": "16x16, picked from 64 candidates (fix round 1: simplified prompt, max_colors 8)"
+  },
+  "icon-u3-hourglass": {
+   "file": "icons/u3-hourglass.png",
+   "tool": "create_image_pro",
+   "seed": 4506,
+   "scores": {
+    "silhouette": 3,
+    "value": 3,
+    "palette": 4,
+    "pixels": 3,
+    "light": 3,
+    "scale_camera": 3,
+    "style": 3
+   },
+   "total": 22,
+   "status": "pass",
+   "gens": 10,
+   "note": "16x16, picked from 64 candidates"
+  },
+  "icon-rewind": {
+   "file": "icons/rewind.png",
+   "tool": "create_image_pro",
+   "seed": 4506,
+   "scores": {
+    "silhouette": 3,
+    "value": 3,
+    "palette": 4,
+    "pixels": 3,
+    "light": 3,
+    "scale_camera": 3,
+    "style": 3
+   },
+   "total": 22,
+   "status": "pass",
+   "gens": 10,
+   "note": "16x16, picked from 64 candidates"
+  },
+  "vfx-v1-sparkle": {
+   "file": "vfx/v1-sparkle-burst-strip.png",
+   "tool": "procedural (vfx/gen-vfx.py)",
+   "seed": null,
+   "scores": {
+    "silhouette": 3,
+    "value": 3,
+    "palette": 4,
+    "pixels": 4,
+    "light": 3,
+    "scale_camera": 3,
+    "style": 3
+   },
+   "total": 23,
+   "status": "pass",
+   "gens": 0,
+   "note": "32x32, 6f @83 ms; PixelLab vfx_workbench tried once (free), came out 31x23 white specks, not on palette"
+  },
+  "vfx-v2-dust": {
+   "file": "vfx/v2-dust-puff-strip.png",
+   "tool": "procedural",
+   "seed": null,
+   "scores": {
+    "silhouette": 3,
+    "value": 3,
+    "palette": 4,
+    "pixels": 3,
+    "light": 3,
+    "scale_camera": 3,
+    "style": 3
+   },
+   "total": 22,
+   "status": "pass",
+   "gens": 0,
+   "note": "32x16, 5f @60/60/80/100/120 ms"
+  },
+  "vfx-v3-up": {
+   "file": "vfx/v3-stat-up-strip.png",
+   "tool": "procedural",
+   "seed": null,
+   "scores": {
+    "silhouette": 4,
+    "value": 3,
+    "palette": 4,
+    "pixels": 4,
+    "light": 3,
+    "scale_camera": 3,
+    "style": 3
+   },
+   "total": 24,
+   "status": "pass",
+   "gens": 0,
+   "note": "16x16, 4f @80 ms, green"
+  },
+  "vfx-v3-down": {
+   "file": "vfx/v3-stat-down-strip.png",
+   "tool": "procedural",
+   "seed": null,
+   "scores": {
+    "silhouette": 4,
+    "value": 3,
+    "palette": 4,
+    "pixels": 4,
+    "light": 3,
+    "scale_camera": 3,
+    "style": 3
+   },
+   "total": 24,
+   "status": "pass",
+   "gens": 0,
+   "note": "16x16, 4f @80 ms, warm amber (never red: no bad pole)"
+  },
+  "ambient-a-l3-drip": {
+   "file": "vfx/a-l3-drip-strip.png",
+   "tool": "procedural",
+   "seed": null,
+   "scores": {
+    "silhouette": 3,
+    "value": 3,
+    "palette": 4,
+    "pixels": 3,
+    "light": 3,
+    "scale_camera": 3,
+    "style": 3
+   },
+   "total": 22,
+   "status": "pass",
+   "gens": 0,
+   "note": "16x32, 6f @100 ms then hold 1.2 s on f0; redrawn after review (stalactite shading, bigger drop)",
+   "ms": [
+    100,
+    100,
+    100,
+    100,
+    100,
+    100
+   ],
+   "hold_ms": 1200
+  },
+  "hero-druid": {
+   "file": "heroes/snapped/druid-idle-0.png",
+   "tool": "create_character v3 import + animate_character",
+   "seed": null,
+   "scores": {
+    "silhouette": 3,
+    "value": 3,
+    "palette": 4,
+    "pixels": 3,
+    "light": 3,
+    "scale_camera": 3,
+    "style": 3
+   },
+   "total": 22,
+   "status": "pass",
+   "gens": 4,
+   "note": "figure 64 px on 88 canvas; idle template 4f @300/300/400/300; talk + react v3 4f; east only; snapped to the palette in CIELAB (tools/snap-palette.py; originals beside it). If emci prefers the unsnapped colours (PIXELLAB_ANIMATION \u00a74), use the originals: palette criterion drops to 2 (20/28)"
+  },
+  "hero-champion": {
+   "file": "heroes/snapped/champion-idle-0.png",
+   "tool": "create_character v3 import + animate_character",
+   "seed": null,
+   "scores": {
+    "silhouette": 3,
+    "value": 3,
+    "palette": 4,
+    "pixels": 3,
+    "light": 3,
+    "scale_camera": 3,
+    "style": 3
+   },
+   "total": 22,
+   "status": "pass",
+   "gens": 4,
+   "note": "figure 64 px on 88 canvas; idle template 4f @300/300/400/300; talk + react v3 4f; east only; snapped to the palette in CIELAB (tools/snap-palette.py; originals beside it). If emci prefers the unsnapped colours (PIXELLAB_ANIMATION \u00a74), use the originals: palette criterion drops to 2 (20/28)"
+  },
+  "hero-witch": {
+   "file": "heroes/snapped/witch-idle-0.png",
+   "tool": "create_character v3 import + animate_character",
+   "seed": null,
+   "scores": {
+    "silhouette": 3,
+    "value": 3,
+    "palette": 4,
+    "pixels": 3,
+    "light": 3,
+    "scale_camera": 3,
+    "style": 3
+   },
+   "total": 22,
+   "status": "pass",
+   "gens": 4,
+   "note": "figure 64 px on 88 canvas; idle template 4f @300/300/400/300; talk + react v3 4f; east only; snapped to the palette in CIELAB (tools/snap-palette.py; originals beside it). If emci prefers the unsnapped colours (PIXELLAB_ANIMATION \u00a74), use the originals: palette criterion drops to 2 (20/28)"
+  },
+  "hero-ratkin-treasure-hunter": {
+   "file": "heroes/snapped/ratkin-treasure-hunter-idle-000.png",
+   "tool": "create_character v3 import + animate_character",
+   "seed": null,
+   "scores": {
+    "silhouette": 3,
+    "value": 3,
+    "palette": 4,
+    "pixels": 3,
+    "light": 3,
+    "scale_camera": 3,
+    "style": 3
+   },
+   "total": 22,
+   "status": "pass",
+   "gens": 2,
+   "note": "H1 idle only, 4f, east; snapped in CIELAB; 2 gens"
+  },
+  "hero-death-knight": {
+   "file": "heroes/snapped/death-knight-idle-000.png",
+   "tool": "create_character v3 import + animate_character",
+   "seed": null,
+   "scores": {
+    "silhouette": 3,
+    "value": 3,
+    "palette": 4,
+    "pixels": 3,
+    "light": 3,
+    "scale_camera": 3,
+    "style": 3
+   },
+   "total": 22,
+   "status": "pass",
+   "gens": 2,
+   "note": "H1 idle only, 4f, east; snapped in CIELAB; 2 gens"
+  },
+  "hero-abyssal-assassin": {
+   "file": "heroes/snapped/abyssal-assassin-idle-000.png",
+   "tool": "create_character v3 import + animate_character",
+   "seed": null,
+   "scores": {
+    "silhouette": 3,
+    "value": 3,
+    "palette": 4,
+    "pixels": 3,
+    "light": 3,
+    "scale_camera": 3,
+    "style": 3
+   },
+   "total": 22,
+   "status": "pass",
+   "gens": 2,
+   "note": "H1 idle only, 4f, east; snapped in CIELAB; 2 gens"
+  },
+  "hero-arcane-engineer": {
+   "file": "heroes/snapped/arcane-engineer-idle-000.png",
+   "tool": "create_character v3 import + animate_character",
+   "seed": null,
+   "scores": {
+    "silhouette": 3,
+    "value": 3,
+    "palette": 4,
+    "pixels": 3,
+    "light": 3,
+    "scale_camera": 3,
+    "style": 3
+   },
+   "total": 22,
+   "status": "pass",
+   "gens": 2,
+   "note": "H1 idle only, 4f, east; snapped in CIELAB; 2 gens"
+  },
+  "hero-demon-guardian": {
+   "file": "heroes/snapped/demon-guardian-idle-000.png",
+   "tool": "create_character v3 import + animate_character",
+   "seed": null,
+   "scores": {
+    "silhouette": 3,
+    "value": 3,
+    "palette": 4,
+    "pixels": 3,
+    "light": 3,
+    "scale_camera": 3,
+    "style": 3
+   },
+   "total": 22,
+   "status": "pass",
+   "gens": 2,
+   "note": "H1 idle only, 4f, east; snapped in CIELAB; 2 gens"
+  },
+  "hero-seraphic-cleric": {
+   "file": "heroes/snapped/seraphic-cleric-idle-000.png",
+   "tool": "create_character v3 import + animate_character",
+   "seed": null,
+   "scores": {
+    "silhouette": 3,
+    "value": 3,
+    "palette": 4,
+    "pixels": 3,
+    "light": 3,
+    "scale_camera": 3,
+    "style": 3
+   },
+   "total": 22,
+   "status": "pass",
+   "gens": 2,
+   "note": "H1 idle only, 4f, east; snapped in CIELAB; 2 gens"
+  },
+  "hero-crystal-berserker": {
+   "file": "heroes/snapped/crystal-berserker-idle-000.png",
+   "tool": "create_character v3 import + animate_character",
+   "seed": null,
+   "scores": {
+    "silhouette": 3,
+    "value": 3,
+    "palette": 4,
+    "pixels": 3,
+    "light": 3,
+    "scale_camera": 3,
+    "style": 3
+   },
+   "total": 22,
+   "status": "pass",
+   "gens": 2,
+   "note": "H1 idle only, 4f, east; snapped in CIELAB; 2 gens"
+  }
+ }
+}
