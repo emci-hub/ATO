@@ -54,6 +54,17 @@ function longChain(n: number): QuestCampaign {
 
 export const BROKEN: BrokenFixture[] = [
   {
+    name: 'content ids the server would refuse (uppercase, space, too long)',
+    expect: ['The choice id "Drop Rope"', 'The flag id "Gave-Map"', `The scene id "${'x'.repeat(65)}"`],
+    build: () => {
+      const c = copy();
+      scene(c, 'lantern_s1_gate').choices[0].id = 'Drop Rope';
+      scene(c, 'lantern_s1_gate').choices[1].setFlags = ['Gave-Map'];
+      c.scenes.push({ ...structuredClone(scene(c, 'lantern_s5_way')), id: 'x'.repeat(65), next: null });
+      return c;
+    },
+  },
+  {
     name: 'fail-only dead end (R13): the fail branch loops',
     expect: ['loops back'],
     build: () => withCheck('lantern_s4b_shore', 'lantern_s4_lake'),

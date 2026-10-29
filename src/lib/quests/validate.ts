@@ -21,6 +21,9 @@ const TRAIT_SET: readonly string[] = TRAIT_AXES;
 const QUEST_SET: readonly string[] = QUEST_AXES;
 const EXCLUDED_SET: readonly string[] = EXCLUDED_QUEST_AXES;
 
+/** The server refuses a run that carries any other id (campaign, scene, choice, ending, flag). */
+const ID_PATTERN = /^[a-z0-9][a-z0-9_-]{0,63}$/;
+
 const gateOpen = (gate: FlagGate | undefined, flags: ReadonlySet<string>): boolean =>
   !gate || ((gate.flags ?? []).every((f) => flags.has(f)) && !(gate.notFlags ?? []).some((f) => flags.has(f)));
 
@@ -33,8 +36,14 @@ export function validateCampaign(c: QuestCampaign): ValidationReport {
     if (!errors.includes(line)) errors.push(line);
   };
 
+  const idCheck = (kind: string, id: string) => {
+    if (!ID_PATTERN.test(id)) say(MSG.badId, { kind, id });
+  };
+  idCheck('campaign', c.id);
+
   const byId = new Map<string, QuestScene>();
   for (const s of c.scenes) {
+    idCheck('scene', s.id);
     if (byId.has(s.id)) say(MSG.dupScene, { id: s.id });
     byId.set(s.id, s);
   }
@@ -94,6 +103,7 @@ export function validateCampaign(c: QuestCampaign): ValidationReport {
     const seen = new Set<string>();
     for (const ch of s.choices) {
       const where = `Choice "${s.id}/${ch.id}"`;
+      idCheck('choice', ch.id);
       if (seen.has(ch.id)) say(MSG.dupChoice, { scene: s.id, id: ch.id });
       seen.add(ch.id);
       if (ch.label.length > LIMITS.labelChars) say(MSG.labelLong, { scene: s.id, id: ch.id, n: ch.label.length, max: LIMITS.labelChars });
@@ -130,6 +140,7 @@ export function validateCampaign(c: QuestCampaign): ValidationReport {
   for (const e of c.endings) {
     if (endingIds.has(e.id)) say(MSG.dupEnding, { id: e.id });
     endingIds.add(e.id);
+    idCheck('ending', e.id);
     if (!QUEST_ENDING_ART_KEYS.includes(e.art)) say(MSG.badEndingArt, { id: e.id, art: e.art });
     lineCheck(e.lines, `Ending "${e.id}"`);
     for (const hit of questCopyHits(e.title)) say(MSG.copyBanned, { where: `Ending "${e.id}" title`, hit });
@@ -144,6 +155,7 @@ export function validateCampaign(c: QuestCampaign): ValidationReport {
 
   // --- flags: every flag that is read must be set by some choice ---------------
   const setFlags = new Set(c.scenes.flatMap((s) => s.choices.flatMap((ch) => ch.setFlags ?? [])));
+  setFlags.forEach((f) => idCheck('flag', f));
   const readFlag = (flag: string, where: string) => {
     if (!setFlags.has(flag)) say(MSG.flagNeverSet, { where, flag });
   };

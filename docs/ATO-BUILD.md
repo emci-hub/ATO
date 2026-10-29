@@ -63,7 +63,7 @@ Stage D Quests
 - [ ] PHASE-16 Quests UI v3
 - [ ] PHASE-17 Server, Apply, Undo, flags  ⚑ wave116
 - [ ] PHASE-18 Style guide + The Drowned Lantern  ⚑ copy OK
-- [ ] PHASE-19 The Masquerade  ⚑ copy OK
+- [x] PHASE-19 The Masquerade  ⚑ copy OK (built; emci's copy read still to come)
 - [ ] PHASE-20 Last Train Home  ⚑ copy OK
 - [ ] PHASE-21 Art 2: Masquerade + City + shared VFX (PixelLab)  ⚑ art OK
 - [ ] PHASE-22 Atlas build + art integration

@@ -49,7 +49,7 @@ also follows `docs/voice-guide.md` and the core content policy in `docs/copy-rev
 ## Ids (forever)
 
 - Content ids match `^[a-z0-9][a-z0-9_-]{0,63}$`: campaign, scene, choice, ending and flag ids. The server refuses a run
-  that carries any other id. (The validator does not check this yet; see the progress log.)
+  that carries any other id. The validator checks every one of them (`MSG.badId`).
 - Scene ids are `<campaign>_s<position>[b]_<name>`, frozen in `sceneIdsFrozen`. Never rename or delete a frozen id:
   mark it `retired` and give it a `redirect`.
 - Bump `contentVersion` when a scene's meaning changes.

@@ -8,6 +8,11 @@ export const QUEST_LOCATION_KEYS: readonly string[] = [
   'lantern.toll-bridge',
   'lantern.singing-lake',
   'lantern.ceiling-crack',
+  'masquerade.ballroom',
+  'masquerade.balcony',
+  'masquerade.servants-stair',
+  'masquerade.library',
+  'masquerade.garden-maze',
 ];
 
 /** Ending art keys (same stub rule). */
@@ -16,4 +21,8 @@ export const QUEST_ENDING_ART_KEYS: readonly string[] = [
   'lantern.ending-long-way-home',
   'lantern.ending-rooks-lantern',
   'lantern.ending-toll-forward',
+  'masquerade.ending-last-waltz',
+  'masquerade.ending-quiet-exit',
+  'masquerade.ending-unmasked-together',
+  'masquerade.ending-clock-twice',
 ];

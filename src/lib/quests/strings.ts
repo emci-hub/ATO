@@ -147,6 +147,7 @@ export const LIMITS = {
 
 /** Validator messages (developer-facing). */
 export const MSG = {
+  badId: 'The {kind} id "{id}" is not allowed: ids use lowercase letters, digits, "_" and "-", start with a letter or digit, and are at most 64 characters.',
   dupScene: 'Scene id "{id}" is used twice.',
   dupChoice: 'Scene "{scene}" has two choices with id "{id}".',
   dupEnding: 'Ending id "{id}" is used twice.',
