@@ -40,7 +40,7 @@ Stage D Quests
 - [ ] PHASE-19 The Masquerade  ⚑ copy OK
 - [ ] PHASE-20 Last Train Home  ⚑ copy OK
 - [x] PHASE-21 Art 2: Masquerade + City + shared VFX (PixelLab)  ⚑ art OK (emci 2026-10-29)
-- [ ] PHASE-22 Atlas build + art integration
+- [x] PHASE-22 Atlas build + art integration
 - [ ] PHASE-23 Quests entry points + tutorial + You
 Stage E Polish & release
 - [ ] PHASE-24 Per-mode polish (G5)
@@ -172,5 +172,7 @@ Stage E Polish & release
   - ⚑ emci approves the three contact sheets (art OK). Not run: the app (no `src/`, `assets/` or `package.json` change, so no gate beyond the art files).
 
 - 2026-10-29 emci: **art OK Masquerade + City + shared** (the three PHASE-21 contact sheets). PHASE-21 ticked.
+
+- 2026-10-29 PHASE-22 (Atlas build + art integration), same branch, committed locally, NOT pushed, no OTA. `npm run build:quest-atlas` (pure JS, scripts/quest-png.ts + node:zlib, no sharp/pngjs, R24) packs art-src/quests into assets/quests/{lantern,masquerade,city,shared}.png + .json (8 files, 1.07 MB, each <= 2048x2048; x2 nearest, 2 px edge-extruded padding R20, NPC/hero clips trimmed to one box per clip, a baked darkened+blurred copy per plate at 1x) and generates `src/lib/quests/art-keys.ts` (keys + frame table). `check:quest-atlas` (10 checks): file count, sizes, 4 MB, padding + non-overlap, stale art-keys, every location/ending/prop/cast/emblem the content names. `atlas-sprite.tsx` (expo-image in an overflow-hidden View, frame from the stage clock on the UI thread) and a rewritten `stage.tsx` (far / glow / mid / ground / ambient clips / props / NPCs / hero / dust motes; lantern glow pulse 4 levels at 250 ms, city neon buzz with 80 ms off-frame, lake glints, ambient slowed not off under Reduce Motion). Known gaps: the cast id `elder` (Lantern scene 1) has no sprite, so the stage skips it; two assets stay below pass in params.json (prop-raft 20, ground-1-gate 19); the baked blur frames are built but the glass backdrop does not use them yet; the chapter wipe is still chapter-card code; ambient/prop positions are from the contact sheets, not seen on a phone. Not seen on a device.
 
 Blocked on: ⚑ copy OK (emci reads the Lantern, Masquerade and Last Train Home copy) and ⚑ apply wave116 (emci, Supabase SQL editor). 11h still needs emci's look at the samples and a phone check.

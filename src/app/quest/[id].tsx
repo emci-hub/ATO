@@ -461,6 +461,7 @@ export default function QuestRunScreen() {
           location={location}
           tint={scene?.art.tint}
           cast={scene?.art.cast}
+          props={scene?.art.props}
           height={plate}
           typing={!!typing}
           npcSpeaking={!!typing?.npc}

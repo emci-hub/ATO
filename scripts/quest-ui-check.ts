@@ -246,8 +246,8 @@ ok('samples are listed in development only', () => {
   assert.match(sources['src/app/quest/index.tsx'], /__DEV__ \|\| !c\.isSample/);
 });
 
-ok('placeholder plates carry a dev-only label', () => {
-  assert.match(sources['src/components/quests/stage.tsx'], /__DEV__ \? <Text style=\{styles\.placeholder\}>/);
+ok('plates with no art carry a dev-only label', () => {
+  assert.match(sources['src/components/quests/stage.tsx'], /__DEV__ && !hasPlate && !isEnding \? <Text style=\{styles\.placeholder\}>/);
 });
 
 ok('isolation: no src/play import, no model call, no typed text, no fixed font bypass', () => {
