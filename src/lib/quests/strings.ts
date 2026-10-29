@@ -18,6 +18,11 @@ export const APPROACH_LABEL: Record<Approach, string> = {
   wait: 'Wait and watch',
 };
 
+/** "What your choices said" lines that score.ts verdicts map to (PHASE-13; PHASE-16 shows them). */
+export const SAID_COPY = {
+  contradiction: "Your story self went the other way. Fun, but we'll trust your answers.",
+} as const;
+
 /** Limits the validator enforces (numbers, not copy). */
 export const LIMITS = {
   beatWords: 45,

@@ -269,6 +269,7 @@
     "check:almanac-calendar": "tsx ./scripts/almanac-calendar-check.ts",
     "check:almanac-art": "tsx ./scripts/almanac-art-check.ts",
     "check:quests": "tsx ./scripts/quests-check.ts",
+    "check:quest-score": "tsx ./scripts/quest-score-check.ts",
     "check:almanac-bank": "tsx ./scripts/almanac-bank-check.ts",
     "load:almanac": "tsx ./scripts/load-almanac.ts",
     "check:insights-g3": "tsx ./scripts/insights-g3-check.ts",
