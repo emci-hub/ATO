@@ -102,7 +102,7 @@ ok('the four missed tables, shared-content authors, referrals and dev grants are
   const s = w104.indexOf('create or replace function public.count_user_rows(');
   const old = w104.slice(s, w104.indexOf('$$;', s));
   const terms = (b: string) => [...b.matchAll(/from (?:public|auth)\.([a-z_0-9]+) where/g)].map((m) => m[1]!);
-  const lost = terms(old).filter((t) => !terms(countBody).includes(t));
+  const lost = terms(old).filter((t) => t !== 'ai_provider_log' && !terms(countBody).includes(t));
   assert.deepEqual(lost, [], `wave106 dropped tables from the proof: ${lost.join(', ')}`);
   ok('wave106 keeps every table wave104 counted');
 }
@@ -113,7 +113,7 @@ ok('the four missed tables, shared-content authors, referrals and dev grants are
   const s = w106.indexOf('create or replace function public.count_user_rows(');
   const old = w106.slice(s, w106.indexOf('$$;', s));
   const terms = (b: string) => [...b.matchAll(/from (?:public|auth)\.([a-z_0-9]+) where/g)].map((m) => m[1]!);
-  const lost = terms(old).filter((t) => !terms(countBody).includes(t));
+  const lost = terms(old).filter((t) => t !== 'ai_provider_log' && !terms(countBody).includes(t));
   assert.deepEqual(lost, [], `wave108 dropped tables from the proof: ${lost.join(', ')}`);
   for (const t of ['chat_keys', 'chat_restrictions']) assert.match(countBody, new RegExp(`from public\\.${t} where user_id = p_user_id`));
   assert.match(countBody, /from public\.chat_messages where sender_id = p_user_id or recipient_id = p_user_id/);
@@ -126,7 +126,8 @@ ok('the four missed tables, shared-content authors, referrals and dev grants are
   const s = w108.indexOf('create or replace function public.count_user_rows(');
   const old = w108.slice(s, w108.indexOf('$$;', s));
   const terms = (b: string) => [...b.matchAll(/from (?:public|auth)\.([a-z_0-9]+) where/g)].map((m) => m[1]!);
-  const lost = terms(old).filter((t) => !terms(countBody).includes(t));
+  // ai_provider_log is the one deliberate omission: wave115 drops that table.
+  const lost = terms(old).filter((t) => t !== 'ai_provider_log' && !terms(countBody).includes(t));
   assert.deepEqual(lost, [], `wave116 dropped tables from the proof: ${lost.join(', ')}`);
   assert.match(countBody, /from public\.quest_runs where user_id = p_user_id/);
   ok('wave116 keeps every table wave108 counted and adds quest_runs');

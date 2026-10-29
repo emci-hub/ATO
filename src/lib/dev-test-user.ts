@@ -117,7 +117,10 @@ export async function applyDevIntakeStagePreset(
       touched[axis] = nowIso;
     }
   }
-  const tracks = devIntakeTracks(DEV_INTAKE_PRESET_VALUES, plan, nowIso).map((row) => ({
+  const tracks = devIntakeTracks(DEV_INTAKE_PRESET_VALUES, plan, nowIso).flatMap((row) =>
+    // The dev jumps never make Quest rows, and the server refuses any track but report / game.
+    row.track === 'quest' ? [] : [{ ...row, track: row.track }],
+  ).map((row) => ({
     axis: row.axis,
     track: row.track,
     value: row.value,

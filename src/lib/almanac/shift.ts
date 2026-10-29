@@ -6,11 +6,13 @@
 import { AXIS_POLE_NAME } from '@/lib/axis-poles';
 import type { TraitAxis } from '@/lib/traits';
 
-/** The three fields of a `TraitHistoryRow` this needs (kept structural so the engine folder stays pure). */
+/** The fields of a `TraitHistoryRow` this needs (kept structural so the engine folder stays pure). */
 export interface ShiftRow {
   axis: TraitAxis;
   value: number;
   createdAt: string;
+  /** Optional so plain rows still work; `self_game` rows are scenario-pick nudges, not answers. */
+  source?: string;
 }
 
 export const SHIFT_WINDOW_DAYS = 31;
@@ -34,6 +36,7 @@ export function monthlyShifts(
   const since = now.getTime() - windowDays * 86_400_000;
   const byAxis = new Map<TraitAxis, ShiftRow[]>();
   for (const row of rows) {
+    if (row.source === 'self_game') continue;
     const list = byAxis.get(row.axis) ?? [];
     list.push(row);
     byAxis.set(row.axis, list);

@@ -200,9 +200,11 @@ ok('the dev sign-up reset and the delete-account count cover the six newer table
   assert.ok(!('quest_runs' in KEEP), 'quest_runs is never on the KEEP list');
   assert.match(w116, /create table public\.quest_runs \([\s\S]*?user_id uuid not null references auth\.users \(id\) on delete cascade,/, 'quest_runs cascades with the account');
   // Each body = its source + the one quest_runs line, nothing else changed.
-  assert.equal(noQuestLine(reset116), fnBody(w103, 'create or replace function public.reset_my_account()'), 'reset_my_account = wave103 + quest_runs');
-  assert.equal(noQuestLine(dev116), fnBody(w104, 'create or replace function public.reset_dev_test_user()'), 'reset_dev_test_user = wave104 + quest_runs');
-  assert.equal(noQuestLine(count116), fnBody(w108, 'create or replace function public.count_user_rows('), 'count_user_rows = wave108 + quest_runs');
+  // wave115 drops ai_provider_log, so wave116 restates the sources without its lines.
+  const noProviderLog = (s: string) => s.split('\n').filter((l) => !/ai_provider_log/.test(l)).join('\n');
+  assert.equal(noQuestLine(reset116), noProviderLog(fnBody(w103, 'create or replace function public.reset_my_account()')), 'reset_my_account = wave103 + quest_runs');
+  assert.equal(noQuestLine(dev116), noProviderLog(fnBody(w104, 'create or replace function public.reset_dev_test_user()')), 'reset_dev_test_user = wave104 + quest_runs − ai_provider_log');
+  assert.equal(noQuestLine(count116), noProviderLog(fnBody(w108, 'create or replace function public.count_user_rows(')), 'count_user_rows = wave108 + quest_runs − ai_provider_log');
   ok('wave116: quest_runs wiped by Reset, cleared by the dev reset, counted for delete-account; bodies = sources + one line');
 }
 

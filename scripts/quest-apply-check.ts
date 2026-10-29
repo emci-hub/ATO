@@ -21,7 +21,7 @@
  *   the Quests fence.
  */
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 import {
@@ -41,6 +41,7 @@ import {
   type AxisWrite,
   type Rpc,
 } from '../src/lib/quests/apply';
+import { monthlyShifts } from '../src/lib/almanac/shift';
 import { questCopyHits } from '../src/lib/quests/banned';
 import { FLAGS_OFF, applyAllowed, flagsFromFetch, nextOverride, parseFlags, questsVisible, resolveFlags } from '../src/lib/quests/flags';
 import type { KV } from '../src/lib/quests/run-store';
@@ -86,7 +87,7 @@ const raise = (code: string) => ({ data: null, error: { message: `quests:${code}
 class FakeServer {
   clock = Date.parse('2026-10-28T12:00:00.000Z');
   runs = new Map<string, FakeRun>();
-  game = new Map<string, number>(); // `${user}:${axis}` → game value
+  quest = new Map<string, number>(); // `${user}:${axis}` → quest value
   history: { user: string; axis: string; at: number }[] = [];
   writes = 0;
   calls: string[] = [];
@@ -144,9 +145,9 @@ class FakeServer {
     r.applied = [];
     for (const w of axes) {
       const key = `${user}:${w.axis}`;
-      const from = this.game.has(key) ? this.game.get(key)! : null;
+      const from = this.quest.has(key) ? this.quest.get(key)! : null;
       const to = applyValue(from, w.s, w.g);
-      this.game.set(key, to);
+      this.quest.set(key, to);
       this.history.push({ user, axis: w.axis, at: this.clock });
       this.writes += 1;
       r.pre[w.axis] = from;
@@ -163,21 +164,21 @@ class FakeServer {
     if (r.appliedAt < this.clock - 24 * H) return raise('undo_expired');
     for (const w of r.applied!) {
       const key = `${user}:${w.axis}`;
-      if (!this.game.has(key)) continue;
-      const cur = this.game.get(key)!;
+      if (!this.quest.has(key)) continue;
+      const cur = this.quest.get(key)!;
       const newer = Math.round(cur * 1e4) !== Math.round(w.to * 1e4) || this.history.some((h) => h.user === user && h.axis === w.axis && h.at > r.appliedAt!);
       const v = undoValue(r.pre![w.axis] ?? null, w, cur, newer);
-      if (v === null) this.game.delete(key);
-      else this.game.set(key, v);
+      if (v === null) this.quest.delete(key);
+      else this.quest.set(key, v);
       if (newer) this.writes += 1;
     }
     r.undoneAt = this.clock;
     return { data: { ok: true, already: false }, error: null };
   }
-  /** A newer game-track write (e.g. record_game_pick through _trait_write). */
+  /** A newer quest-track write (a second Apply). */
   gameWrite(user: string, axis: string, value: number) {
     this.clock += 1000;
-    this.game.set(`${user}:${axis}`, value);
+    this.quest.set(`${user}:${axis}`, value);
     this.history.push({ user, axis, at: this.clock });
   }
 }
@@ -248,7 +249,7 @@ async function main() {
   {
     assert.ok(close(applyValue(0.6, 0.6636, 0.13125), 0.6083), 'the PHASE-13 worked example lands at .6083/.6084 (4 places)');
     assert.ok(Math.abs(applyValue(0.6, 0.6636, 0.13125) - previewGameValue(0.6, 0.6636, 0.13125)) < 1e-4, 'server write = score.ts preview');
-    assert.equal(applyValue(null, 0.8, 0.25), 0.575, 'no game row starts at 0.5');
+    assert.equal(applyValue(null, 0.8, 0.25), 0.575, 'no quest row starts at 0.5');
     assert.equal(applyValue(0.2, 0.8, 0.25), 0.28, '|Δ| ≤ 0.08');
     assert.equal(applyValue(0.8, 0.2, 0.25), 0.72, '|Δ| ≤ 0.08 downward');
     // No newer write: back exactly (null = the row Apply made goes).
@@ -289,7 +290,7 @@ async function main() {
     const out = await ap.save(job());
     assert.equal(out.status, 'saved');
     assert.equal(server.writes, 2, 'two axes, two writes');
-    assert.ok(close(server.game.get('u1:openness')!, applyValue(null, 0.664, 0.131)));
+    assert.ok(close(server.quest.get('u1:openness')!, applyValue(null, 0.664, 0.131)));
     const again = await ap.save(job());
     assert.equal(again.status, 'saved');
     assert.equal(server.writes, 2, 'the same Save again writes nothing (run id used once)');
@@ -364,7 +365,7 @@ async function main() {
 
     // An offline Undo of a lost-answer Apply is finished by the next flush (the Save is not re-sent).
     const s7 = new FakeServer();
-    s7.game.set('u1:openness', 0.6);
+    s7.quest.set('u1:openness', 0.6);
     const kv7 = new MapKV();
     let drop = true;
     const lossy7: Rpc = async (fn, args) => {
@@ -379,12 +380,12 @@ async function main() {
     s7.offline = false;
     assert.equal(await ap7.flush(), 0, 'flush sends no Save for a cancelled entry');
     assert.equal(s7.calls.filter((c) => c === 'apply_quest_result').length, 1, 'no second Apply');
-    assert.equal(s7.game.get('u1:openness'), 0.6, 'the flush finished the Undo on the server');
+    assert.equal(s7.quest.get('u1:openness'), 0.6, 'the flush finished the Undo on the server');
     assert.equal(kv7.map.has(QUEST_APPLY_QUEUE_KEY), false);
 
     // The Apply landed but its answer was lost (so the Save was queued): Undo still reverses it on the server.
     const s6 = new FakeServer();
-    s6.game.set('u1:openness', 0.6);
+    s6.quest.set('u1:openness', 0.6);
     const kv6 = new MapKV();
     const lossy: Rpc = async (fn, args) => {
       const out = await s6.rpcFor('u1')(fn, args);
@@ -394,7 +395,7 @@ async function main() {
     assert.deepEqual(await ap6.save(job()), { status: 'queued' });
     assert.equal(s6.writes, 2, 'the server did write');
     assert.deepEqual(await createQuestApplier({ kv: kv6, rpc: s6.rpcFor('u1') }).undo(serverRunId(RUN.runId)), { status: 'undone' });
-    assert.equal(s6.game.get('u1:openness'), 0.6, 'the lost-answer Apply is reversed on the server');
+    assert.equal(s6.quest.get('u1:openness'), 0.6, 'the lost-answer Apply is reversed on the server');
     assert.equal(kv6.map.has(QUEST_APPLY_QUEUE_KEY), false);
 
     // A corrupt queue is read as empty.
@@ -426,26 +427,26 @@ async function main() {
   {
     // No newer write: exact restore (a track Apply created disappears).
     const server = new FakeServer();
-    server.game.set('u1:openness', 0.6);
+    server.quest.set('u1:openness', 0.6);
     const kv = new MapKV();
     const ap = createQuestApplier({ kv, rpc: server.rpcFor('u1'), now: () => new Date(server.clock) });
     await ap.save(job());
-    assert.ok(server.game.get('u1:openness')! > 0.6);
+    assert.ok(server.quest.get('u1:openness')! > 0.6);
     assert.deepEqual(await ap.undo(serverRunId(RUN.runId)), { status: 'undone' });
-    assert.equal(server.game.get('u1:openness'), 0.6, 'restored exactly');
-    assert.equal(server.game.has('u1:playfulness'), false, 'a track Apply created is gone again');
+    assert.equal(server.quest.get('u1:openness'), 0.6, 'restored exactly');
+    assert.equal(server.quest.has('u1:playfulness'), false, 'a track Apply created is gone again');
     assert.deepEqual(await ap.lastAppliedAt(), {}, 'the 7-day mirror is cleared');
     assert.deepEqual(await ap.undo(serverRunId(RUN.runId)), { status: 'undone' }, 'a second Undo is a no-op');
 
     // Undo after a newer write: bounded inverse.
     const s2 = new FakeServer();
-    s2.game.set('u1:openness', 0.6);
+    s2.quest.set('u1:openness', 0.6);
     const ap2 = createQuestApplier({ kv: new MapKV(), rpc: s2.rpcFor('u1') });
     await ap2.save(job(RUN, [{ axis: 'openness', s: 0.8, g: 0.25 }]));
-    assert.equal(s2.game.get('u1:openness'), 0.65);
+    assert.equal(s2.quest.get('u1:openness'), 0.65);
     s2.gameWrite('u1', 'openness', 0.7);
     await ap2.undo(serverRunId(RUN.runId));
-    const after = s2.game.get('u1:openness')!;
+    const after = s2.quest.get('u1:openness')!;
     assert.ok(close(after, 0.65, 1e-4), 'the newer write is kept, only this Apply’s +0.05 comes off');
     assert.ok(after >= 0.52 && after <= 0.68, 'inside pre ± 0.08');
 
@@ -525,9 +526,9 @@ async function main() {
     // R10 option A
     assert.doesNotMatch(code, /_trait_write\s*\(/, 'R10: wave116 never calls _trait_write');
     const write = fn('_quest_game_write');
-    assert.match(write, /values \(p_uid, p_axis, 'game', p_value, 0, 0, now\(\)\)\s*on conflict \(user_id, axis, track\) do update set value = excluded\.value;/, 'only the game value moves');
+    assert.match(write, /values \(p_uid, p_axis, 'quest', p_value, 0, 0, now\(\)\)\s*on conflict \(user_id, axis, track\) do update set value = excluded\.value;/, 'only the quest value moves');
     assert.doesNotMatch(write, /public\.me\b|trait_sources|stability =|answer_count =/, 'never me, trait_sources, stability or answer_count');
-    assert.match(write, /insert into public\.trait_history \(user_id, axis, value, source\) values \(p_uid, p_axis, p_value, 'self_game'\);/);
+    assert.match(write, /insert into public\.trait_history \(user_id, axis, value, source\) values \(p_uid, p_axis, p_value, 'self_quest'\);/);
     const apply = fn('apply_quest_result');
     assert.match(apply, /v_to := coalesce\(v_from, 0\.5\) \+ v_g \* \(v_s - coalesce\(v_from, 0\.5\)\);/, 'to = game + g·(s − game), no row = 0.5');
     assert.match(apply, /v_to := least\(coalesce\(v_from, 0\.5\) \+ 0\.08, greatest\(coalesce\(v_from, 0\.5\) - 0\.08, v_to\)\);/, '|Δ| ≤ 0.08 on the server');
@@ -549,7 +550,42 @@ async function main() {
     const undo = fn('undo_quest_result');
     assert.match(undo, /r\.applied_at < now\(\) - interval '24 hours'/, '24 h');
     assert.match(undo, /v_lo := greatest\(0\.2, v_pre - 0\.08\);\s*v_hi := least\(0\.8, v_pre \+ 0\.08\);\s*v_new := least\(v_hi, greatest\(v_lo, v_cur - v_delta\)\);\s*v_new := least\(v_cur \+ abs\(v_delta\), greatest\(v_cur - abs\(v_delta\), v_new\)\);\s*v_new := case when v_delta >= 0 then least\(v_new, v_cur\) else greatest\(v_new, v_cur\) end;/, 'R08: the bounded inverse (= undoValue)');
-    assert.match(undo, /h\.source = 'self_game' and h\.created_at > r\.applied_at/, 'a newer game write is seen in the history');
+    assert.match(undo, /h\.source = 'self_quest' and h\.created_at > r\.applied_at/, 'a newer quest write is seen in the history');
+    assert.match(undo, /delete from public\.trait_history\s*where user_id = uid and axis = v_axis and source = 'self_quest' and created_at = r\.applied_at;/, 'Undo drops exactly the self_quest row Apply wrote');
+    // Quests own their track and history source: Apply, Undo and the write never name game / self_game.
+    for (const [name, body] of [['_quest_game_write', write], ['apply_quest_result', apply], ['undo_quest_result', undo]] as const) {
+      assert.doesNotMatch(body, /'game'|self_game/, `${name} never reads or writes the game track or self_game`);
+      assert.match(body, /'quest'/, `${name} names the quest track`);
+    }
+    // The new constraint values (wave21 / wave38 pattern): quest next to report + game; self_quest after wave38's eight.
+    assert.match(code, /alter table public\.trait_tracks drop constraint if exists trait_tracks_kind;\s*alter table public\.trait_tracks\s*add constraint trait_tracks_kind check \(track in \('report', 'game', 'quest'\)\);/, 'trait_tracks_kind allows quest');
+    const wave38 = read('supabase/migrations/wave38_trait_history_self_scenario.sql');
+    const w38 = /check \(source in \(([\s\S]*?)\)\);/.exec(wave38.replace(/--[^\n]*/g, ''));
+    const w116 = /trait_history_source_known check \(source in \(([\s\S]*?)\)\);/.exec(code);
+    assert.ok(w38 && w116, 'both source constraints are found');
+    const srcList = (s: string) => [...s.matchAll(/'([a-z_]+)'/g)].map((m) => m[1]!);
+    assert.deepEqual(srcList(w116![1]!), [...srcList(w38![1]!), 'self_quest'], 'trait_history_source_known = wave38 list + self_quest');
+    assert.match(code, /alter table public\.trait_history drop constraint if exists trait_history_source_known;/);
+    // Restated function bodies only name tables that exist (wave115 drops ai_provider_log).
+    const migDir = resolve(root, 'supabase', 'migrations');
+    const allSql = readdirSync(migDir).filter((f) => f.endsWith('.sql')).map((f) => readFileSync(resolve(migDir, f), 'utf8').replace(/--[^\n]*/g, ''));
+    const baselineDir = resolve(root, 'supabase', 'baseline');
+    if (existsSync(baselineDir)) {
+      for (const f of readdirSync(baselineDir).filter((x) => x.endsWith('.sql'))) allSql.push(readFileSync(resolve(baselineDir, f), 'utf8').replace(/--[^\n]*/g, ''));
+    }
+    const dropped = new Set<string>();
+    for (const s of allSql) {
+      for (const m of s.matchAll(/drop table (?:if exists )?(?:public\.)?"?([a-z_0-9]+)"?/gi)) dropped.add(m[1]!.toLowerCase());
+    }
+    for (const name of ['reset_my_account', 'reset_dev_test_user', 'count_user_rows']) {
+      const named = [...fn(name).matchAll(/\b(?:from|join|into|update)\s+public\.([a-z_0-9]+)\b(?!\s*\()/g)].map((m) => m[1]!);
+      assert.ok(named.length > 0, `${name} names tables`);
+      for (const t of named) {
+        // Early tables (me, checks…) predate the migrations, so "exists" = not dropped by any migration.
+        assert.ok(!dropped.has(t), `${name} names ${t}, which a migration drops`);
+      }
+    }
+    assert.doesNotMatch(code, /ai_provider_log/, 'wave116 no longer names ai_provider_log (wave115 drops it)');
     // R11
     for (const name of ['record_quest_run', 'apply_quest_result', 'undo_quest_result']) {
       const f = fn(name);
@@ -579,6 +615,22 @@ async function main() {
     assert.match(fn('reset_dev_test_user'), /delete from public\.quest_runs where user_id = v_dev_id;/);
     assert.match(fn('count_user_rows'), /from public\.quest_runs where user_id = p_user_id/);
     ok('wave116: R10 game value only (no _trait_write), R11 on every RPC, R09 server rules, R08 bounded Undo, R12 reset + delete');
+  }
+
+  // --- the quest track on the phone ---------------------------------------------------------------
+  {
+    assert.match(read('src/lib/trait-stability.ts'), /export type TraitTrackKind = 'report' \| 'game' \| 'quest';/);
+    assert.match(read('src/lib/trait-tracks-store.ts'), /raw\.track !== 'quest'\) return null;/, 'the parser keeps quest rows');
+    assert.match(read('src/lib/quests/score.ts'), /trackFor\(tracks, x\.axis, 'quest'\)/, 'the Said preview reads the quest track');
+    assert.doesNotMatch(read('src/lib/quests/score.ts'), /trackFor\([^)]*'game'\)/, 'the Said preview never reads the game track');
+    assert.doesNotMatch(read('src/lib/traits.ts'), /self_quest/, 'self_quest stays out of the client TraitSource list, so fetchTraitHistory drops it');
+    const rows = [
+      { axis: 'openness' as const, value: 0.3, createdAt: '2026-10-01T00:00:00Z', source: 'self_slider' },
+      { axis: 'openness' as const, value: 0.9, createdAt: '2026-10-20T00:00:00Z', source: 'self_game' },
+    ];
+    assert.deepEqual(monthlyShifts(rows, new Date('2026-10-25T00:00:00Z')), [], 'a self_game row is not an almanac shift');
+    assert.equal(monthlyShifts(rows.map((r) => ({ ...r, source: 'self_slider' })), new Date('2026-10-25T00:00:00Z')).length, 1);
+    ok('quest track on the phone: parser, type, Said preview, self_quest dropped, self_game out of "What shifted"');
   }
 
   // --- the Said wiring and the copy ---------------------------------------------------------------

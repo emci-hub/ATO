@@ -208,7 +208,7 @@ export function scoreRun(input: ScoreInput): RunScore {
   const axes: AxisVerdict[] = leans.map((x) => {
     if (!x.eligible) return { ...x, status: 'not_enough' };
     const report = trackFor(tracks, x.axis, 'report');
-    const game = trackFor(tracks, x.axis, 'game');
+    const game = trackFor(tracks, x.axis, 'quest');
     const stab = effectiveStability(report, now);
     const s = sampleFromLean(x.lean);
     const g = evidenceWeight(x.consistency, x.scenes, stab);

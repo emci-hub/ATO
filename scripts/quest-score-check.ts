@@ -71,7 +71,7 @@ const camp = (scenes: QuestScene[], extra: Partial<QuestCampaign> = {}): QuestCa
   endings: [{ id: 'end', title: 'The end', when: {}, lines: [{ kind: 'narrator', text: 'Home.' }], art: 'lantern.ending-long-way-home' }],
   ...extra,
 });
-const track = (axis: TraitAxis, kind: 'report' | 'game', value: number, stability = 0, answerCount = 5, lastTouched = daysAgo(1)): TraitTrack => ({
+const track = (axis: TraitAxis, kind: 'report' | 'game' | 'quest', value: number, stability = 0, answerCount = 5, lastTouched = daysAgo(1)): TraitTrack => ({
   axis,
   track: kind,
   value,
@@ -102,7 +102,7 @@ const verdict = (r: ReturnType<typeof scoreRun>, axis: TraitAxis) => {
   const picks = [...picksOf('o', 'ppmp'), { sceneId: 'x1', choiceId: 'p' }];
   const report = track('openness', 'report', 0.62, 0.5);
   near(effectiveStability(report, NOW), 0.5, 1e-12, 'report stability');
-  const r = run(c, picks, { tracks: [report, track('openness', 'game', 0.6)] });
+  const r = run(c, picks, { tracks: [report, track('openness', 'quest', 0.6)] });
   const v = verdict(r, 'openness');
   near(v.P, 2.4, 1e-12, 'P');
   near(v.W, 4.4, 1e-12, 'W');
@@ -235,7 +235,7 @@ const verdict = (r: ReturnType<typeof scoreRun>, axis: TraitAxis) => {
 
   // |Δ| ≤ 0.08.
   const c = camp(axisScenes('o', 'openness', 4));
-  const big = verdict(run(c, picksOf('o', 'pppp'), { tracks: [track('openness', 'game', 0.2)] }), 'openness');
+  const big = verdict(run(c, picksOf('o', 'pppp'), { tracks: [track('openness', 'quest', 0.2)] }), 'openness');
   near(big.g, 0.25);
   near(big.to, 0.28, 1e-12, 'capped at +0.08 (uncapped 0.35)');
   near(previewGameValue(0.9, 0.2, 0.25), 0.82, 1e-12, 'capped at −0.08');

@@ -110,4 +110,8 @@ The red team found 2 blockers and 4 high issues. **This section replaces §2–�
 4. `start_fresh` also clears the Quest numbers (and decide `quest_runs` cooldowns in S4).
 5. D6 (scenario picks writing the original `me` column, any of 16 axes) is a separate later change; ask then.
 
-State: S1 not started. S2–S4 wait for S1.
+State: S1 DONE locally (2026-10-29, not pushed, wave116 still NOT applied): wave116 now writes `track='quest'` / history `self_quest`
+(constraints re-added, `ai_provider_log` lines removed); phone parser/type/Said preview/almanac filter updated; `check:quest-apply` pins the
+constraint, the exact `self_quest` Undo and "restated bodies name no dropped table". Not done in S1: `start_fresh` is not restated in wave116
+(wave101's version clears only the report track and all history), so clearing Quest numbers on start_fresh moves to S4 with the `quest_runs`
+cooldown decision. S2 is next; S3–S4 wait for S2.

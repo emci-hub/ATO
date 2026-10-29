@@ -9,12 +9,13 @@
 --   3. record_quest_run: stores a finished run. Server-side 30-day rule (R09): only the first
 --      as-me run of a campaign in 30 days counts; a later one is stored as for_fun.
 --   4. apply_quest_result(p_run_id, p_axes [{axis, s, g}]): the R10 option A write
---      (emci 2026-10-28). It never calls _trait_write: _quest_game_write sets ONLY the game-track
---      value, to = clamp(game + g·(s − game), game ± 0.08) (no game row yet = start at 0.5),
+--      (emci 2026-10-28). It never calls _trait_write: _quest_game_write sets ONLY the quest-track
+--      value, to = clamp(quest + g·(s − quest), quest ± 0.08) (no quest row yet = start at 0.5),
 --      never its stability or answer_count, never the me column or trait_sources, plus one
---      self_game history row. Checks: switches, campaign, allow-list (QUEST_AXES), s ∈ [0.2, 0.8],
+--      self_quest history row. Quests have their own track ('quest') and history source
+--      (self_quest), so they never share a row with scenario picks (game / self_game). Checks: switches, campaign, allow-list (QUEST_AXES), s ∈ [0.2, 0.8],
 --      0 < g ≤ 0.25, 1–3 distinct axes, 7 days per axis (R09), the run id once (idempotent, R07).
---   5. undo_quest_result(p_run_id): within 24 h. No newer game-track write since = put pre_values
+--   5. undo_quest_result(p_run_id): within 24 h. No newer quest-track write since = put pre_values
 --      back exactly (and drop the history row Apply wrote). A newer write = bounded inverse (R08):
 --      take the applied delta back, never past pre ± 0.08 or [0.2, 0.8], never moving the value
 --      further than Apply did. Port pinned by check:quest-apply (src/lib/quests/apply.ts).
@@ -102,8 +103,32 @@ end;
 $$;
 revoke all on function public._quests_gate(text, boolean) from public, anon, authenticated;
 
--- The R10 option A write: ONLY the game-track value (insert starts stability 0, answer_count 0;
--- an update never touches them), plus one self_game history row. Never me, never trait_sources.
+-- Quests keep their own track and history source (docs/quests-game-track-plan.md §5): 'quest' next to
+-- 'report' and 'game' (wave21 drop/re-add pattern; wave20 stays as written), and self_quest next to the
+-- 8 sources wave38 lists, so a scenario pick (game / self_game) and a Quest run never share a row and
+-- Undo finds exactly the history row Apply wrote. The client TraitSource list does not include
+-- self_quest, so fetchTraitHistory drops it (Quest values stay out of "How this has shifted").
+alter table public.trait_tracks drop constraint if exists trait_tracks_kind;
+alter table public.trait_tracks
+  add constraint trait_tracks_kind check (track in ('report', 'game', 'quest'));
+
+alter table public.trait_history drop constraint if exists trait_history_source_known;
+alter table public.trait_history
+  add constraint trait_history_source_known check (source in (
+    'self_slider',
+    'self_tap',
+    'self_confirm',
+    'self_settings',
+    'self_scenario',
+    'self_grid',
+    'self_situation',
+    'self_game',
+    'self_quest'
+  ));
+
+-- The R10 option A write: ONLY the quest-track value (insert starts stability 0, answer_count 0;
+-- an update never touches them), plus one self_quest history row. Never me, never trait_sources,
+-- never the report or game track.
 create or replace function public._quest_game_write(p_uid uuid, p_axis text, p_value double precision)
 returns void
 language plpgsql
@@ -115,9 +140,9 @@ begin
     raise exception 'quests:bad_input' using errcode = 'P0001';
   end if;
   insert into public.trait_tracks (user_id, axis, track, value, stability, answer_count, last_touched)
-    values (p_uid, p_axis, 'game', p_value, 0, 0, now())
+    values (p_uid, p_axis, 'quest', p_value, 0, 0, now())
     on conflict (user_id, axis, track) do update set value = excluded.value;
-  insert into public.trait_history (user_id, axis, value, source) values (p_uid, p_axis, p_value, 'self_game');
+  insert into public.trait_history (user_id, axis, value, source) values (p_uid, p_axis, p_value, 'self_quest');
 end;
 $$;
 revoke all on function public._quest_game_write(uuid, text, double precision) from public, anon, authenticated;
@@ -305,9 +330,9 @@ begin
     v_s := (a ->> 's')::double precision;
     v_g := (a ->> 'g')::double precision;
     select value::double precision into v_from from public.trait_tracks
-      where user_id = uid and axis = v_axis and track = 'game' for update;
+      where user_id = uid and axis = v_axis and track = 'quest' for update;
     v_found := found;
-    -- No game row yet = start at 0.5, like score.ts.
+    -- No quest row yet = start at 0.5, like score.ts.
     v_to := coalesce(v_from, 0.5) + v_g * (v_s - coalesce(v_from, 0.5));
     v_to := least(coalesce(v_from, 0.5) + 0.08, greatest(coalesce(v_from, 0.5) - 0.08, v_to));
     v_to := round(least(1::float8, greatest(0::float8, v_to))::numeric, 4)::double precision;
@@ -384,27 +409,27 @@ begin
     v_pre := case when v_had then (r.pre_values ->> v_axis)::double precision else 0.5 end;
 
     select value::double precision into v_cur from public.trait_tracks
-      where user_id = uid and axis = v_axis and track = 'game' for update;
+      where user_id = uid and axis = v_axis and track = 'quest' for update;
     if not found then
       continue;  -- the track is gone (a reset): nothing to take back
     end if;
 
-    -- A newer game-track write: the value moved, or another self_game row landed after Apply.
+    -- A newer quest-track write: the value moved, or another self_quest row landed after Apply.
     v_newer := round(v_cur::numeric, 4) <> round(v_to::numeric, 4) or exists (
       select 1 from public.trait_history h
-      where h.user_id = uid and h.axis = v_axis and h.source = 'self_game' and h.created_at > r.applied_at
+      where h.user_id = uid and h.axis = v_axis and h.source = 'self_quest' and h.created_at > r.applied_at
     );
 
     if not v_newer then
       -- Put it back exactly and drop the history row Apply wrote.
       if v_had then
         update public.trait_tracks set value = v_pre
-          where user_id = uid and axis = v_axis and track = 'game';
+          where user_id = uid and axis = v_axis and track = 'quest';
       else
-        delete from public.trait_tracks where user_id = uid and axis = v_axis and track = 'game';
+        delete from public.trait_tracks where user_id = uid and axis = v_axis and track = 'quest';
       end if;
       delete from public.trait_history
-        where user_id = uid and axis = v_axis and source = 'self_game' and created_at = r.applied_at;
+        where user_id = uid and axis = v_axis and source = 'self_quest' and created_at = r.applied_at;
     else
       -- R08 bounded inverse: take the delta back, inside pre ± 0.08 and [0.2, 0.8], never
       -- move the value further than Apply did (|new − cur| ≤ |delta|), and only ever against
@@ -551,7 +576,6 @@ begin
   delete from public.explore_packs where user_id = v_dev_id;
   delete from public.explore_entries where user_id = v_dev_id;
   delete from public.explore_reactions where user_id = v_dev_id;
-  delete from public.ai_provider_log where user_id = v_dev_id;
   delete from public.ai_usage where user_id = v_dev_id;
   delete from public.question_packs where user_id = v_dev_id;
   delete from public.question_items where user_id = v_dev_id;
@@ -608,7 +632,6 @@ as $$
   + (select count(*) from public.explore_packs where user_id = p_user_id)
   + (select count(*) from public.explore_entries where user_id = p_user_id)
   + (select count(*) from public.explore_reactions where user_id = p_user_id)
-  + (select count(*) from public.ai_provider_log where user_id = p_user_id)
   + (select count(*) from public.ai_usage where user_id = p_user_id)
   + (select count(*) from public.question_packs where user_id = p_user_id)
   + (select count(*) from public.question_items where user_id = p_user_id)

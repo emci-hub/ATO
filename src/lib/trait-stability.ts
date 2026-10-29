@@ -67,7 +67,8 @@ export const UNDO_SAME_AXIS_REPEAT_CAP = 1;
 export const TITLE_MIN_STABLE = 2;
 export const TITLE_STABLE_MIN = 0.4;
 
-export type TraitTrackKind = 'report' | 'game';
+/** `quest` = Quests' own number (wave116); scenario picks stay on `game`. */
+export type TraitTrackKind = 'report' | 'game' | 'quest';
 
 /**
  * Lightweight replay of a single trait write, for `evidenceHistory` below.
