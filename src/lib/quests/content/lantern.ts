@@ -383,7 +383,7 @@ const SCENES: QuestScene[] = [
     requires: { flags: ['saw_glow'] },
     lines: [
       nar('The blue glow has followed you. In a crack in the wall, a small door hums, rusted shut.', 'door'),
-      say('Rook', 'Never seen that before. Never seen anyone brag about it, either.'),
+      say('Rook', 'Never seen that before. Nobody ever mentioned it, either.'),
     ],
     choices: [
       choice('pry_door', {
@@ -425,7 +425,7 @@ const SCENES: QuestScene[] = [
     primaryAxis: 'self_efficacy',
     lines: [
       nar('A narrow ledge leads on. Its iron anchor wobbles when you touch it.', 'anchor'),
-      say('Rook', 'Somebody set that in a hurry. I respect the optimism.'),
+      say('Rook', 'Somebody set that in a hurry. Brave of them.'),
     ],
     choices: [
       choice('reset_anchor', {
@@ -445,7 +445,7 @@ const SCENES: QuestScene[] = [
       choice('crawl_ledge', {
         label: 'Cross on hands and knees, one at a time.',
         approach: 'steady',
-        result: [nar('Slow, undignified, and perfectly safe. Rook is already planning the story.')],
+        result: [nar('Slow, silly, and perfectly safe. Rook is already planning the story.')],
       }),
       choice('tie_off', {
         label: 'Tie everyone together and go slow.',
@@ -490,7 +490,7 @@ const SCENES: QuestScene[] = [
       choice('share_tea', {
         label: 'Offer a hot drink and ask about the route ahead.',
         approach: 'talk',
-        result: [nar('The captain thaws by half a degree and mutters something about a slippery gantry.')],
+        result: [nar('The captain warms up a little and mutters something about a slippery gantry.')],
         stats: { supplies: -1 },
       }),
     ],
@@ -526,7 +526,7 @@ const SCENES: QuestScene[] = [
         result: [nar('It rattles away, hits a bump, and sails into the dark. You all nod, very seriously.')],
       }),
       choice('hang_lantern', {
-        label: 'Hang our spare lamp on the cart and follow its light.',
+        label: 'Hang our lamp on the cart and follow its light.',
         approach: 'explore',
         result: [nar('The light bobs ahead like a polite ghost, and you chase it down the slope.')],
       }),
@@ -560,7 +560,7 @@ const SCENES: QuestScene[] = [
       choice('dry_planks', {
         label: 'Dry the planks with our scarves first.',
         approach: 'wait',
-        result: [nar('Four scarves, a lot of squeaking, and the gantry looks almost respectable.')],
+        result: [nar('Four scarves, a lot of squeaking, and the gantry looks almost dry.')],
         stats: { supplies: -1 },
       }),
       choice('sing_across', {
@@ -659,7 +659,7 @@ const SCENES: QuestScene[] = [
         stats: { morale: 1 },
       }),
       choice('hold_lantern', {
-        label: 'Ask Vey to hold our spare lamp while we climb.',
+        label: 'Ask Vey to hold our lamp while we climb.',
         approach: 'talk',
         result: [nar('Vey holds it, solemn as a statue, and does not charge for the privilege.')],
       }),
@@ -672,7 +672,7 @@ const SCENES: QuestScene[] = [
     chapter: 4,
     primaryAxis: 'openness',
     lines: [
-      nar("Somewhere along the way, the lantern ended up in your pack. Rook says that's how it always goes."),
+      nar("Somewhere along the way, the lantern slipped out of the singing lake and into your pack. Rook says that's how it always goes."),
       nar('Two ways out: the long known road, or a ceiling crack with daylight.', 'daylight'),
     ],
     choices: [
