@@ -76,7 +76,7 @@ const SCENES: QuestScene[] = [
       choice('rook_leads', {
         label: "Rook, you've been down there. You lead.",
         approach: 'talk',
-        result: [say('Rook', 'Finally, someone sensible. Stay close and mind the drip.')],
+        result: [say('Rook', 'Good. Stay close and mind the drip.')],
         tags: [tag('autonomy', -1, 0.4)],
         stats: { morale: 1 },
         flags: ['trusted_rook'],
@@ -469,7 +469,7 @@ const SCENES: QuestScene[] = [
       choice('hold_pass', {
         label: 'We were here first, actually. Step aside, please.',
         approach: 'act',
-        result: [nar('You say it calmly and keep your boots planted. The Dunmarsh captain looks at the lantern and shifts.')],
+        result: [nar('You say it calmly and keep your boots planted. The Dunmarsh captain looks at you, then at the lantern.')],
         tags: [tag('conflict_assertiveness', 1)],
         check: { stat: 'renown', dc: 9, success: 'lantern_s9_gantry', fail: 'lantern_s9b_gantry_slick' },
       }),
@@ -585,7 +585,7 @@ const SCENES: QuestScene[] = [
         requires: { flags: ['trusted_rook'] },
         lines: [
           nar('A winch lifts the last stretch. Its gear is jammed, and a bell hangs beside it.', 'winch'),
-          say('Rook', "I'd say fix it. But you know what I'd say, and you picked me for a reason."),
+          say('Rook', "You trusted me down here. Up here, it's your call."),
         ],
       },
     ],
@@ -632,13 +632,13 @@ const SCENES: QuestScene[] = [
         requires: { flags: ['gave_map'] },
         lines: [
           nar('Vey waits at the last gate, holding a copy of your map like a menu.', 'map'),
-          say('Vey', "Three crews have used it already. You get the friends rate: one ration, no stories."),
+          say('Vey', "Three crews have used it already. You get the friends rate: one ration, no haggling."),
         ],
       },
     ],
     choices: [
       choice('free_exit', {
-        label: 'The exit stays free. The rope goes.',
+        label: "The exit shouldn't cost a thing. Lose the rope.",
         approach: 'act',
         result: [nar('Vey tilts their head, then unhooks the rope and pockets it with a shrug.')],
         tags: [tag('conflict_assertiveness', 1)],
