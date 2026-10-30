@@ -32,6 +32,8 @@ Set in `app_config` (root only; wave116 added them, both default false):
 - `quests_enabled = true` — the entry shows and `record_quest_run` accepts runs (root already passes both switches).
 - `quests_apply_enabled = true` — Apply works. Turn this on later than the first if you want a play-only week.
 
+Done 2026-10-30: OTA `9e44cd32-814a-4bf0-94e7-f92c93523add` live, then both switches set to true (emci asked for everything on at once).
+
 ## Metrics to watch
 
 Completion rate and drop-off scene (only finished runs are stored in `quest_runs`, so these cannot be read from the server today; watch playtest feedback, or add a counter later) · for-fun ratio (`for_fun`) · apply rate (`applied_at is not null`) · undo rate (`undone_at is not null`).
