@@ -1,7 +1,7 @@
 # Quests launch (PHASE-27)
 
-Status 2026-10-29: built, gate run on branch `phase-11c-almanac-content` (local, not pushed, no OTA). emci approves the wording below,
-flips the two switches and publishes the one OTA himself.
+Status 2026-10-29: built, gate run on branch `phase-11c-almanac-content` (local, not pushed, no OTA). emci approved the wording below and the Quests copy
+(Lantern, Masquerade, Last Train: read, no changes, 2026-10-30) and the 📱 rows; he flips the two switches and publishes the one OTA himself.
 
 ## Store wording (emci approves)
 

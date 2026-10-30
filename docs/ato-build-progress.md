@@ -177,6 +177,8 @@ Stage E Polish & release
 
 - 2026-10-29 PHASE-27 pre-flight (emci's answers): PHASE-25 playtest run; Lantern stays 5.5% (spec 5%, accepted) and the Last Train node count stays as is. iPad tab bar + More sheet stay full width (F5 closed, no code change). No 📱 row in `qa-a11y-report.md` confirmed as passed. wave115, 116, 118 NOT applied (117 is), so PHASE-27 stopped before the master merge; nothing else touched.
 
+- 2026-10-30 PHASE-27 emci's answers ("approve all"), same branch, local commit, NOT pushed, no OTA. Copy: Lantern, Masquerade, Last Train and the Almanac ticks approved, no changes. 📱: every row in `qa-a11y-report.md` recorded as passed ("✅ phone"); nothing broke. Done: `ALMANAC_COPY_REVIEWED = true` (`check:copy-flags` now carries each post-A4 flag's value in `AFTER_A4`); Quests have no code flag, so docs only (ATO-BUILD, quests-launch, release-notes, PROJECT_CONTEXT). `load:almanac` NOT re-run: 0 unticked rows, the generated bank is already current. No SQL. Note: the answer named no row individually, so it is recorded as all rows.
+
 - 2026-10-29 PHASE-27 (Regression QA + release prep), branch `phase-11c-almanac-content`, one local commit, NOT pushed, no OTA.
   - Waves: read-only check showed wave115 already live in effect (every object it drops is gone; the docs were wrong), wave116 and wave118 NOT applied. At emci's ask Claude applied 116 then 118 with `supabase db query --linked -f` (each one transaction, no errors) and verified: `quest_runs` exists, `_trait_write` skips `me` in game mode, new Quest functions are not anon-executable. Migration headers and `check:trait-checkpoint` §6 now say APPLIED.
   - R26: `git rev-list HEAD..origin/master` = 0 after fetch, so nothing to merge.

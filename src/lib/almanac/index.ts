@@ -39,13 +39,13 @@ export { ALMANAC_SEEN_CAP, ALMANAC_SEEN_KEY } from './seen-store';
 export { ALMANAC_TODAY_KEY, cacheKey } from './cache';
 
 /**
- * False until emci has ticked the first cards in docs/almanac-review.md (⚑ almanac copy).
- * Only ticked rows reach the generated bank, so with nothing ticked the bank is empty.
+ * True since 2026-10-30: emci approved the ticked cards in docs/almanac-review.md (⚑ almanac copy).
+ * Only ticked rows reach the generated bank.
  */
-export const ALMANAC_COPY_REVIEWED = false;
+export const ALMANAC_COPY_REVIEWED = true;
 /** Changes whenever a shipped card changes (`npm run load:almanac` writes it). 0 = nothing shipped. */
 export const ALMANAC_BANK_VERSION = GENERATED_BANK_VERSION;
-/** The ticked cards, from `bank.generated.ts`. Empty until emci ticks. */
+/** The ticked cards, from `bank.generated.ts`. */
 export const ALMANAC_BANK: readonly AlmanacCard[] = GENERATED_CARDS;
 
 export interface TodayOptions {

@@ -11,7 +11,7 @@
  *   every season and month has a card, every micro-event has a card, 15+ tries visible per band,
  *   32 archetype names);
  * - each rule has a pass/fail pair, so a loosened rule fails here.
- * Nothing is ticked yet, so the shipped bank must be empty (ALMANAC_COPY_REVIEWED = false).
+ * With nothing ticked the shipped bank must be empty and the flag false; with rows ticked the bank is the ticked rows.
  */
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';

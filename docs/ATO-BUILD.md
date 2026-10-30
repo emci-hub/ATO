@@ -49,7 +49,7 @@ Stage C Gamify screens
 Stage C2 Almanac
 - [ ] PHASE-11a Almanac engine core
 - [ ] PHASE-11b Calendar, locale, ramp, arcs
-- [x] PHASE-11c Almanac content pipeline + MVP bank  ⚑ copy OK (built; emci's ticks still to come)
+- [x] PHASE-11c Almanac content pipeline + MVP bank  ⚑ copy OK (built; emci approved and ticked 2026-10-28, flag true 2026-10-30)
 - [x] PHASE-11d Pick 368 + community counter  ⚑ wave117 (built; emci applies wave117)
 - [x] PHASE-11e Almanac surfaces: Home, Insights, You
 - [x] PHASE-11f Seasonal settings + morning push copy
@@ -62,14 +62,14 @@ Stage D Quests
 - [ ] PHASE-15 Art 1: style lock + Lantern set (PixelLab)
 - [ ] PHASE-16 Quests UI v3
 - [ ] PHASE-17 Server, Apply, Undo, flags  ⚑ wave116
-- [ ] PHASE-18 Style guide + The Drowned Lantern  ⚑ copy OK
-- [x] PHASE-19 The Masquerade  ⚑ copy OK (built; emci's copy read still to come)
-- [ ] PHASE-20 Last Train Home  ⚑ copy OK
+- [ ] PHASE-18 Style guide + The Drowned Lantern  ⚑ copy OK (emci approved 2026-10-30, no changes)
+- [x] PHASE-19 The Masquerade  ⚑ copy OK (built; emci approved the Quests copy 2026-10-30, no changes)
+- [ ] PHASE-20 Last Train Home  ⚑ copy OK (emci approved 2026-10-30, no changes)
 - [ ] PHASE-21 Art 2: Masquerade + City + shared VFX (PixelLab)  ⚑ art OK
 - [x] PHASE-22 Atlas build + art integration
 - [x] PHASE-23 Quests entry points + tutorial + You
 Stage E Polish & release
-- [ ] PHASE-24 Per-mode polish (G5) — code built 2026-10-29, checks green; open: 5-mode screenshots, Reduce Motion recording, wiring `tracks` into a sender share path
+- [ ] PHASE-24 Per-mode polish (G5) — code built 2026-10-29, checks green; open: 5-mode screenshots, wiring `tracks` into a sender share path
 - [ ] PHASE-25 Quests QA + playtest  ⚑ playtest
 - [ ] PHASE-26 Whole-app a11y + states
 - [ ] PHASE-27 Regression QA + release  ⚑ wording, flags, OTA

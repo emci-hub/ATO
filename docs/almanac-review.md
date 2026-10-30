@@ -1,6 +1,6 @@
 # Almanac review (PHASE-11c)
 
-Tick `[x]` the cards you approve, then run `npm run load:almanac`. Rows without an id get one from `npm run load:almanac -- --assign`. Every live row is ticked; emci approved the copy on 2026-10-28 with no row changes, and `npm run load:almanac` has run. `ALMANAC_COPY_REVIEWED` stays `false` until it is flipped on purpose. Sections: A base Picks (304), B events (159), C arcs (72), D micro-events (20), E try-today (160), F reflect (60), G recaps (40), H year archetype names (32). `[r]` retires a row and keeps its id.
+Tick `[x]` the cards you approve, then run `npm run load:almanac`. Rows without an id get one from `npm run load:almanac -- --assign`. Every live row is ticked; emci approved the copy on 2026-10-28 with no row changes, and `npm run load:almanac` has run. `ALMANAC_COPY_REVIEWED` was flipped to `true` on 2026-10-30 (emci: approve all, no changes; no unticked rows remain, so `load:almanac` was not re-run). Sections: A base Picks (304), B events (159), C arcs (72), D micro-events (20), E try-today (160), F reflect (60), G recaps (40), H year archetype names (32). `[r]` retires a row and keeps its id.
 
 ## A. Base Picks (304 = 19 per trait; PHASE-11d appends them to the 64 shipped, taking the bank to 368)
 

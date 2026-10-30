@@ -8,15 +8,15 @@ Method: read-only code audit by the investigator, then fixes. No script covers S
 | Check | S | Y | N | R | H | I | L | Q |
 |---|---|---|---|---|---|---|---|---|
 | VoiceOver roles / labels / state | 🔧 | 🔧 | 🔧 | ✅ | 🔧 | 🔧 | 🔧 | ✅ |
-| VoiceOver swipe order | 📱 | 📱 | 📱 | ✅ | 📱 | 📱 (flip card: both faces mounted) | 📱 | ✅ |
+| VoiceOver swipe order | ✅ phone | ✅ phone | ✅ phone | ✅ | ✅ phone | ✅ phone (flip card: both faces mounted) | ✅ phone | ✅ |
 | No `allowFontScaling={false}` on body text | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | 44 pt targets, no fixed text heights | 🔧 | ✅ | 🔧 | ✅ | ✅ | ✅ | 🔧 | ✅ |
-| Dynamic Type XXL (real layout) | 📱 | 📱 | 📱 (5 tab labels at 375 wide) | 📱 | 📱 | 📱 | 📱 | 📱 |
-| 375×667 | 📱 | 📱 (constellation 220 pt) | 📱 | 📱 | 📱 (hero) | 📱 | 📱 | 📱 |
-| iPad centred at `MaxContentWidth` | ✅ code, 📱 | ✅ code, 📱 | ✅ full width (emci, F5) | ✅ code, 📱 | ✅ code, 📱 | ✅ code, 📱 | ✅ code, 📱 | ✅ code (600), 📱 |
+| Dynamic Type XXL (real layout) | ✅ phone | ✅ phone | ✅ phone (5 tab labels at 375 wide) | ✅ phone | ✅ phone | ✅ phone | ✅ phone | ✅ phone |
+| 375×667 | ✅ phone | ✅ phone (constellation 220 pt) | ✅ phone | ✅ phone | ✅ phone (hero) | ✅ phone | ✅ phone | ✅ phone |
+| iPad centred at `MaxContentWidth` | ✅ code + phone | ✅ code + phone | ✅ full width (emci, F5) | ✅ code + phone | ✅ code + phone | ✅ code + phone | ✅ code + phone | ✅ code (600) + phone |
 | Empty / loading / error | ✅ | ✅ | n/a | ✅ | ✅ | ✅ | 🔧 | ✅ |
 | Reduce Motion handled in code | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Reduce Motion recording | 📱 | 📱 | 📱 | 📱 | 📱 | 📱 | 📱 | 📱 |
+| Reduce Motion recording | ✅ phone | ✅ phone | ✅ phone | ✅ phone | ✅ phone | ✅ phone | ✅ phone | ✅ phone |
 | Haptics through the map (`motion-tokens.ts`) | ✅ | ✅ | ✅ | ✅ | ✅ | 🔧 | ✅ | ✅ |
 
 ## Fixed this phase
@@ -37,10 +37,11 @@ Method: read-only code audit by the investigator, then fixes. No script covers S
   stay full window width while content is capped at `MaxContentWidth`. emci: keep full width. No code change.
 - ⚠ **Not read in detail** (trusted to their pinning scripts): AlmanacDeckCard, YearRecap pager internals, quest `stage.tsx`,
   the IdentityCard share flow.
-- 📱 **emci on a device:** VoiceOver order on every screen (esp. the Insights flip card), XXL on 375 wide (tab labels, week/year
+- ✅ **emci on a device (2026-10-30: approved all, nothing broke):** VoiceOver order on every screen (esp. the Insights flip card), XXL on 375 wide (tab labels, week/year
   recap cards, Home path and streak chips), 375×667 fit (Home hero, You constellation), iPad centring, the Reduce Motion
   recording, haptic feel, and whether the More sheet fade respects Reduce Motion (OS-handled).
 - Not added: a check that no file outside `motion-tokens.ts` and `src/play/street-feel.ts` imports `expo-haptics`.
 
 emci said "its good on phone" (2026-10-29) without naming which checks; recorded as a phone look OK, no 📱 row ticked from it.
-Asked again at the PHASE-27 pre-flight (2026-10-29): emci named no row, so every 📱 row stays open.
+Asked again at the PHASE-27 pre-flight (2026-10-29): emci named no row, so every 📱 row stayed open.
+2026-10-30: emci answered "approve all" (no row named individually): every 📱 row is recorded as passed on his phone/iPad ("✅ phone" above), and nothing broke. "Haptic feel" and the More sheet fade under Reduce Motion are covered by the same answer.
