@@ -195,7 +195,7 @@ function walk(dir: string): string[] {
 // --- 6. D6: a scenario pick never writes the me column (wave118) ---------------------------
 {
   const sql = read('supabase/migrations/wave118_game_pick_no_me.sql');
-  assert.match(sql, /^-- NOT APPLIED/m, 'wave118 stays unapplied until emci applies it');
+  assert.match(sql, /^-- APPLIED 2026-10-29/m, 'wave118 header says it is applied (emci, 2026-10-29)');
   const at = sql.indexOf('create or replace function public._trait_write(');
   assert.ok(at >= 0, '_trait_write restated');
   const fn = sql.slice(at, sql.indexOf('$$;', sql.indexOf('as $$', at)));

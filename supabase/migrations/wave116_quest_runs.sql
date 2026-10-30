@@ -1,5 +1,5 @@
 -- wave116_quest_runs.sql · ATO-BUILD PHASE-17 (Quests: server, Apply, Undo, flags), 2026-10-28.
--- NOT APPLIED: emci applies it in Supabase (⚑ apply wave116).
+-- APPLIED 2026-10-29 (verified read-only).
 --
 -- What it adds:
 --   1. app_config: quests_enabled, quests_apply_enabled (both default false) and

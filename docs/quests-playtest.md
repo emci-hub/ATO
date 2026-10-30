@@ -61,5 +61,6 @@ understand it was optional.
 
 ## 3. Accept status
 
-All rows are ✅ or 📱 (emci looks on a device) except two ⚠ that need an explicit emci decision: Lantern scoring at 5.5 % vs the 5 % spec,
-and the T node count. Neither is silently deferred.
+All rows are ✅ or 📱 (emci looks on a device). The two ⚠ rows are decided (emci, 2026-10-29, after running the playtest):
+Lantern scoring stays at 5.5 % (accepted over the 5 % spec, inside the 12 % cap) and the Last Train node count stays as is
+(no rain cut). The tester log above was not filled in this doc.

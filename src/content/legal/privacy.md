@@ -23,6 +23,7 @@ ATO is for reflection and fun. It is not therapy, counselling or medical advice.
 - Your saved profiles and history, so you can see how your answers changed
 - Your Circle: friend requests, who you are friends with, who you blocked, the reports you file, and your per-friend switches for visits and compare (see "Circle" below)
 - Your Divecore game save (your pet, its rooms, items and progress), stored with your account so it survives a new phone. Kept if you reset your profile; deleted when you delete your account
+- Your Quests: each story you finish is saved with your account (which story, how it ended, the numbers it tracked, your choices along the way, and whether you used the For fun mode). If you choose Apply, a small hint from the story is added to your profile, and Undo takes it back for 24 hours after saving. Starting fresh undoes any applied hints; resetting your profile or deleting your account erases the saved stories
 - Anonymous daily counts of Divecore actions (for example, how many times the Hideout was opened today), with no account or device attached, so we can see which parts of the game get used
 - An AI usage log: which AI feature was used on which day and how many times, which library cards you were shown, and your ATO token activity. It does not contain the text of any request or reply
 - Invite links: if you joined through a friend's invite link, we keep who invited you, only to prevent abuse. It is never shown publicly
@@ -100,7 +101,7 @@ ATO is for people 18 and older. Marking yourself as "going" to an 18+ night also
 - **Notifications:** ATO asks once, after your first insight, and you can change it in your phone's settings or on the You tab at any time.
 - **Story library:** Legends cards and category deep dives are stored copy. The You tab no longer sends them to a model.
 - **See or correct your data:** email us (below) to ask what we hold about you or to correct it. We answer within 30 days.
-- **Delete your account:** always available in-app, at the bottom of the You tab. It deletes your account and the data stored under it: profile, answers, Checks, saved profiles, Circle links, requests and switches, Divecore save, AI usage log and token history. It revokes your Sign in with Apple token. This is permanent and cannot be undone. Two things are kept, each for 2 years:
+- **Delete your account:** always available in-app, at the bottom of the You tab. It deletes your account and the data stored under it: profile, answers, Checks, saved profiles, Quests, Circle links, requests and switches, Divecore save, AI usage log and token history. It revokes your Sign in with Apple token. This is permanent and cannot be undone. Two things are kept, each for 2 years:
   - a short deletion record (an ID, whether an Apple identity existed, and the result of the Apple revoke; no profile content), so we can prove the deletion happened;
   - reports you filed or that were filed about you, without your account ID (the reported @handle and reason stay, see above).
   Cards in the shared story library stay in the library with no link to you.

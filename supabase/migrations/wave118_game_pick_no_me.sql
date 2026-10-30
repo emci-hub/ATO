@@ -1,5 +1,5 @@
 -- wave118_game_pick_no_me.sql · Quests own-number plan, D6 (emci ok 2026-10-29).
--- NOT APPLIED: emci applies it in Supabase. It does not depend on wave115/116 (they never touch _trait_write).
+-- APPLIED 2026-10-29 (verified read-only). It does not depend on wave115/116 (they never touch _trait_write).
 --
 -- What it changes: a scenario pick (record_game_pick -> _trait_write mode 'game') no longer writes the
 -- original me.<axis> column (any of the 16 axes), me.trait_sources[axis] or me.trait_touched_at.

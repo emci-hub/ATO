@@ -13,7 +13,7 @@ Method: read-only code audit by the investigator, then fixes. No script covers S
 | 44 pt targets, no fixed text heights | 🔧 | ✅ | 🔧 | ✅ | ✅ | ✅ | 🔧 | ✅ |
 | Dynamic Type XXL (real layout) | 📱 | 📱 | 📱 (5 tab labels at 375 wide) | 📱 | 📱 | 📱 | 📱 | 📱 |
 | 375×667 | 📱 | 📱 (constellation 220 pt) | 📱 | 📱 | 📱 (hero) | 📱 | 📱 | 📱 |
-| iPad centred at `MaxContentWidth` | ✅ code, 📱 | ✅ code, 📱 | ⚠ F5 | ✅ code, 📱 | ✅ code, 📱 | ✅ code, 📱 | ✅ code, 📱 | ✅ code (600), 📱 |
+| iPad centred at `MaxContentWidth` | ✅ code, 📱 | ✅ code, 📱 | ✅ full width (emci, F5) | ✅ code, 📱 | ✅ code, 📱 | ✅ code, 📱 | ✅ code, 📱 | ✅ code (600), 📱 |
 | Empty / loading / error | ✅ | ✅ | n/a | ✅ | ✅ | ✅ | 🔧 | ✅ |
 | Reduce Motion handled in code | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | Reduce Motion recording | 📱 | 📱 | 📱 | 📱 | 📱 | 📱 | 📱 | 📱 |
@@ -33,8 +33,8 @@ Method: read-only code audit by the investigator, then fixes. No script covers S
 
 ## Open
 
-- ⚠ **F5 tab bar on iPad.** The bar (`app-tabs.tsx:286-299`) and the More sheet (`nav-more-sheet.tsx` `sheet`) are full window width
-  while content is capped at `MaxContentWidth`. A full-width bottom bar may be intended; left as is. emci: keep, or cap and centre?
+- ✅ **F5 tab bar on iPad (decided 2026-10-29).** The bar (`app-tabs.tsx:286-299`) and the More sheet (`nav-more-sheet.tsx` `sheet`)
+  stay full window width while content is capped at `MaxContentWidth`. emci: keep full width. No code change.
 - ⚠ **Not read in detail** (trusted to their pinning scripts): AlmanacDeckCard, YearRecap pager internals, quest `stage.tsx`,
   the IdentityCard share flow.
 - 📱 **emci on a device:** VoiceOver order on every screen (esp. the Insights flip card), XXL on 375 wide (tab labels, week/year
@@ -43,3 +43,4 @@ Method: read-only code audit by the investigator, then fixes. No script covers S
 - Not added: a check that no file outside `motion-tokens.ts` and `src/play/street-feel.ts` imports `expo-haptics`.
 
 emci said "its good on phone" (2026-10-29) without naming which checks; recorded as a phone look OK, no 📱 row ticked from it.
+Asked again at the PHASE-27 pre-flight (2026-10-29): emci named no row, so every 📱 row stays open.

@@ -44,9 +44,9 @@ Stage D Quests
 - [x] PHASE-23 Quests entry points + tutorial + You
 Stage E Polish & release
 - [x] PHASE-24 Per-mode polish (G5)  (built; open: holo-card/hall-rings frames, 5-mode screenshots, Reduce Motion recording, SharePoster `tracks` wiring)
-- [ ] PHASE-25 Quests QA + playtest  ⚑ playtest  (QA done 2026-10-29, see docs/quests-playtest.md; open: emci's playtest, scoring 5% vs 12% decision, T node count on device)
-- [ ] PHASE-26 Whole-app a11y + states  (offline half done 2026-10-29, see docs/qa-a11y-report.md; open: 📱 rows, tab bar on iPad call)
-- [ ] PHASE-27 Regression QA + release  ⚑ wording, flags, OTA
+- [x] PHASE-25 Quests QA + playtest  ⚑ playtest  (QA done 2026-10-29; emci ran the playtest 2026-10-29 and kept Lantern at 5.5% and the Last Train node count as is)
+- [ ] PHASE-26 Whole-app a11y + states  (offline half done 2026-10-29, see docs/qa-a11y-report.md; iPad tab bar: emci keeps full width; open: 📱 rows, none confirmed yet)
+- [x] PHASE-27 Regression QA + release  ⚑ wording, flags, OTA  (prep done 2026-10-29, gate green; waves 115-118 live; open: perf/bundle size, 📱 rows, emci's wording + OTA)
 ```
 
 ## Log
@@ -175,4 +175,14 @@ Stage E Polish & release
 
 - 2026-10-29 PHASE-22 (Atlas build + art integration), same branch, committed locally, NOT pushed, no OTA. `npm run build:quest-atlas` (pure JS, scripts/quest-png.ts + node:zlib, no sharp/pngjs, R24) packs art-src/quests into assets/quests/{lantern,masquerade,city,shared}.png + .json (8 files, 1.07 MB, each <= 2048x2048; x2 nearest, 2 px edge-extruded padding R20, NPC/hero clips trimmed to one box per clip, a baked darkened+blurred copy per plate at 1x) and generates `src/lib/quests/art-keys.ts` (keys + frame table). `check:quest-atlas` (10 checks): file count, sizes, 4 MB, padding + non-overlap, stale art-keys, every location/ending/prop/cast/emblem the content names. `atlas-sprite.tsx` (expo-image in an overflow-hidden View, frame from the stage clock on the UI thread) and a rewritten `stage.tsx` (far / glow / mid / ground / ambient clips / props / NPCs / hero / dust motes; lantern glow pulse 4 levels at 250 ms, city neon buzz with 80 ms off-frame, lake glints, ambient slowed not off under Reduce Motion). Known gaps: the cast id `elder` (Lantern scene 1) has no sprite, so the stage skips it; two assets stay below pass in params.json (prop-raft 20, ground-1-gate 19); the baked blur frames are built but the glass backdrop does not use them yet; the chapter wipe is still chapter-card code; ambient/prop positions are from the contact sheets, not seen on a phone. Not seen on a device.
 
-Blocked on: ⚑ copy OK (emci reads the Lantern, Masquerade and Last Train Home copy) and ⚑ apply wave116 (emci, Supabase SQL editor). 11h still needs emci's look at the samples and a phone check.
+- 2026-10-29 PHASE-27 pre-flight (emci's answers): PHASE-25 playtest run; Lantern stays 5.5% (spec 5%, accepted) and the Last Train node count stays as is. iPad tab bar + More sheet stay full width (F5 closed, no code change). No 📱 row in `qa-a11y-report.md` confirmed as passed. wave115, 116, 118 NOT applied (117 is), so PHASE-27 stopped before the master merge; nothing else touched.
+
+- 2026-10-29 PHASE-27 (Regression QA + release prep), branch `phase-11c-almanac-content`, one local commit, NOT pushed, no OTA.
+  - Waves: read-only check showed wave115 already live in effect (every object it drops is gone; the docs were wrong), wave116 and wave118 NOT applied. At emci's ask Claude applied 116 then 118 with `supabase db query --linked -f` (each one transaction, no errors) and verified: `quest_runs` exists, `_trait_write` skips `me` in game mode, new Quest functions are not anon-executable. Migration headers and `check:trait-checkpoint` §6 now say APPLIED.
+  - R26: `git rev-list HEAD..origin/master` = 0 after fetch, so nothing to merge.
+  - Privacy diff (R12): `privacy.md` + `landing/privacy.html` (kept in sync, `check:floor`): new "Your Quests" bullet (Undo 24 h) and "Quests" in the delete list = **mandatory**; `app-privacy-labels.md`: `quest_runs` named in Other User Content = **recommended safeguard** (Apple types unchanged, plist unchanged); `ai_provider_log` removed (wave115 dropped it) = **mandatory** accuracy; "Last updated" date left at October 26, 2026 for emci = **optional**. Almanac: no change.
+  - New docs: `docs/quests-launch.md`, `docs/release-notes.md`. Reviewer FAIL once (landing/privacy.html out of sync; Undo's 24 h missing), fixed once.
+  - Quests assets: 8 files, 1.16 MB, inside §1.9 (12 files / 4 MB). No dependency or native change vs master (package.json scripts only).
+  - NOT verified: per-screen perf and OTA bundle size vs the last OTA (needs a device / `expo export`); the Pick cutover dry-run on real old/new bundles; every 📱 row of `qa-a11y-report.md` (emci's reply "is good" did not name rows, so none counted as passed); nothing played on a phone.
+
+Blocked on: ⚑ emci approves the Store, privacy and legal wording (`docs/quests-launch.md`, `privacy.md`, set the "Last updated" date), ⚑ confirms `ALMANAC_PICK_CUTOVER` (placeholder 2027-02-01) against the OTA date, ⚑ copy OK (Lantern, Masquerade, Last Train Home; Almanac ticks), ⚑ the 📱 rows, then ⚑ sets `quests_enabled` / `quests_apply_enabled` and publishes the one OTA. 11h still needs emci's look at the samples and a phone check.
