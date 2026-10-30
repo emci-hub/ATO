@@ -11,6 +11,7 @@ import {
   isAppearanceUnlocked,
   resolveAllowedAppearance,
 } from '../src/lib/subscription';
+import { accentFromShowUp } from '../src/lib/color';
 import { contrastRatio, meetsAa } from '../src/lib/theme/contrast';
 
 let passed = 0;
@@ -40,7 +41,84 @@ for (const id of APPEARANCE_IDS) {
     assert.ok(meetsAa(fg, bg), `${id} ${label} ${fg} on ${bg} = ${ratio?.toFixed(2)}`);
   }
   ok(`${id}: body, surface, secondary, and filled-accent pairs meet WCAG AA 4.5:1`);
+
+  // PHASE-24: the flavour tokens draw frames, glow and bars in these colours, so they are
+  // graphics (WCAG 1.4.11, 3:1) against the page, not text.
+  const graphics: [string, string][] = [];
+  if (t.hudFrames === 'ornament') graphics.push(['ornament frame (accentSecondary)', t.accentSecondary]);
+  if (t.hudFrames === 'bracket') graphics.push(['bracket frame (accent)', t.accent], ['bracket frame (accentTertiary)', t.accentTertiary]);
+  if (t.glowPulse) graphics.push(['glow (accent)', t.accent]);
+  if (t.hpMpBars) graphics.push(['bar fill (accentTertiary)', t.accentTertiary], ['bar fill (accentSecondary)', t.accentSecondary]);
+  for (const [label, color] of graphics) {
+    const ratio = contrastRatio(color, t.background);
+    assert.ok(ratio != null && ratio >= 3, `${id} ${label} ${color} on ${t.background} = ${ratio?.toFixed(2)}`);
+  }
+  // Bars sit on backgroundSelected inside a card: the fill must still separate from its track.
+  if (t.hpMpBars) {
+    for (const fill of [t.accentTertiary, t.accentSecondary]) {
+      const ratio = contrastRatio(fill, t.backgroundSelected);
+      assert.ok(ratio != null && ratio >= 3, `${id} bar fill ${fill} on track ${t.backgroundSelected} = ${ratio?.toFixed(2)}`);
+    }
+  }
+  ok(`${id}: frame, glow and bar colours meet 3:1 graphics contrast`);
 }
+
+// --- PHASE-24: flavour tokens are wired, each mode gets its look, Reduce Motion holds still ---
+assert.equal(APPEARANCES.quest.hpMpBars, true);
+assert.equal(APPEARANCES.quest.hudFrames, 'ornament');
+assert.equal(APPEARANCES.neon.glowPulse, true);
+assert.equal(APPEARANCES.anime.glowPulse, true);
+assert.equal(APPEARANCES.anime.hudFrames, 'bracket');
+for (const id of ['soft', 'zen'] as const) {
+  assert.equal(APPEARANCES[id].glowPulse, false);
+  assert.equal(APPEARANCES[id].hpMpBars, false);
+  assert.equal(APPEARANCES[id].hudFrames, 'none');
+}
+const glowSrc = fs.readFileSync(path.resolve(__dirname, '../src/components/glow-pulse.tsx'), 'utf8');
+assert.match(glowSrc, /theme\.glowPulse/);
+assert.match(glowSrc, /useMotionReduced\(\)/);
+assert.match(glowSrc, /useMotionActive\(\)/);
+assert.match(glowSrc, /const run = theme\.glowPulse && active;/);
+assert.match(glowSrc, /const amp = rm \? 0\.5 : 1;/);
+assert.match(glowSrc, /const cycle = rm \? CYCLE_MS \* 4 : CYCLE_MS;/);
+const heroSrc = fs.readFileSync(path.resolve(__dirname, '../src/components/home-hero.tsx'), 'utf8');
+assert.match(heroSrc, /<GlowPulse/);
+assert.match(heroSrc, /<QuestSkyBars/);
+assert.match(fs.readFileSync(path.resolve(__dirname, '../src/app/(tabs)/insights.tsx'), 'utf8'), /<GlowPulse>/);
+assert.match(fs.readFileSync(path.resolve(__dirname, '../src/components/quest-growth-bars.tsx'), 'utf8'), /if \(!theme\.hpMpBars/);
+ok('glow loop runs only for glowPulse modes, stops under Reduce Motion / unfocused; bars only for hpMpBars; both sit on Home, glow on Insights');
+
+// --- PHASE-24: the share poster draws the sender's still constellation, on its fixed palette ---
+const posterSrc = fs.readFileSync(path.resolve(__dirname, '../src/components/share-poster.tsx'), 'utf8');
+assert.match(posterSrc, /variant="poster"/);
+assert.match(posterSrc, /ring=\{FIELD_RING\}/);
+assert.doesNotMatch(posterSrc, /useTheme|useAppearance/, 'the poster stays off the app theme');
+assert.match(fs.readFileSync(path.resolve(__dirname, '../src/app/[handle].tsx'), 'utf8'), /<SharePoster me=\{profile\} \/>/, 'the public page passes no tracks');
+for (const [label, fg] of [
+  ['name', '#F5F1E9'],
+  ['handle', '#A6A3AF'],
+  ['caption', '#C9C5BC'],
+] as const) {
+  const ratio = contrastRatio(fg, '#1A1B20');
+  assert.ok(ratio != null && ratio >= 4.5, `poster ${label} ${fg} on #1A1B20 = ${ratio?.toFixed(2)}`);
+}
+// The sender's share image (ShareCard) draws the same still sky from the sender's own tracks.
+const cardSrc = fs.readFileSync(path.resolve(__dirname, '../src/components/share-card.tsx'), 'utf8');
+assert.match(cardSrc, /variant="poster"/);
+assert.match(cardSrc, /accent=\{accent\.dark\}/);
+assert.match(fs.readFileSync(path.resolve(__dirname, '../src/components/identity-card.tsx'), 'utf8'), /shape: traitShapePoints\(me, tracks\), tracks \}/);
+// The ring is decorative (the stars and line carry the meaning), so it has no contrast floor;
+// the star colour (the sender's accent.light) is what must read on the field.
+// The poster draws the stars in accent.dark (the brighter pair); sweep every hue show_up can give.
+assert.match(posterSrc, /accent=\{accent\.dark\}/);
+const SKY_STAR_MIN = 3;
+for (let i = 0; i < 4000; i += 1) {
+  const star = accentFromShowUp(`phrase ${i}`).dark;
+  const ratio = contrastRatio(star, '#1A1B20');
+  assert.ok(ratio != null && ratio >= SKY_STAR_MIN, `poster star ${star} (phrase ${i}) = ${ratio?.toFixed(2)}`);
+}
+assert.match(posterSrc, /ring is decorative|FIELD_RING = /);
+ok('poster: constellation still, public page passes no tracks, text clears AA and sample star colours clear 3:1 on the field');
 
 const zen = APPEARANCES.zen;
 const zenSecondaryOnSurface = contrastRatio(zen.textSecondary, zen.backgroundElement);

@@ -13,6 +13,8 @@ import {
   LegendStoryCard,
   legendTitle,
 } from '@/components/legend-figure-card';
+import { HallRing, OverallProgress } from '@/components/hall-rings';
+import { HoloCard } from '@/components/holo-card';
 import { NAV_PIXEL_HEADER_INSET } from '@/components/nav-pixel';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -57,6 +59,7 @@ import {
   settledFingerprint,
 } from '@/lib/legend-figures/pick';
 import { LEGEND_ROSTER, legendById, legendsInHall } from '@/lib/legend-figures/roster';
+import { HOLO_GUARD_MS, frameState, matchPercent, matchedTracks } from '@/lib/legend-figures/view-math';
 import {
   didYouKnowFact,
   fallbackLegendStory,
@@ -142,6 +145,8 @@ export default function LegendsScreen() {
   const { me, refresh: refreshMe } = useMeContext();
   const [tracks, setTracks] = useState<readonly TraitTrack[]>([]);
   const [ready, setReady] = useState(false);
+  /** The last load failed (offline): shown only while nothing has loaded yet. */
+  const [loadFailed, setLoadFailed] = useState(false);
   const [today, setToday] = useState<string | null>(null);
   const [local, setLocal] = useState<LegendLocalState | null>(null);
   const [hall, setHall] = useState<LegendHall | null>(null);
@@ -160,6 +165,10 @@ export default function LegendsScreen() {
   /** The newest state in memory, newer than storage while a write is pending. */
   const localRef = useRef<LegendLocalState | null>(null);
   const hallRef = useRef<LegendHall | null>(null);
+  /** The legend whose holo reveal is still turning: the frames stay locked until it ends (R07). */
+  const [freshId, setFreshId] = useState<string | null>(null);
+  const holoRef = useRef(false);
+  holoRef.current = freshId != null;
 
   const dataEpoch = useAccountDataEpoch();
   const userId = me?.id ?? null;
@@ -204,10 +213,12 @@ export default function LegendsScreen() {
       }
       setTracks(boot.tracks);
       setToday(day);
+      setLoadFailed(false);
       // A story being written owns the state until it is saved.
       if (!meetingRef.current) persist(next);
     } catch (err) {
       console.log('[legends] load error:', err);
+      if (request === requestRef.current) setLoadFailed(true);
     } finally {
       if (request === requestRef.current) setReady(true);
     }
@@ -279,7 +290,7 @@ export default function LegendsScreen() {
   const reveal = useCallback(
     async (key: string) => {
       const start = localRef.current;
-      if (!start || !hall || !today || busyKey || meetingRef.current) return;
+      if (!start || !hall || !today || busyKey || holoRef.current || meetingRef.current) return;
       const startDay = start.day?.ymd === today ? start.day : null;
       const revealedBefore = startDay?.revealed.length ?? 0;
       const bonus = revealedBefore >= 1 && startDay != null && hasNewSettledLean(startDay.fingerprint, settledFingerprint(tracks));
@@ -368,6 +379,7 @@ export default function LegendsScreen() {
         setRevealNotes((prev) => ({ ...prev, [legend.id]: notes }));
         setOpenId(legend.id);
         setOpenChapter(chapter);
+        setFreshId(legend.id);
         void saveServerEntry(entry);
         void loadFriends(legend.id);
       } finally {
@@ -378,6 +390,17 @@ export default function LegendsScreen() {
     },
     [hall, today, busyKey, tracks, consentGranted, me, persist, loadFriends, refreshMe],
   );
+
+  // The holo lock ends when the card finishes turning, when another card is
+  // opened or the hall changes, and never later than HOLO_GUARD_MS.
+  useEffect(() => {
+    if (freshId && openId !== freshId) setFreshId(null);
+  }, [freshId, openId]);
+  useEffect(() => {
+    if (!freshId) return;
+    const timer = setTimeout(() => setFreshId(null), HOLO_GUARD_MS);
+    return () => clearTimeout(timer);
+  }, [freshId]);
 
   const openLegend = useCallback(
     (legendId: string) => {
@@ -407,30 +430,46 @@ export default function LegendsScreen() {
 
   const hallMet = hall ? legendsInHall(hall).filter((legend) => metIds.has(legend.id)) : [];
 
+  const match = useMemo(
+    () =>
+      openLegendDef
+        ? { percent: matchPercent(openLegendDef, tracks), tracks: matchedTracks(openLegendDef, tracks) }
+        : null,
+    [openLegendDef, tracks],
+  );
+
   const card =
     openEntry && openLegendDef ? (
       <>
-        <LegendStoryCard
-          legend={openLegendDef}
-          story={openEntry.story}
-          friends={friends[openLegendDef.id] ?? []}
-          aiOff={false}
-          onShare={() => setShareOpen(true)}
-          notes={revealNotes[openLegendDef.id] ?? []}
-          matchedOn={matchedOnLine(openLegendDef, tracks)}
-          didYouKnow={didYouKnowFact(openLegendDef, openEntry.story, local?.userId ?? '')}
-          nextTeaser={nextChapterTeaser(openLegendDef, toldAngles(museum).get(openLegendDef.id))}
-          nextNote={
-            hallComplete(openLegendDef.hall, tracks, metIds)
-              ? 'It can turn up behind this hall’s frames.'
-              : 'Chapters open once you’ve met every legend in this hall.'
-          }
-          chapters={{
-            labels: openEntries.map((row) => chapterLabel(row.chapter)),
-            selected: openEntries.indexOf(openEntry),
-            onSelect: (index) => setOpenChapter(openEntries[index]?.chapter ?? 0),
-          }}
-        />
+        <HoloCard
+          key={`${openLegendDef.id}:${openEntry.chapter}`}
+          fresh={freshId === openLegendDef.id}
+          color={HALL_COLOR[openLegendDef.hall]}
+          matchPercent={match?.percent ?? 0}
+          matchTracks={match?.tracks ?? []}
+          onDone={() => setFreshId(null)}>
+          <LegendStoryCard
+            legend={openLegendDef}
+            story={openEntry.story}
+            friends={friends[openLegendDef.id] ?? []}
+            aiOff={false}
+            onShare={() => setShareOpen(true)}
+            notes={revealNotes[openLegendDef.id] ?? []}
+            matchedOn={matchedOnLine(openLegendDef, tracks)}
+            didYouKnow={didYouKnowFact(openLegendDef, openEntry.story, local?.userId ?? '')}
+            nextTeaser={nextChapterTeaser(openLegendDef, toldAngles(museum).get(openLegendDef.id))}
+            nextNote={
+              hallComplete(openLegendDef.hall, tracks, metIds)
+                ? 'It can turn up behind this hall’s frames.'
+                : 'Chapters open once you’ve met every legend in this hall.'
+            }
+            chapters={{
+              labels: openEntries.map((row) => chapterLabel(row.chapter)),
+              selected: openEntries.indexOf(openEntry),
+              onSelect: (index) => setOpenChapter(openEntries[index]?.chapter ?? 0),
+            }}
+          />
+        </HoloCard>
         <LegendShareSheet
           legend={openLegendDef}
           title={openEntry.story.title ?? null}
@@ -448,7 +487,7 @@ export default function LegendsScreen() {
           contentContainerStyle={styles.scroll}
           contentInsetAdjustmentBehavior="never">
           <View style={styles.titleRow}>
-            <ThemedText type="subtitle" style={styles.flex}>
+            <ThemedText type="subtitle" style={styles.flex} accessibilityRole="header">
               Legends
             </ThemedText>
             <TokenChip />
@@ -461,12 +500,30 @@ export default function LegendsScreen() {
               onPress={() => router.push('/roll')}
               accessibilityRole="button"
               accessibilityLabel="Your reveals"
-              style={({ pressed }) => [styles.link, pressed && styles.pressed]}>
+              style={({ pressed }) => [styles.revealsLink, pressed && styles.pressed]}>
               <ThemedText type="linkPrimary">Your reveals ›</ThemedText>
             </Pressable>
           ) : null}
 
-          {!ready ? null : !unlocked ? (
+          {!ready ? null : loadFailed && today == null ? (
+            <View style={[styles.panel, { backgroundColor: theme.backgroundElement, borderColor: theme.border }]}>
+              <ThemedText type="smallBold">Couldn&apos;t load the museum.</ThemedText>
+              <ThemedText type="small" themeColor="textSecondary">
+                Check your connection and try again.
+              </ThemedText>
+              <Pressable
+                onPress={() => {
+                  if (!userId || !me) return;
+                  setReady(false);
+                  void reload();
+                }}
+                accessibilityRole="button"
+                accessibilityLabel="Try again"
+                style={({ pressed }) => [styles.link, pressed && styles.pressed]}>
+                <ThemedText type="linkPrimary">Try again</ThemedText>
+              </Pressable>
+            </View>
+          ) : !unlocked ? (
             <View style={[styles.panel, { backgroundColor: theme.backgroundElement, borderColor: theme.border }]}>
               <ThemedText type="smallBold">
                 {tracks.length > 0 ? fullProfileLockedLine(fullProfileProgress(tracks)) : FULL_PROFILE_LOCKED_COPY}
@@ -483,14 +540,13 @@ export default function LegendsScreen() {
             </View>
           ) : (
             <>
-              <ThemedText type="small" themeColor="textSecondary">
-                {metIds.size} of {LEGEND_ROSTER.length} legends met
-              </ThemedText>
+              <OverallProgress met={metIds.size} total={LEGEND_ROSTER.length} color={theme.accent} />
               <View style={styles.tiles}>
-                {LEGEND_HALLS.map((h) => (
+                {LEGEND_HALLS.map((h, index) => (
                   <HallTile
                     key={h}
                     hall={h}
+                    index={index}
                     selected={hall === h}
                     met={metIds}
                     disabled={busyKey != null}
@@ -503,7 +559,7 @@ export default function LegendsScreen() {
                 <>
                   <View style={styles.hallHead}>
                     <MaterialCommunityIcons name={HALL_ICON[hall]} size={22} color={HALL_COLOR[hall]} />
-                    <ThemedText type="heading" style={styles.flex}>
+                    <ThemedText type="heading" style={styles.flex} accessibilityRole="header">
                       {HALL_LABEL[hall]}
                     </ThemedText>
                   </View>
@@ -527,7 +583,7 @@ export default function LegendsScreen() {
                                 index={index}
                                 total={frames.length}
                                 chapter={showingChapters}
-                                state={busyKey === key ? 'loading' : canReveal && !busyKey ? 'ready' : 'spent'}
+                                state={frameState({ key, busyKey, canReveal, holoActive: freshId != null })}
                                 onReveal={() => void reveal(key)}
                               />
                             ),
@@ -615,12 +671,15 @@ export default function LegendsScreen() {
 
 function HallTile({
   hall,
+  index,
   selected,
   met,
   disabled,
   onPress,
 }: {
   hall: LegendHall;
+  /** Position in the grid: rings draw 120 ms apart. */
+  index: number;
   selected: boolean;
   met: ReadonlySet<string>;
   /** A story is being written: stay in this hall until it is saved. */
@@ -646,18 +705,13 @@ function HallTile({
         },
         pressed && styles.pressed,
       ]}>
-      <MaterialCommunityIcons name={HALL_ICON[hall]} size={22} color={color} />
-      <ThemedText type="small" style={styles.tileLabel} numberOfLines={2}>
+      <View style={styles.tileTop}>
+        <MaterialCommunityIcons name={HALL_ICON[hall]} size={22} color={color} />
+        <HallRing met={metHere} total={all.length} color={color} index={index} />
+      </View>
+      <ThemedText type="small" numberOfLines={2}>
         {HALL_LABEL[hall]}
       </ThemedText>
-      <View style={[styles.progress, { backgroundColor: theme.backgroundSelected }]}>
-        <View
-          style={[
-            styles.progressFill,
-            { backgroundColor: color, width: `${all.length ? (metHere / all.length) * 100 : 0}%` },
-          ]}
-        />
-      </View>
     </Pressable>
   );
 }
@@ -681,7 +735,8 @@ const styles = StyleSheet.create({
   titleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: Spacing.two },
   heading: { marginTop: Spacing.two },
   panel: { borderWidth: 1, borderRadius: 14, padding: Spacing.three, gap: Spacing.two },
-  link: { paddingVertical: 4 },
+  link: { minHeight: 44, justifyContent: 'center' },
+  revealsLink: { minHeight: 44, justifyContent: 'center', alignSelf: 'flex-start' },
   pressed: { opacity: 0.7 },
   flex: { flex: 1 },
   tiles: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
@@ -694,12 +749,10 @@ const styles = StyleSheet.create({
     gap: 4,
     justifyContent: 'space-between',
   },
-  tileLabel: { lineHeight: 16 },
   hallHead: { flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: Spacing.two },
   frames: { flexDirection: 'row', gap: 8 },
-  progress: { height: 4, borderRadius: 2, overflow: 'hidden' },
-  progressFill: { height: 4, borderRadius: 2 },
+  tileTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   metList: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  metChip: { borderWidth: 1, borderRadius: 10, paddingHorizontal: 10, paddingVertical: 8 },
+  metChip: { borderWidth: 1, borderRadius: 10, paddingHorizontal: 10, paddingVertical: 8, minHeight: 44, justifyContent: 'center' },
   placeholder: { gap: 4, marginTop: Spacing.two },
 });

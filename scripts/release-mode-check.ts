@@ -163,6 +163,8 @@ pin(
   'the play route is not inside the PRE_LAUNCH_DEV guard',
   devGuardAt > 0 && devGuardEnd > devGuardAt && !(playAt > devGuardAt && playAt < devGuardEnd),
 );
+// PHASE-11c: a generated Almanac bank written with `load:almanac -- --all` marks every row reviewed; it must never ship.
+pin('the generated Almanac bank is not a DRAFT MODE file', !src('src/lib/almanac/bank.generated.ts').includes('DRAFT MODE'));
 console.log(`release-mode: ${surfaceChecks} dev-surface gates verified`);
 
 const profile = process.env.EAS_BUILD_PROFILE ?? '';

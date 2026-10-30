@@ -69,7 +69,7 @@ function readRunningUpdate(): RunningUpdateSnapshot {
 }
 
 /**
- * Glanceable "what is this phone running" -- restored on You 2026-09-15
+ * Glanceable "what is this phone running" -- restored 2026-09-15 (now on Settings > About)
  * (emci: build/update info kept live alongside sign out, delete account and
  * AI consent). App version + build, the short OTA id, when it was published
  * (local time), channel/runtime, and a plain "Original build" vs "OTA update"
@@ -84,7 +84,7 @@ export function RunningUpdateLine({ compact = false }: { compact?: boolean }) {
   const { version, build } = useMemo(() => readAppBuild(), []);
   const copyValue = snap.groupId ?? snap.updateId ?? label.line;
   const secret = useRef({ n: 0, at: 0 });
-  // This row renders on You for EVERY account, so the 5-tap shortcut below
+  // This row renders on Settings for EVERY account, so the 5-tap shortcut below
   // has to carry the same gate `/dev-lab` itself does — otherwise any user
   // could open the dev lab. Copy-to-clipboard stays open to all;
   // only the hidden navigation is gated.

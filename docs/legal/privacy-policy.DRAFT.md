@@ -32,6 +32,7 @@ ATO ("the app," "we," "us") is made by AsTrollOGs. This policy explains what we 
 - Referral relationships (who invited you, who you've invited) — used only to prevent abuse, never shown publicly, never shared
 - Email address if you request an invite from the public landing page (ato.emgens.com), stored until the request is reviewed
 - Your Divecore game save (your pet, its rooms, items and progress), stored with your account so it survives a new phone. Kept if you reset your profile; deleted when you delete your account
+- Quests: when you finish a Quest you can choose to Apply a small hint to your profile. We store that hint as its own number, separate from your answers, and keep a short record of the run. You can Undo it within 24 hours, and Start Fresh clears it. The optional "Include Quests" view only changes what you see on your own device: it is off by default, stays on the device, and is never shared, sent to your Circle or used by any AI feature
 - Anonymous daily counts of Divecore actions (for example, how many times the Hideout was opened today), with no account or device attached, so we can see which parts of the game get used
 
 **Device**

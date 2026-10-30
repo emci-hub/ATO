@@ -1,0 +1,21 @@
+# Release notes: the ATO-BUILD release (draft, emci approves wording)
+
+One OTA, no native change. Runtime stays 1.2.0 (no new native deps; OTA only).
+
+## For players (App Store / what's new)
+
+- **Quests.** Three short story games: The Drowned Lantern, The Masquerade, Last Train Home. Play as yourself or just for fun.
+  If you choose, a finished story can add a small hint to your profile. You can Undo it. Not a psychological test.
+- **The Almanac.** A calendar-aware daily Pick, "You're in the N%" after you answer, seasonal touches, and week, month and year recaps with badges.
+- **Home, Insights and Legends feel new.** A constellation on Home, a calmer Insights with event cards, and reveal animations that respect Reduce Motion.
+- **You tab.** "This is you so far" and your reveals live in one place; Explore is folded into You.
+- **Settings.** Everything in one screen, including the tab layout reset.
+- **Accessibility.** Clearer VoiceOver labels on headers and the More sheet, 44 pt tap targets, larger-text fixes.
+
+## For emci (not user-facing)
+
+- Database: waves 115 to 118 are live. Quests and Apply stay OFF until you set `quests_enabled` / `quests_apply_enabled`.
+- Scenario picks no longer write the original trait columns (wave118); they still move the game track.
+- Copy: you approved Lantern, Masquerade, Last Train and the Almanac ticks with no changes (2026-10-30); `ALMANAC_COPY_REVIEWED = true`. Still behind a copy flag: the older `false` flags (`CATEGORY_STATEMENTS`, `PROFILE_CARD`, `LEGEND_FIGURES`, `CIRCLE_COMPARE`).
+- `ALMANAC_PICK_CUTOVER` is 2026-11-01 (emci, 2026-10-30: no other users, so no slow-updater delay). Server side is wave119 (applied 2026-10-30). Publish the OTA on or before that day, or the old phone build and the server disagree until it lands (the 14-day overlap still accepts the old Pick).
+- **Published 2026-10-30 (emci asked in chat):** OTA update group `9e44cd32-814a-4bf0-94e7-f92c93523add`, branch `production`, runtime 1.2.0, built from commit 6b0fd7e0 (gate green). Then `quests_enabled = true` and `quests_apply_enabled = true` set in `app_config` (verified by the update's returned row). The Pick cutover (2026-11-01, wave119) needs nothing further: the phones now carry the 368 formula. Not pushed to git.

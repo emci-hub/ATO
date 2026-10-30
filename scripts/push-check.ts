@@ -17,6 +17,7 @@ import { resolve } from 'node:path';
 import {
   copyHasFakeUrgency,
   eveningPush,
+  morningCopy,
   morningPush,
   pathFromNotificationData,
   PUSH_PATHS,
@@ -98,6 +99,18 @@ assert.equal(morning.body, 'The kettle is already on. Sit with it.');
 assert.equal(copyHasFakeUrgency(morning.body), false);
 assert.equal(copyHasFakeUrgency(morning.title), false);
 ok('morning push is the Read, no urgency');
+
+// PHASE-11f: the morning body is today's Almanac push card, else the base copy.
+assert.equal(morningCopy('  Frost on the windscreen, again.  ', 'Base pick'), 'Frost on the windscreen, again.');
+assert.equal(morningCopy(null, 'Base pick'), 'Base pick', 'seasonal off or no card: base copy');
+assert.equal(morningCopy('   ', 'Base pick'), 'Base pick');
+assert.equal(morningCopy("Don't miss today or you'll fall behind", 'Base pick'), 'Base pick', 'fake urgency is dropped');
+const pushSource = readFileSync(resolve(__dirname, '../src/lib/push.ts'), 'utf8');
+assert.match(pushSource, /almanac\.today\('push'/, 'the morning push draws from almanac.today(push)');
+assert.match(pushSource, /if \(!prefs\.seasonal\) return \(\) => null/, 'seasonal off sends the base copy');
+assert.match(pushSource, /morningCopy\(almanacLine\(ymd\), pick\.prompt\)/);
+assert.doesNotMatch(pushSource, /loadToday\('push'/, 'a week scheduled ahead never marks cards seen');
+ok('morning push: Almanac card when there is one, base copy when seasonal is off or nothing fits');
 
 assert.doesNotMatch(morning.title, /npc|Nudge/i);
 assert.doesNotMatch(morning.body, /Nudge/);

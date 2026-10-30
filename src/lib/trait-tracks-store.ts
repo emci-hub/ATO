@@ -12,7 +12,7 @@ function parseTrack(raw: {
   last_depth_at: unknown;
 }): TraitTrack | null {
   if (!(TRAIT_AXES as readonly string[]).includes(raw.axis)) return null;
-  if (raw.track !== 'report' && raw.track !== 'game') return null;
+  if (raw.track !== 'report' && raw.track !== 'game' && raw.track !== 'quest') return null;
   const value = typeof raw.value === 'number' ? raw.value : Number(raw.value);
   const stability = typeof raw.stability === 'number' ? raw.stability : Number(raw.stability);
   const answerCount =

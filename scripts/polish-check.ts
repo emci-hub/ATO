@@ -95,10 +95,11 @@ for (const rel of [
   const src = read(rel);
   assert.match(src, /reduceMotion/, `${rel} must read Reduce Motion`);
 }
-assert.match(read('src/components/motion.tsx'), /if \(reduceMotion\) return <View style=\{style\}>\{children\}<\/View>;/);
+// PHASE-03: Reduce Motion is a cross-fade (gentle, never still), no longer a bare View.
+assert.match(read('src/components/motion.tsx'), /if \(reduceMotion\) return <ReducedAppear style=\{style\} breathe=\{breathe\}>\{children\}<\/ReducedAppear>;/);
 assert.match(read('src/components/set-done-moment.tsx'), /\{reduceMotion \? null : <Confetti \/>\}/);
 assert.match(read('src/components/today-pick-card.tsx'), /animated=\{!reduceMotion\}/);
-ok('every new animation honours Reduce Motion (things simply appear)');
+ok('every new animation honours Reduce Motion (a short cross-fade, never a slide or a pulse)');
 
 // ── The coin only when the server paid ───────────────────────────────────────
 const fold = read('src/components/questions-fold.tsx');
@@ -117,7 +118,7 @@ assert.match(home, /<WeekStrip userId=\{me\.id\} todayYmd=\{todayYmd\}/);
 // Home's title first, like Explore and You, then "This week" above every card (emci, 2026-10-07).
 const headerAt = home.indexOf('<View style={styles.header}>');
 assert.ok(headerAt > home.indexOf('<ScrollView'), 'the Home title is the first thing on the page');
-assert.match(home.slice(headerAt, headerAt + 200), /<ThemedText type="subtitle">\{HOME_TITLE\}<\/ThemedText>/, 'same title style as Explore and You');
+assert.match(home.slice(headerAt, headerAt + 260), /<ThemedText type="subtitle" accessibilityRole="header">\s*\{HOME_TITLE\}\s*<\/ThemedText>/, 'same title style as Explore and You');
 const stripAt = home.indexOf('<WeekStrip');
 // The crisis card was removed (2026-10-14); the identity chip is now the first card.
 assert.ok(stripAt > headerAt && stripAt < home.indexOf('<IdentityTitleChip'), 'This week sits right under the title, above every card');

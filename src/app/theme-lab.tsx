@@ -1,4 +1,5 @@
 import { Redirect } from 'expo-router';
+import { useState } from 'react';
 import { PRE_LAUNCH_DEV } from '@/lib/dev-mode';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -10,7 +11,13 @@ import { RevealCard } from '@/components/reveal-card';
 import { RankingCard } from '@/components/ranking-card';
 import { ScenarioCard } from '@/components/scenario-card';
 import { QuestGrowthBars } from '@/components/quest-growth-bars';
+import { GradientFill } from '@/components/gradient-fill';
+import { LivingBg } from '@/components/living-bg';
+import { PlusPop } from '@/components/plus-pop';
+import { PressPop } from '@/components/press-pop';
+import { Sheen } from '@/components/sheen';
 import { ThemedTabBar } from '@/components/themed-tab-bar';
+import { TraitConstellation } from '@/components/trait-constellation';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { MaxContentWidth, Spacing } from '@/constants/theme';
@@ -29,7 +36,24 @@ import type { RevealPick } from '@/lib/reveal';
 import { RANKING_ROUNDS, type RankingPrompt } from '@/lib/ranking';
 import { composeSageKnowsLine } from '@/lib/sage-knows';
 import { SCENARIO_DECK, type ScenarioPrompt } from '@/lib/scenario';
-import { TRAIT_POLE_LINES } from '@/lib/traits';
+import type { TraitTrack } from '@/lib/trait-stability';
+import { TRAIT_AXES, TRAIT_POLE_LINES } from '@/lib/traits';
+
+// Motion-lab fixtures: nine lit axes (one firmly settled = gold), and last
+// week's version of the same figure for the morph.
+const labTrack = (axis: (typeof TRAIT_AXES)[number], value: number, stability: number): TraitTrack => ({
+  axis,
+  track: 'report',
+  value,
+  stability,
+  answerCount: 6,
+  lastTouched: '2026-10-20T00:00:00.000Z',
+  lastDepthAt: null,
+});
+const LAB_TRACKS: TraitTrack[] = TRAIT_AXES.slice(0, 9).map((axis, i) =>
+  labTrack(axis, 0.2 + ((i * 0.37) % 0.7), i === 2 ? 0.9 : 0.25 + i * 0.05),
+);
+const LAB_GHOST: TraitTrack[] = LAB_TRACKS.map((t, i) => ({ ...t, value: Math.min(1, Math.max(0, t.value + (i % 2 ? 0.2 : -0.2))) }));
 
 const THEME_REVEAL_WEEK: RevealPick = {
   kind: 'week-pattern',
@@ -157,6 +181,8 @@ export default function ThemeLabScreen() {
             <QuestGrowthBars presence={2} depth={1} />
           </ThemedView>
 
+          <MotionLab />
+
           <AppearancePicker />
 
           {/* Talk was deleted with Sage (2026-10-14): Insights has no chat. */}
@@ -182,7 +208,106 @@ export default function ThemeLabScreen() {
   );
 }
 
+/** Every motion primitive, normal and Reduce Motion side by side (PHASE-03). */
+function MotionLab() {
+  const theme = useTheme();
+  const [pops, setPops] = useState(0);
+  const [changed, setChanged] = useState<readonly (typeof TRAIT_AXES)[number][]>([]);
+  return (
+    <View style={styles.header}>
+      <ThemedText type="subtitle">Motion primitives</ThemedText>
+      {([false, true] as const).map((rm) => (
+        <ThemedView key={String(rm)} type="backgroundElement" style={styles.motionCard}>
+          <ThemedText type="smallBold">{rm ? 'Reduce Motion' : 'Normal'}</ThemedText>
+          <View style={styles.motionRow}>
+            <PressPop
+              forceReduceMotion={rm}
+              accessibilityRole="button"
+              accessibilityLabel="Press pop"
+              onPress={() => setPops((n) => n + 1)}
+              style={[styles.motionButton, { backgroundColor: theme.accentFill }]}>
+              <ThemedText type="smallBold" style={{ color: theme.onAccent }}>
+                PressPop +1
+              </ThemedText>
+            </PressPop>
+            <View style={styles.plusHost}>
+              <PlusPop label="+5" trigger={pops} forceReduceMotion={rm} color={theme.accent} />
+            </View>
+          </View>
+          <Sheen forceReduceMotion={rm} borderRadius={Spacing.three} style={[styles.motionButton, { backgroundColor: theme.accentFill }]}>
+            <ThemedText type="smallBold" style={{ color: theme.onAccent }}>
+              Sheen
+            </ThemedText>
+          </Sheen>
+          <View style={[styles.motionBox, { backgroundColor: theme.background }]}>
+            <LivingBg forceReduceMotion={rm} colors={[`${theme.accent}55`, `${theme.accentSecondary}55`]} />
+            <ThemedText type="smallBold">LivingBg</ThemedText>
+          </View>
+          <View style={styles.motionBox}>
+            <GradientFill colors={['#5EEAD4', '#22D3EE', '#6366F1']} stops={[0, 0.45, 1]} borderRadius={Spacing.three} />
+            <ThemedText type="smallBold" style={{ color: '#05070D' }}>
+              GradientFill
+            </ThemedText>
+          </View>
+          <TraitConstellation
+            tracks={LAB_TRACKS}
+            ghostTracks={LAB_GHOST}
+            changedAxes={changed}
+            size={240}
+            variant="hero"
+            forceReduceMotion={rm}
+          />
+        </ThemedView>
+      ))}
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel="Brighten two stars"
+        onPress={() => setChanged([TRAIT_AXES[0], TRAIT_AXES[4]])}
+        style={[styles.motionButton, { backgroundColor: theme.backgroundSelected }]}>
+        <ThemedText type="smallBold">Brighten two stars</ThemedText>
+      </Pressable>
+      <ThemedText type="smallBold">Constellation · header / mini / badge / empty</ThemedText>
+      <View style={styles.motionRow}>
+        <TraitConstellation tracks={LAB_TRACKS} size={120} variant="header" />
+        <TraitConstellation tracks={LAB_TRACKS} size={64} variant="mini" />
+        <TraitConstellation tracks={LAB_TRACKS} size={32} variant="badge" />
+      </View>
+      <TraitConstellation tracks={[]} size={240} />
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
+  motionCard: {
+    padding: Spacing.three,
+    gap: Spacing.three,
+    alignItems: 'center',
+  },
+  motionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.three,
+  },
+  motionButton: {
+    minHeight: 44,
+    paddingHorizontal: Spacing.four,
+    borderRadius: Spacing.three,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  plusHost: {
+    width: 60,
+    height: 44,
+    justifyContent: 'center',
+  },
+  motionBox: {
+    width: 240,
+    height: 90,
+    borderRadius: Spacing.three,
+    overflow: 'hidden',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   container: {
     flex: 1,
     flexDirection: 'row',

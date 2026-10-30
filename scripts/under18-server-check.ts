@@ -48,6 +48,19 @@ const NOT_LIVE = new Set([
   // Roadmap v2 S3 (2026-10-22, NOT applied): a trigger on me (show_up / talk_style chips only); no
   // client-callable function. Pinned by scripts/circle-safety-check.ts.
   'wave110_public_card_fields_guard.sql',
+  // PHASE-11d (2026-10-28, NOT applied): restates answer_daily_pick (wave101's copy + the cutover
+  // overlap / event override) and adds daily_pick_event_total; both start with require_adult(),
+  // pinned by scripts/daily-pick-check.ts.
+  'wave117_almanac.sql',
+  // PHASE-17 (2026-10-28, NOT applied): Quests runs. Its app functions (record_quest_run,
+  // apply_quest_result, undo_quest_result) start with require_adult() after the null-uid check, pinned
+  // by scripts/quest-apply-check.ts; it restates reset_my_account / reset_dev_test_user /
+  // count_user_rows (wave103/104/108 + one quest_runs line), pinned by check:reset-account.
+  'wave116_quest_runs.sql',
+  // PHASE-27 (2026-10-30): restates answer_daily_pick (wave117's body, only the cutover date changed;
+  // still starts with require_adult()) and daily_pick_position (no client gate needed), pinned by
+  // scripts/daily-pick-check.ts.
+  'wave119_pick_cutover.sql',
 ]);
 
 /** Apply order of the migrations that existed when wave101 was written (git history order). */

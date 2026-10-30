@@ -1,7 +1,13 @@
-import * as Haptics from 'expo-haptics';
 import { useRef } from 'react';
 import { AccessibilityInfo, Pressable, StyleSheet, View } from 'react-native';
-import Animated, { useAnimatedStyle, useSharedValue, withSequence, withTiming } from 'react-native-reanimated';
+import Animated, {
+  useAnimatedStyle,
+  useReducedMotion,
+  useSharedValue,
+  withSequence,
+  withSpring,
+  withTiming,
+} from 'react-native-reanimated';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -9,6 +15,7 @@ import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import type { TryTodayPick } from '@/lib/daily-insights';
 import { controlBorderColor } from '@/lib/theme/chrome';
+import { SPRING_POP, haptic } from '@/lib/motion-tokens';
 import { useAppearance } from '@/lib/theme/context';
 
 import { ContextLine, ScriptLines } from './script-parts';
@@ -36,11 +43,18 @@ export function TryTodayCard({
   onDone: () => Promise<number | null>;
 }) {
   const theme = useTheme();
-  const { reduceMotion } = useAppearance();
+  const systemReduce = useReducedMotion();
+  const { reduceMotion: appReduce } = useAppearance();
+  const reduceMotion = systemReduce || appReduce;
   const pressing = useRef(false);
   const scale = useSharedValue(1);
   const fade = useSharedValue(1);
-  const animated = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }], opacity: fade.value }));
+  // The check pop once the day is marked (PHASE-09): 0.6 → 1 with SPRING_POP.
+  const checkPop = useSharedValue(1);
+  const animated = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value * checkPop.value }],
+    opacity: fade.value,
+  }));
 
   const modeLabel = pick.line.mode === 'stretch' ? 'Stretch' : 'Strength';
   const whyText = pick.whyLine.replace(/^This is your /, '');
@@ -50,7 +64,7 @@ export function TryTodayCard({
     // Two taps in one frame: only the first buzzes and announces.
     if (done || pressing.current) return;
     pressing.current = true;
-    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
+    haptic.commit();
     // Reduce Motion: an instant state change only, no scale or fade.
     if (!reduceMotion) {
       scale.value = withSequence(withTiming(1.06, { duration: 120 }), withTiming(1, { duration: 160 }));
@@ -59,6 +73,11 @@ export function TryTodayCard({
     const next = await onDone();
     pressing.current = false;
     if (next == null) return; // not marked (new day loading, or a save error)
+    haptic.success();
+    if (!reduceMotion) {
+      checkPop.value = 0.6;
+      checkPop.value = withSpring(1, SPRING_POP);
+    }
     AccessibilityInfo.announceForAccessibility(
       next > 0 ? `Marked done. Streak ${daysLabel(next)}.` : 'Marked done.',
     );

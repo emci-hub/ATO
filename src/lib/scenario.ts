@@ -178,11 +178,16 @@ export function scenarioForAxis(
   return { axis, def, weekKey };
 }
 
+/**
+ * `played` = axes that already have a game-track row. Since wave118 a scenario pick no longer
+ * writes the `me` column, so "filled" is `me` value OR a played game track.
+ */
 export function pickScenarioAxis(
   values: TraitValues,
   last: TraitAxis | null,
+  played: readonly TraitAxis[] = [],
 ): ExtraAxis | null {
-  const unfilled = EXTRA_AXES.filter((axis) => values[axis] == null);
+  const unfilled = EXTRA_AXES.filter((axis) => values[axis] == null && !played.includes(axis));
   if (unfilled.length === 0) return null;
   if (last == null || !(EXTRA_AXES as readonly string[]).includes(last)) {
     return unfilled[0] ?? null;
@@ -197,6 +202,7 @@ export function pickScenarioAxis(
 
 export function resolveScenario(input: {
   values: TraitValues;
+  played?: readonly TraitAxis[];
   knows: SageKnowsState;
   now?: Date;
   timeZone: string;
@@ -210,7 +216,7 @@ export function resolveScenario(input: {
   if (weekSlotTaken(input.knows, weekKey)) return null;
   if (resolveRanking(input) != null) return null;
 
-  const axis = pickScenarioAxis(input.values, input.knows.scenario_last_axis);
+  const axis = pickScenarioAxis(input.values, input.knows.scenario_last_axis, input.played);
   if (!axis) return null;
   const def = SCENARIO_DECK[axis];
   const copy = `${def.setup} ${def.high.label} ${def.low.label}`;
@@ -218,6 +224,7 @@ export function resolveScenario(input: {
   return { axis, def, weekKey };
 }
 
+/** Local model of the OLD me-merge. The live server stopped writing `me` for picks in wave118. */
 export function applyScenarioWrite(
   current: TraitState,
   axis: ExtraAxis,
@@ -229,8 +236,8 @@ export function applyScenarioWrite(
   return mergeTraitWrite(current, { [axis]: value }, 'self_game', [axis], nowIso);
 }
 
-export function hasUnfilledExtraAxis(values: TraitValues): boolean {
-  return EXTRA_AXES.some((axis) => values[axis] == null);
+export function hasUnfilledExtraAxis(values: TraitValues, played: readonly TraitAxis[] = []): boolean {
+  return EXTRA_AXES.some((axis) => values[axis] == null && !played.includes(axis));
 }
 
 export { applyScenarioWeek, emptyTraitState, hasUnfilledTraitAxis };

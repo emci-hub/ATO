@@ -24,7 +24,8 @@
  *
  * Run it after wave105 + wave106 are applied (Release B): wave106 is the count_user_rows that sees every
  * per-account table (pinned offline by check:delete-proof). Uses the dev-test handle @atodev only as the
- * target of one pending friend request, which the delete removes.
+ * target of one pending friend request, which the delete removes. After wave116 (PHASE-17) it also seeds
+ * one quest_runs row when Quests is switched on (count_user_rows from wave116 counts it).
  *
  * This proves the flow end to end. It does NOT prove Apple revocation against a
  * real Apple token, which needs Apple credentials and a device sign-in — see
@@ -125,6 +126,27 @@ async function main() {
   if (reqError) throw new Error(`circle_request failed: ${reqError.message}`);
   assert.equal((reqData as { ok?: boolean } | null)?.ok, true, `circle_request wrote no row: ${JSON.stringify(reqData)}`);
   ok('pending Circle request to @atodev exists before delete', reqData);
+
+  // A Quests run (PHASE-17, R12): quest_runs cascades with the account and count_user_rows (wave116)
+  // counts it. record_quest_run refuses while app_config.quests_enabled is off for a non-root account,
+  // so the seed is skipped (and said) until Quests is switched on.
+  const { error: questError } = await authed.rpc('record_quest_run', {
+    p_run_id: crypto.randomUUID(),
+    p_campaign_id: 'sample-lantern',
+    p_content_version: 1,
+    p_ending_id: 'lantern_daylight',
+    p_for_fun: true,
+    p_stats: { supplies: 3, morale: 3, renown: 3 },
+    p_events: [{ t: 'quest_start' }, { t: 'ending' }],
+  });
+  if (questError && /quests:(quests_disabled|campaign_disabled)/.test(questError.message)) {
+    ok('quest_runs seed skipped: Quests is switched off for this account', { reason: questError.message });
+  } else {
+    if (questError) throw new Error(`record_quest_run failed: ${questError.message}`);
+    const { count: questRows } = await authed.from('quest_runs').select('*', { count: 'exact', head: true });
+    assert.equal(questRows, 1, 'one quest_runs row before delete');
+    ok('quest_runs row exists before delete', { questRows });
+  }
 
   const { count: meCountBefore } = await authed
     .from('me')

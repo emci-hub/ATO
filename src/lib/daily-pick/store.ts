@@ -49,8 +49,11 @@ async function saveState(state: LocalState): Promise<void> {
   }
 }
 
+/** Only the id matters here: rotation Picks and seasonal peak Picks both answer by id. */
+type PickKey = Pick<DailyPick, 'id'>;
+
 /** Today's answer, from the phone first, then the server (a reinstall). */
-export async function loadTodayAnswer(userId: string, ymd: string, pick: DailyPick): Promise<number | null> {
+export async function loadTodayAnswer(userId: string, ymd: string, pick: PickKey): Promise<number | null> {
   const state = await loadState(userId);
   const local = state.answers[ymd];
   if (local && local.pickId === pick.id) {
@@ -80,17 +83,20 @@ export async function loadTodayAnswer(userId: string, ymd: string, pick: DailyPi
 export async function saveTodayAnswer(
   userId: string,
   ymd: string,
-  pick: DailyPick,
+  pick: PickKey,
   optionIndex: number,
 ): Promise<boolean> {
   const state = await loadState(userId);
-  if (state.answers[ymd]) return state.answers[ymd]!.synced; // one answer a day
+  const existing = state.answers[ymd];
+  // One answer a day per Pick. A different Pick for the same day (a seasonal Pick the
+  // server confirmed after the rotation one was answered offline) is sent in its own right.
+  if (existing && existing.pickId === pick.id) return existing.synced;
   state.answers[ymd] = { pickId: pick.id, optionIndex, synced: false };
   await saveState(state);
   return sendAnswer(userId, ymd, pick, optionIndex);
 }
 
-async function sendAnswer(userId: string, ymd: string, pick: DailyPick, optionIndex: number): Promise<boolean> {
+async function sendAnswer(userId: string, ymd: string, pick: PickKey, optionIndex: number): Promise<boolean> {
   try {
     await answerDailyPick(ymd, pick.id, optionIndex);
     const state = await loadState(userId);
@@ -103,6 +109,43 @@ async function sendAnswer(userId: string, ymd: string, pick: DailyPick, optionIn
   } catch (err) {
     console.log('[daily-pick] answer not saved yet:', err);
     return false;
+  }
+}
+
+/**
+ * The seasonal Pick the server names for this date (wave117 override table), or
+ * null on an ordinary day, offline, or before wave117 is applied. The card shows
+ * a seasonal Pick only when this agrees with the phone's own table, because the
+ * server refuses an answer to any other Pick that day. Never throws.
+ */
+export async function fetchEventPickId(ymd: string): Promise<string | null> {
+  try {
+    const { data, error } = await supabase
+      .from('daily_pick_event_override')
+      .select('pick_id')
+      .eq('ymd', ymd)
+      .maybeSingle();
+    if (error || !data || typeof data.pick_id !== 'string') return null;
+    return data.pick_id;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * How many people answered this event's peak Picks this year (wave117
+ * `daily_pick_event_total`). One number; null under 20, offline, or before
+ * wave117 is applied, so the community card hides itself. Never throws.
+ */
+export async function fetchEventTotal(eventId: string, year: number): Promise<number | null> {
+  try {
+    const { data, error } = await supabase.rpc('daily_pick_event_total', { p_event_id: eventId, p_year: year });
+    if (error || data == null) return null;
+    const row = (typeof data === 'object' ? (data as { total?: unknown }).total : data) as unknown;
+    const total = Number(row);
+    return Number.isFinite(total) && total >= 20 ? Math.floor(total) : null;
+  } catch {
+    return null;
   }
 }
 

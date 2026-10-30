@@ -10,6 +10,15 @@ import { ShapeEmptyCard } from '@/components/shape-card';
 import { TraitShape } from '@/components/trait-shape';
 import { TodayPickCard } from '@/components/today-pick-card';
 import { WeekStrip } from '@/components/week-strip';
+import { CommunityGoal } from '@/components/almanac/community-goal';
+import { TeaserLine } from '@/components/almanac/teaser-line';
+import { HomeHero } from '@/components/home-hero';
+import { earnSeasonalBadges } from '@/lib/almanac-badges-store';
+import { useAlmanacDay } from '@/hooks/use-almanac-day';
+import { StreakChip } from '@/components/streak-chip';
+import { TodaysPath } from '@/components/todays-path';
+import { totalAnswered } from '@/lib/home-path';
+import { answeredBaselineFor, loadInsightsSeen, markInsightsSeen } from '@/lib/home-path-store';
 import { IdentityTitleChip } from '@/components/identity-title-chip';
 import { DailyCheckinCard } from '@/components/daily-checkin-card';
 import { ThemedText } from '@/components/themed-text';
@@ -198,10 +207,66 @@ export default function HomeScreen() {
   const todayPick = todayYmd ? pickForYmd(todayYmd) : null;
   // The mini guy who says the line (same recipe as the nav companion).
   const faceRecipe = useMemo(() => (me ? recipeForAccount(me.id, me.recipe) : undefined), [me]);
+  // The Almanac's day (PHASE-11e): feeds the one-line teaser and the community card.
+  const almanacDay = useAlmanacDay({
+    userId,
+    me,
+    ymd: todayYmd,
+    tracks,
+    dataDays: todayLine?.streak ?? 0,
+    facts: { glowStreak: todayLine?.streak },
+  });
   // How far into the current round (one read, refreshed with the tracks).
   const roundAnswered = useRoundProgress(fullProfileDone ? userId : undefined, tracks);
   // 3 / 7 / 21 days in a row: the mini guy says it, once each.
   useBuddyStreak({ me, streak: todayLine?.streak, onPersisted: refreshMe });
+
+  // Today's path (PHASE-08). It only reads: the check-in card reports its status,
+  // the insight step is a flag set when "See today's Insights" is tapped, and the
+  // question step is the round count minus where it stood when Home first opened
+  // today. Nothing here awards or charges anything.
+  const [checkin, setCheckin] = useState<{ checkedIn: boolean | null; earned: { amount: number; nonce: number } | null }>({
+    checkedIn: null,
+    earned: null,
+  });
+  const [insightSeen, setInsightSeen] = useState<boolean | null>(null);
+  const [answeredBaseline, setAnsweredBaseline] = useState<number | null>(null);
+  // Another account must never inherit the last one's path state.
+  useEffect(() => {
+    setCheckin({ checkedIn: null, earned: null });
+    setInsightSeen(null);
+    setAnsweredBaseline(null);
+  }, [userId]);
+  const tracksOwnedNow = bootstrapReady && !bootstrapFailed && tracksUserId === userId;
+  const answeredTotal = tracksOwnedNow ? totalAnswered(tracks) : null;
+  const onCheckinStatus = useCallback((status: { checkedIn: boolean; earned: number | null }) => {
+    setCheckin((prev) => ({
+      checkedIn: status.checkedIn,
+      earned: status.earned ? { amount: status.earned, nonce: (prev.earned?.nonce ?? 0) + 1 } : prev.earned,
+    }));
+  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      if (!userId || !todayYmd) return;
+      let live = true;
+      void loadInsightsSeen(userId, todayYmd).then((seen) => {
+        if (live) setInsightSeen(seen);
+      });
+      return () => {
+        live = false;
+      };
+    }, [userId, todayYmd]),
+  );
+  useEffect(() => {
+    if (!userId || !todayYmd || answeredTotal == null) return;
+    let live = true;
+    void answeredBaselineFor(userId, todayYmd, answeredTotal).then((base) => {
+      if (live) setAnsweredBaseline(base);
+    });
+    return () => {
+      live = false;
+    };
+  }, [userId, todayYmd, answeredTotal]);
   // Picks are written to be read by anyone, so the widget can show today's.
   const todayLineLockScreen = todayPick?.prompt ?? (todayLine ? lockScreenText(todayLine.line) : null);
 
@@ -271,9 +336,9 @@ export default function HomeScreen() {
     purpose, because that card disappears the moment the question is answered.
 
     The first-time ask stays here. The on/off switch that used to sit under it
-    after an answer is gone from Home (emci, 2026-10-04: it is already on You,
-    under "Sage's AI"): the server refuses every AI call while consent is off
-    (ai-generate), and You is where it is turned back on or off.
+    after an answer is gone from Home (emci, 2026-10-04: it now lives in
+    Settings > Privacy & AI): the server refuses every AI call while consent is off,
+    and Settings is where it is turned back on or off.
   */
   /*
     Today's Pick (emci, 2026-10-05) replaces the daily line card: one
@@ -291,9 +356,12 @@ export default function HomeScreen() {
             face={faceRecipe}
             onAnswered={() => {
               void reloadHome();
+              // A Pick answered inside a season or an event's build/peak earns its cosmetic badge.
+              if (almanacDay) void earnSeasonalBadges(userId, almanacDay.theme);
             }}
           />
         </Appear>
+        {almanacDay ? <CommunityGoal theme={almanacDay.theme} /> : null}
       </>
     ) : null;
 
@@ -325,7 +393,9 @@ export default function HomeScreen() {
               small line under it. */}
           <View style={styles.header}>
             <View style={styles.headerTop}>
-              <ThemedText type="subtitle">{HOME_TITLE}</ThemedText>
+              <ThemedText type="subtitle" accessibilityRole="header">
+                {HOME_TITLE}
+              </ThemedText>
               {/* Settings live on their own screen (IA phase P1). */}
               <Pressable
                 accessibilityRole="button"
@@ -341,10 +411,20 @@ export default function HomeScreen() {
             </ThemedText>
           </View>
 
+          {/* The hero (PHASE-08): the constellation, once THIS account's tracks have
+              loaded, like You. No tracks = the constellation's own empty card. */}
+          {me && bootstrapReady && !bootstrapFailed && tracksUserId === me.id ? (
+            <HomeHero userId={me.id} tracks={tracks} day={almanacDay} />
+          ) : null}
+
+          {almanacDay ? <TeaserLine day={almanacDay} /> : null}
+
+          {me && todayYmd && todayLine ? <StreakChip userId={me.id} todayYmd={todayYmd} refreshKey={todayLine} /> : null}
+
           {/* "This week" right under the title, above every card (emci, 2026-10-07). */}
           {me && todayYmd && todayLine ? (
             <Appear>
-              <WeekStrip userId={me.id} todayYmd={todayYmd} refreshKey={todayLine} />
+              <WeekStrip userId={me.id} todayYmd={todayYmd} refreshKey={todayLine} checkedIn={checkin.checkedIn} />
             </Appear>
           ) : null}
 
@@ -428,9 +508,27 @@ export default function HomeScreen() {
              * Story live on Insights now.
              */
             <>
+              {/* Today's path: shown once all three steps are known, so a step that
+                  was already done never pops or buzzes on first paint. */}
+              {checkin.checkedIn != null && insightSeen != null && answeredTotal != null && answeredBaseline != null ? (
+                <TodaysPath
+                  input={{
+                    checkedIn: checkin.checkedIn,
+                    insightSeen,
+                    answeredTotal,
+                    answeredBaseline,
+                  }}
+                  earned={checkin.earned}
+                />
+              ) : null}
               {/* Daily check-in (wave92): +5 ATO tokens a day, which pay for AI views. */}
               {me && todayYmd ? (
-                <DailyCheckinCard todayYmd={todayYmd} tokens={atoTokenBalanceOf(me)} onEarned={() => void refreshMe()} />
+                <DailyCheckinCard
+                  todayYmd={todayYmd}
+                  tokens={atoTokenBalanceOf(me)}
+                  onEarned={() => void refreshMe()}
+                  onStatus={onCheckinStatus}
+                />
               ) : null}
               {/* One way into Insights (emci 2026-10-14): Try this today, the
                   focus, the Story, Superpower / Kryptonite, How you argue. */}
@@ -438,7 +536,13 @@ export default function HomeScreen() {
                 accessibilityRole="button"
                 accessibilityLabel={SEE_INSIGHTS_LABEL}
                 testID="home-see-insights"
-                onPress={() => router.push('/insights')}
+                onPress={() => {
+                  if (userId && todayYmd) {
+                    void markInsightsSeen(userId, todayYmd);
+                    setInsightSeen(true);
+                  }
+                  router.push('/insights');
+                }}
                 style={({ pressed }) => [
                   styles.answerQuestionsRow,
                   { borderColor: controlBorderColor(theme) },

@@ -1,0 +1,233 @@
+{
+ "halloween": {
+  "colors": [
+   "#0a0a1c",
+   "#221c3d",
+   "#6e6e7e",
+   "#f0f0f0",
+   "#4a2a12",
+   "#a85a1c",
+   "#e07a2a",
+   "#f29a2e",
+   "#ffd166",
+   "#fff1c2",
+   "#1f6b3a",
+   "#3fb24f",
+   "#3a0a3d",
+   "#7a1468"
+  ],
+  "b64": "iVBORw0KGgoAAAANSUhEUgAAAA4AAAABCAIAAABhfAhTAAAAM0lEQVR4nGPk4pKREFL0CXJsaiqKslKKM+CyUOATUmDhNbdgUIhRqKpQcBf9HfHOgUsbALzACfjCSbSZAAAAAElFTkSuQmCC"
+ },
+ "spring": {
+  "colors": [
+   "#0a0a1c",
+   "#221c3d",
+   "#6e6e7e",
+   "#f0f0f0",
+   "#1f6b3a",
+   "#3fb24f",
+   "#7aa83a",
+   "#9cf06a",
+   "#f06ac0",
+   "#ff8fe6",
+   "#ffe0fb",
+   "#ffd166",
+   "#fff1c2"
+  ],
+  "b64": "iVBORw0KGgoAAAANSUhEUgAAAA0AAAABCAIAAACKS7NQAAAAMElEQVR4nGPk4pKREFL0CXJsairSr/ZScBe1/vZaycMgpCqMX1WNIVCU4WM2g0IMAM1MCrSCcpjDAAAAAElFTkSuQmCC"
+ },
+ "summer": {
+  "colors": [
+   "#0a0a1c",
+   "#221c3d",
+   "#6e6e7e",
+   "#f0f0f0",
+   "#05283a",
+   "#0a5a73",
+   "#0fa3b8",
+   "#22e6ff",
+   "#8ff6ff",
+   "#ffd166",
+   "#f29a2e",
+   "#fff1c2"
+  ],
+  "b64": "iVBORw0KGgoAAAANSUhEUgAAAAwAAAABCAIAAABlidhuAAAAMElEQVR4nAElANr/AAoKHCIcPW5ufvDw8AUoOgpacw+juCLm/4/2///RZvKaLv/xwg8aEqunuN3BAAAAAElFTkSuQmCC"
+ },
+ "autumn": {
+  "colors": [
+   "#0a0a1c",
+   "#221c3d",
+   "#6e6e7e",
+   "#f0f0f0",
+   "#4a2a12",
+   "#7a5238",
+   "#a85a1c",
+   "#c8955e",
+   "#e07a2a",
+   "#f29a2e",
+   "#ffd166",
+   "#b8e04a",
+   "#fff1c2"
+  ],
+  "b64": "iVBORw0KGgoAAAANSUhEUgAAAA0AAAABCAIAAACKS7NQAAAAMElEQVR4nGPk4pKREFL0CXJsaiqKslIy0FDT43iiYO0k8fSMkAILr7nFTv4n7oIVAL2bCrQtZdzBAAAAAElFTkSuQmCC"
+ },
+ "winter": {
+  "colors": [
+   "#0a0a1c",
+   "#221c3d",
+   "#6e6e7e",
+   "#f0f0f0",
+   "#05283a",
+   "#0a5a73",
+   "#0fa3b8",
+   "#8ff6ff",
+   "#e6fdff",
+   "#4a3a7a",
+   "#8a6cc8",
+   "#b49ae0",
+   "#d8d8e0"
+  ],
+  "b64": "iVBORw0KGgoAAAANSUhEUgAAAA0AAAABCAIAAACKS7NQAAAAM0lEQVR4nAEoANf/AAoKHCIcPW5ufvDw8AUoOgpacw+juI/2/+b9/0o6eopsyLSa4NjY4EhYFF6MGqYjAAAAAElFTkSuQmCC"
+ },
+ "christmas": {
+  "colors": [
+   "#0a0a1c",
+   "#221c3d",
+   "#6e6e7e",
+   "#f0f0f0",
+   "#123d2a",
+   "#1f6b3a",
+   "#3fb24f",
+   "#9cf06a",
+   "#7a1468",
+   "#c21f8f",
+   "#ff3cc7",
+   "#ffd166",
+   "#fff1c2",
+   "#e6fdff"
+  ],
+  "b64": "iVBORw0KGgoAAAANSUhEUgAAAA4AAAABCAIAAABhfAhTAAAAM0lEQVR4nGPk4pKREFL0CXJsaipS8rXi1RNQcBeNtZO+p/LPg1vdVtaCYep8BoWY5zy2ANHJCuSadcZ0AAAAAElFTkSuQmCC"
+ },
+ "love": {
+  "colors": [
+   "#0a0a1c",
+   "#221c3d",
+   "#6e6e7e",
+   "#f0f0f0",
+   "#3a0a3d",
+   "#7a1468",
+   "#c21f8f",
+   "#d23ca0",
+   "#ff3cc7",
+   "#f06ac0",
+   "#ff8fe6",
+   "#ffe0fb",
+   "#fff1c2"
+  ],
+  "b64": "iVBORw0KGgoAAAANSUhEUgAAAA0AAAABCAIAAACKS7NQAAAAMElEQVR4nGPk4pKREFL0CXJsairykvJ14NL24FYXkBXUZVD/qPeTX1WNIVCUQfA4AKNtCLQAN0bFAAAAAElFTkSuQmCC"
+ },
+ "diwali": {
+  "colors": [
+   "#0a0a1c",
+   "#221c3d",
+   "#6e6e7e",
+   "#f0f0f0",
+   "#3a0a3d",
+   "#7a1468",
+   "#c21f8f",
+   "#a85a1c",
+   "#e07a2a",
+   "#f29a2e",
+   "#ffd166",
+   "#fff1c2"
+  ],
+  "b64": "iVBORw0KGgoAAAANSUhEUgAAAAwAAAABCAIAAABlidhuAAAALUlEQVR4nGPk4pKREFL0CXJsairykvJ14NL24FZ/Zt1rocAnpMDCa27BoBADAJHVB7TjcsnQAAAAAElFTkSuQmCC"
+ },
+ "eid": {
+  "colors": [
+   "#0a0a1c",
+   "#221c3d",
+   "#6e6e7e",
+   "#f0f0f0",
+   "#123d2a",
+   "#1f6b3a",
+   "#3fb24f",
+   "#0a5a73",
+   "#0fa3b8",
+   "#8ff6ff",
+   "#ffd166",
+   "#fff1c2"
+  ],
+  "b64": "iVBORw0KGgoAAAANSUhEUgAAAAwAAAABCAIAAABlidhuAAAALklEQVR4nGPg4pJRkrHNy6v78OGDkK2WfLaV/SZ/rqhi/sU7+r/9/38x7f/HQwD0jBEA+fnNbgAAAABJRU5ErkJggg=="
+ },
+ "lunar": {
+  "colors": [
+   "#0a0a1c",
+   "#221c3d",
+   "#6e6e7e",
+   "#f0f0f0",
+   "#3a0a3d",
+   "#7a1468",
+   "#c21f8f",
+   "#d23ca0",
+   "#a85a1c",
+   "#f29a2e",
+   "#ffd166",
+   "#fff1c2"
+  ],
+  "b64": "iVBORw0KGgoAAAANSUhEUgAAAAwAAAABCAIAAABlidhuAAAALUlEQVR4nGPk4pKREFL0CXJsairykvJ14NL24FYXkBW8Jlfj5SDEa27BoBADAIxTB7SJjhFpAAAAAElFTkSuQmCC"
+ },
+ "party": {
+  "colors": [
+   "#0a0a1c",
+   "#221c3d",
+   "#6e6e7e",
+   "#f0f0f0",
+   "#3c2f6e",
+   "#6b4fa8",
+   "#22e6ff",
+   "#8ff6ff",
+   "#ff3cc7",
+   "#ff8fe6",
+   "#ffd166",
+   "#fff1c2"
+  ],
+  "b64": "iVBORw0KGgoAAAANSUhEUgAAAAwAAAABCAIAAABlidhuAAAAMElEQVR4nAElANr/AAoKHCIcPW5ufvDw8DwvbmtPqCLm/4/2//88x/+P5v/RZv/xwjSiFPrRLNcHAAAAAElFTkSuQmCC"
+ },
+ "sticker": {
+  "colors": [
+   "#0a0a1c",
+   "#221c3d",
+   "#6e6e7e",
+   "#f0f0f0",
+   "#0a5a73",
+   "#0fa3b8",
+   "#22e6ff",
+   "#8ff6ff",
+   "#7a1468",
+   "#d23ca0",
+   "#ff3cc7",
+   "#ffd166",
+   "#fff1c2",
+   "#3fb24f"
+  ],
+  "b64": "iVBORw0KGgoAAAANSUhEUgAAAA4AAAABCAIAAABhfAhTAAAANklEQVR4nAErANT/AAoKHCIcPW5ufvDw8Apacw+juCLm/4/2/3oUaNI8oP88x//RZv/xwj+yT5/KFnAxUFBpAAAAAElFTkSuQmCC"
+ },
+ "school": {
+  "colors": [
+   "#0a0a1c",
+   "#221c3d",
+   "#6e6e7e",
+   "#f0f0f0",
+   "#3c2f6e",
+   "#6b4fa8",
+   "#8a6cc8",
+   "#f29a2e",
+   "#ffd166",
+   "#fff1c2",
+   "#3fb24f",
+   "#7aa83a"
+  ],
+  "b64": "iVBORw0KGgoAAAANSUhEUgAAAAwAAAABCAIAAABlidhuAAAALUlEQVR4nGPk4pKREFL0CXJsairysa/TV7CSl1XI0EvjNbdgUIhxONhr/e01AJlSCl5mdr5fAAAAAElFTkSuQmCC"
+ }
+}

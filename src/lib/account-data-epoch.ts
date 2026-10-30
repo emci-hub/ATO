@@ -7,6 +7,7 @@
  * Questions kept showing the old answers and the old round until the app was
  * reopened. Screens that cache account data read this and reload when it moves.
  * Only the dev tools bump it; a normal answer already refreshes its own screen.
+ * (A Quest Apply or Undo uses `quests/quest-change.ts` instead.)
  */
 import { useSyncExternalStore } from 'react';
 

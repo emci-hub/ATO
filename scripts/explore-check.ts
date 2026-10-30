@@ -24,6 +24,7 @@ import {
 import { EXPLORE_GUARD_FALLBACK, EXPLORE_LABEL, EXPLORE_NOTED } from '../src/lib/explore/copy';
 import { EXPLORE_FEW_SHOTS, EXPLORE_AXIS_GROUNDING_LINES, buildExplorePrompt } from '../src/lib/explore/prompt';
 import { TRAIT_AXES } from '../src/lib/traits';
+import { parseSection } from '../src/lib/you-sections';
 import { routeExplore } from '../src/lib/explore/route';
 import type { ExploreMeSlice, ExplorePackRow } from '../src/lib/explore/types';
 import type { DevTraceRecordInput } from '../src/lib/dev-trace';
@@ -573,6 +574,16 @@ assert.match(exploreScreen, /<Redirect href="\/you\?section=categories" \/>/, 'e
 assert.doesNotMatch(exploreScreen, /CategoriesFold|CategoryDeepDiveCard|FullProfileFold|fetchTraitTracks/, 'no content left on the Explore route');
 assert.equal(exploreScreen.trim().split('\n').filter((l) => /^\s*(import|export)\b/.test(l)).length, 2, 'one import, one default export');
 assert.match(youScreen, /<CategoriesFold/);
+// PHASE-06 deep-link fixture: only an exact known key scrolls; everything else is a silent no-op.
+for (const key of ['shape', 'traits', 'categories', 'profile', 'tokens', 'quests']) {
+  assert.equal(parseSection(key), key, `?section=${key} is accepted`);
+}
+// PHASE-23 (R22): with Quests off (or not read yet) You drops ?section=quests like an unknown key.
+assert.match(youScreen, /parsedSection === 'quests' && !questsOn \? null : parsedSection/, 'You ignores section=quests while Quests is off');
+for (const bad of ['','Shape', 'nope', ' shape', undefined, null, ['shape'], ['a', 'b'], 7]) {
+  assert.equal(parseSection(bad), null, `?section=${JSON.stringify(bad)} is ignored, no error`);
+}
+assert.match(youScreen, /parseSection\(params\.section\)/, 'You parses the section param through parseSection');
 // Legends and Circle are reached from You now (Circle only when its tab is unlocked).
 assert.match(youScreen, /<NavRow label="Legends" onPress=\{\(\) => router\.push\('\/legends'\)\} \/>/, 'You has the Legends row');
 assert.match(

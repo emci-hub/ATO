@@ -11,6 +11,7 @@ import {
   legendsPaidLine,
 } from '@/app/(tabs)/legends';
 import { HALL_COLOR, HALL_ICON, LegendShareSheet, LegendStoryCard, legendTitle } from '@/components/legend-figure-card';
+import { SkeletonCard } from '@/components/motion';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
@@ -41,13 +42,14 @@ import type { TraitTrack } from '@/lib/trait-stability';
 export const YOUR_REVEALS_TITLE = 'Your reveals';
 export const REVEALS_EMPTY_COPY = 'No legends met yet. Your first reveal is free, in Legends.';
 export const REVEALS_LOCKED_COPY = 'Legends opens once your answers show a clear side or two.';
+export const REVEALS_ERROR_COPY = "Couldn't load your reveals.";
 
 function chapterLabel(chapter: number): string {
   return chapter === 0 ? 'First meeting' : `Chapter ${chapter + 1}`;
 }
 
 /**
- * Your reveals (IA phase P6, docs/ato-ia-runner.md) — a pushed screen from
+ * Your reveals (IA phase P6, docs/ato-ia-runner.md; verified in PHASE-07) — a pushed screen from
  * Legends. Display only: every legend met (their saved stories open for free),
  * today's reveal state read from the same sources Legends uses, and a row per
  * hall that opens it in Legends. Paid reveals happen ONLY in Legends: nothing on
@@ -62,6 +64,7 @@ export default function YourRevealsScreen() {
   const [local, setLocal] = useState<LegendLocalState | null>(null);
   const [today, setToday] = useState<string | null>(null);
   const [ready, setReady] = useState(false);
+  const [loadFailed, setLoadFailed] = useState(false);
   const [openId, setOpenId] = useState<string | null>(null);
   const [openChapter, setOpenChapter] = useState(0);
   const [shareOpen, setShareOpen] = useState(false);
@@ -92,8 +95,10 @@ export default function YourRevealsScreen() {
       setTracks(boot.tracks);
       setToday(devDate ?? localYmd(new Date(), timeZone));
       setLocal({ ...localState, museum: mergeMuseum(server ?? [], localState.museum) });
+      setLoadFailed(false);
     } catch (err) {
       console.log('[your-reveals] load error:', err);
+      if (request === requestRef.current) setLoadFailed(true);
     } finally {
       if (request === requestRef.current) setReady(true);
     }
@@ -182,10 +187,25 @@ export default function YourRevealsScreen() {
               style={({ pressed }) => [styles.backButton, pressed && styles.pressed]}>
               <ThemedText type="link">‹ Back</ThemedText>
             </Pressable>
-            <ThemedText type="subtitle">{YOUR_REVEALS_TITLE}</ThemedText>
+            <ThemedText type="subtitle" accessibilityRole="header">
+              {YOUR_REVEALS_TITLE}
+            </ThemedText>
           </View>
 
-          {!ready ? null : !unlocked ? (
+          {!ready ? (
+            <SkeletonCard lines={3} />
+          ) : loadFailed ? (
+            <View style={panel}>
+              <ThemedText type="smallBold">{REVEALS_ERROR_COPY}</ThemedText>
+              <Pressable
+                onPress={() => void reload()}
+                accessibilityRole="button"
+                accessibilityLabel="Try loading your reveals again"
+                style={({ pressed }) => [styles.link, pressed && styles.pressed]}>
+                <ThemedText type="linkPrimary">Try again</ThemedText>
+              </Pressable>
+            </View>
+          ) : !unlocked ? (
             <View style={panel}>
               <ThemedText type="smallBold">
                 {tracks.length > 0 ? fullProfileLockedLine(fullProfileProgress(tracks)) : FULL_PROFILE_LOCKED_COPY}
@@ -205,7 +225,9 @@ export default function YourRevealsScreen() {
             <>
               {/* Today: the same numbers Legends shows. Paying happens there, never here. */}
               <View style={panel}>
-                <ThemedText type="smallBold">Today</ThemedText>
+                <ThemedText type="smallBold" accessibilityRole="header">
+                  Today
+                </ThemedText>
                 <ThemedText type="small">
                   Free reveal: {revealedToday >= 1 ? 'used' : 'open'}
                   {revealedToday >= 1 ? ` · Bonus reveal: ${bonusUnlocked && left > 0 ? 'open' : bonusUnlocked ? 'used' : 'not open'}` : ''}
@@ -218,7 +240,7 @@ export default function YourRevealsScreen() {
                 </ThemedText>
               </View>
 
-              <ThemedText type="small" themeColor="textSecondary" style={styles.heading}>
+              <ThemedText type="small" themeColor="textSecondary" style={styles.heading} accessibilityRole="header">
                 Reveal in Legends
               </ThemedText>
               <View style={styles.rows}>
@@ -237,10 +259,12 @@ export default function YourRevealsScreen() {
                         pressed && styles.pressed,
                       ]}>
                       <MaterialCommunityIcons name={HALL_ICON[hall]} size={20} color={HALL_COLOR[hall]} />
-                      <ThemedText type="small" style={styles.flex}>
-                        {HALL_LABEL[hall]} · {metHere}/{all.length}
-                      </ThemedText>
-                      <ThemedText type="linkPrimary">Reveal in Legends ›</ThemedText>
+                      <View style={styles.rowText}>
+                        <ThemedText type="small">
+                          {HALL_LABEL[hall]} · {metHere}/{all.length}
+                        </ThemedText>
+                        <ThemedText type="linkPrimary">Reveal in Legends ›</ThemedText>
+                      </View>
                     </Pressable>
                   );
                 })}
@@ -248,9 +272,9 @@ export default function YourRevealsScreen() {
             </>
           )}
 
-          {ready ? (
+          {ready && !loadFailed ? (
             <>
-              <ThemedText type="small" themeColor="textSecondary" style={styles.heading}>
+              <ThemedText type="small" themeColor="textSecondary" style={styles.heading} accessibilityRole="header">
                 Legends met · {metIds.size} of {LEGEND_ROSTER.length}
               </ThemedText>
               {metIds.size === 0 ? (
@@ -320,9 +344,9 @@ const styles = StyleSheet.create({
   backButton: { alignSelf: 'flex-start', minHeight: 44, justifyContent: 'center' },
   heading: { marginTop: Spacing.two },
   panel: { borderWidth: 1, borderRadius: 14, padding: Spacing.three, gap: Spacing.two },
-  link: { paddingVertical: 4 },
+  link: { minHeight: 44, justifyContent: 'center', alignSelf: 'flex-start' },
   pressed: { opacity: 0.7 },
-  flex: { flex: 1 },
+  rowText: { flex: 1, flexShrink: 1, gap: 2 },
   rows: { gap: 8 },
   row: {
     flexDirection: 'row',
@@ -337,5 +361,5 @@ const styles = StyleSheet.create({
   hallGroup: { gap: Spacing.two },
   hallHead: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   metList: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  metChip: { borderWidth: 1, borderRadius: 10, paddingHorizontal: 10, paddingVertical: 8 },
+  metChip: { borderWidth: 1, borderRadius: 10, paddingHorizontal: 10, paddingVertical: 8, minHeight: 44, justifyContent: 'center' },
 });

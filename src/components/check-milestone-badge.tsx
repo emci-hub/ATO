@@ -1,7 +1,13 @@
 import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Platform, Pressable, StyleSheet, View } from 'react-native';
-import Animated, { useAnimatedStyle, useSharedValue, withSequence, withTiming } from 'react-native-reanimated';
+import Animated, {
+  useAnimatedStyle,
+  useReducedMotion,
+  useSharedValue,
+  withSequence,
+  withTiming,
+} from 'react-native-reanimated';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 
 import { ThemedPressable } from '@/components/themed-pressable';
@@ -201,7 +207,9 @@ export function MilestoneBadges({
   me?: Me | null;
 }) {
   const theme = useTheme();
-  const { reduceMotion } = useAppearance();
+  const systemReduce = useReducedMotion();
+  const { reduceMotion: appReduce } = useAppearance();
+  const reduceMotion = systemReduce || appReduce;
   const [open, setOpen] = useState(defaultOpen);
   const [fullPicture, setFullPicture] = useState(false);
   const [nextAxis, setNextAxis] = useState<TraitAxis | null>(null);
@@ -336,9 +344,10 @@ function FullProfileUnlockAck({ reduceMotion }: { reduceMotion: boolean }) {
   useEffect(() => {
     opacity.value = 1;
     if (reduceMotion) {
+      // Gentle, never still: hold, then a 300 ms fade out (no slide).
       const hide = setTimeout(() => {
-        opacity.value = 0;
-      }, 2400);
+        opacity.value = withTiming(0, { duration: 300 });
+      }, 2100);
       return () => clearTimeout(hide);
     }
     opacity.value = withSequence(

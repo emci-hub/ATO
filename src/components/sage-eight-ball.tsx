@@ -6,6 +6,7 @@ import Animated, {
   Easing,
   runOnJS,
   useAnimatedStyle,
+  useReducedMotion,
   useSharedValue,
   withRepeat,
   withSequence,
@@ -49,7 +50,9 @@ function SageOrb({
   thinking?: boolean;
 }) {
   const theme = useTheme();
-  const { reduceMotion } = useAppearance();
+  const systemReduce = useReducedMotion();
+  const { reduceMotion: appReduce } = useAppearance();
+  const reduceMotion = systemReduce || appReduce;
   const rotate = useSharedValue(0);
   const nudge = useSharedValue(0);
   const pop = useSharedValue(1);
@@ -307,7 +310,9 @@ function CalmReel({ lines, runId, onDone }: { lines: readonly string[]; runId: n
  */
 export function SageEightBall() {
   const theme = useTheme();
-  const { reduceMotion } = useAppearance();
+  const systemReduce = useReducedMotion();
+  const { reduceMotion: appReduce } = useAppearance();
+  const reduceMotion = systemReduce || appReduce;
   const [open, setOpen] = useState(false);
   const [answer, setAnswer] = useState<string | null>(null);
   const [spin, setSpin] = useState(0);

@@ -3,6 +3,7 @@ import { router } from 'expo-router';
 import { Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 
+import { QuestsMoreRow } from '@/components/quests/entry-card';
 import { ThemedText } from '@/components/themed-text';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
@@ -16,9 +17,9 @@ import { controlBorderColor } from '@/lib/theme/chrome';
  * one navigates to it; long-press opens edit mode so it can be added to the
  * bar.
  *
- * Divecore (Play) is appended as a fixed module row in every build (emci
- * 2026-10-15: Divecore stays on) — it is a pushed room (root /play route), not
- * a pool tab, so it never appears in the bar or the edit pool.
+ * Divecore stays on in every build (emci 2026-10-15). Play is a pushed room
+ * (root /play route) that sits in the bar by default; its "Open Divecore" row is
+ * appended here only when Play is not on the bar (moreIds includes 'play').
  */
 // RN's default Modal `animationType="fade"` runs ~300ms on both platforms.
 const MODAL_FADE_MS = 300;
@@ -41,13 +42,25 @@ export function NavMoreSheet({
         <View style={styles.backdrop}>
         {/* Flex spacer above the sheet — not absoluteFill, so row taps never
             hit the dismiss layer. */}
-        <Pressable style={styles.backdropDismiss} onPress={onClose} accessibilityLabel="Dismiss More" />
+        <Pressable
+          style={styles.backdropDismiss}
+          onPress={onClose}
+          accessibilityRole="button"
+          accessibilityLabel="Dismiss More"
+        />
         <SafeAreaView
           edges={['bottom']}
           style={[styles.sheet, { backgroundColor: theme.background, borderColor: controlBorderColor(theme) }]}>
           <View style={styles.header}>
-            <ThemedText type="smallBold">More</ThemedText>
-            <Pressable hitSlop={8} onPress={onClose}>
+            <ThemedText type="smallBold" accessibilityRole="header">
+              More
+            </ThemedText>
+            <Pressable
+              hitSlop={8}
+              onPress={onClose}
+              accessibilityRole="button"
+              accessibilityLabel="Close More"
+              style={styles.closeButton}>
               <ThemedText type="small" themeColor="textSecondary">
                 Close
               </ThemedText>
@@ -60,6 +73,12 @@ export function NavMoreSheet({
                 key={id}
                 accessibilityRole="button"
                 accessibilityLabel={`Open ${NAV_TABS[id].label}`}
+                accessibilityActions={[{ name: 'edit', label: 'Edit tab bar' }]}
+                onAccessibilityAction={(event) => {
+                  if (event.nativeEvent.actionName !== 'edit') return;
+                  onClose();
+                  setTimeout(startEditing, MODAL_FADE_MS);
+                }}
                 onPress={() => {
                   // Push first so closing the Modal cannot unmount before
                   // the tab navigator receives the route.
@@ -90,6 +109,9 @@ export function NavMoreSheet({
                 </ThemedText>
               </Pressable>
             ))}
+
+            {/* Quests (PHASE-23): hidden while quests_enabled is off. Mounted only while the sheet is open. */}
+            <QuestsMoreRow onClose={onClose} rowStyle={styles.row} pressedStyle={styles.pressed} labelStyle={styles.rowLabel} />
 
             {/* "Open Divecore" shows only when Play is not already a bar slot (IA phase P3). */}
             {moreIds.includes('play') ? (
@@ -136,6 +158,10 @@ const styles = StyleSheet.create({
   },
   backdropDismiss: {
     flex: 1,
+  },
+  closeButton: {
+    minHeight: 44,
+    justifyContent: 'center',
   },
   sheet: {
     borderTopLeftRadius: Spacing.four,

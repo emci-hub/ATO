@@ -58,8 +58,8 @@ function inQueue<T>(work: () => Promise<T>): Promise<T> {
 }
 
 // --- the pool cache -----------------------------------------------------------
-// The lines fetched from `daily_line_pool` (new authored rows, and this
-// account's own AI lines), kept so the picker has them on the next cold start
+// The lines fetched from `daily_line_pool` (new authored rows, and any
+// AI-sourced rows this account already has), kept so the picker has them on the next cold start
 // without waiting for the network. Owner-stamped like everything else here.
 
 export const DAILY_LINE_POOL_CACHE_KEY = 'ato.daily-line-pool.v1';
@@ -120,9 +120,8 @@ async function hydratePool(userId: string): Promise<void> {
 
 /**
  * Replaces the cache with a fresh fetch and registers the lines. This
- * account's AI lines that the server did not return are KEPT: a line saved
- * while offline is still this account's line, and dropping it would change a
- * day that already showed it.
+ * account's existing AI-sourced rows that the server did not return are KEPT:
+ * dropping one would change a day that already showed it.
  */
 export function savePoolCache(
   userId: string,
@@ -142,25 +141,6 @@ export function savePoolCache(
       await AsyncStorage.setItem(DAILY_LINE_POOL_CACHE_KEY, JSON.stringify({ userId, fetchedAt: now, rows }));
     } catch (err) {
       console.log('[daily-line] pool cache save skipped:', err);
-    }
-  });
-}
-
-/** Adds lines to the cache without a refetch (AI lines just written for this account). */
-export function appendPoolCache(userId: string, rows: PoolCache['rows']): Promise<void> {
-  return inQueue(async () => {
-    await hydratePool(userId);
-    registerPoolLines(rows);
-    const cache = (await readPoolCache(userId)) ?? { userId, fetchedAt: 0, rows: [] };
-    const seen = new Set(cache.rows.map((row) => row.text));
-    const merged = [...cache.rows, ...rows.filter((row) => !seen.has(row.text))];
-    try {
-      await AsyncStorage.setItem(
-        DAILY_LINE_POOL_CACHE_KEY,
-        JSON.stringify({ userId, fetchedAt: cache.fetchedAt, rows: merged }),
-      );
-    } catch (err) {
-      console.log('[daily-line] pool cache append skipped:', err);
     }
   });
 }

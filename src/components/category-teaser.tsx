@@ -99,9 +99,9 @@ export function CategoryTeaser({ me }: { me: Me }) {
           <Pressable
             onPress={() => router.push('/you?section=categories')}
             accessibilityRole="button"
-            accessibilityLabel="Open Explore for more"
+            accessibilityLabel="Open your categories for more"
             style={({ pressed }) => [styles.link, pressed && styles.pressed]}>
-            <ThemedText type="smallBold">More in Explore ›</ThemedText>
+            <ThemedText type="smallBold">More in categories ›</ThemedText>
           </Pressable>
         </View>
       ) : null}

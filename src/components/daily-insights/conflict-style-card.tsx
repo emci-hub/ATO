@@ -1,10 +1,13 @@
 import { StyleSheet } from 'react-native';
 
+import { GradientFill } from '@/components/gradient-fill';
+import { IconPop } from '@/components/icon-pop';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import type { ConflictLine } from '@/lib/daily-insights';
+import { BAR_FILL } from '@/lib/motion-tokens';
 import { controlBorderColor } from '@/lib/theme/chrome';
 
 import { ContextLine, MiniSection, ScriptLines } from './script-parts';
@@ -25,7 +28,14 @@ export function ConflictStyleCard({ line }: { line: ConflictLine }) {
       accessibilityLabel={label}
       style={[styles.card, { borderColor: controlBorderColor(theme) }]}
       testID="conflict-style-card">
-      <ContextLine emoji="🗣️" label="How you argue" />
+      <GradientFill
+        colors={[theme.accentTertiary, theme.accent]}
+        opacities={[0.12, 0.06]}
+        borderRadius={Spacing.three}
+      />
+      <IconPop delayMs={2 * BAR_FILL.tileStaggerMs}>
+        <ContextLine emoji="🗣️" label="How you argue" />
+      </IconPop>
       <ThemedText type="subheading">{line.title}</ThemedText>
       <ScriptLines text={line.text} />
       <MiniSection label="Strength" text={line.strength} />

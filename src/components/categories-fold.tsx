@@ -57,7 +57,7 @@ export function categoryWaitingCopy(reading: CategoryReading): string {
 // Display names live in lib/category-labels.ts (shared with Home's deep dive).
 
 /**
- * Categories on Explore (release pass, emci 2026-09-16; stored cards, emci
+ * Categories on You (was Explore; release pass, emci 2026-09-16; stored cards, emci
  * 2026-10-07).
  *
  * The WHOLE category set is always listed, open on the page — never folded,
@@ -78,7 +78,7 @@ export function CategoriesFold({
 }: {
   me: Me;
   /**
-   * Tracks the parent already fetched on focus (Explore). When given, they win
+   * Tracks the parent already fetched on focus (You). When given, they win
    * over this card's own fetch, so the card can never show older counts than
    * the screen around it.
    */

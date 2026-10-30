@@ -1,0 +1,54 @@
+{
+  "group_id": "2675c470-99a7-4784-96fc-b478ee9eda52",
+  "states": [
+    {
+      "character": {
+        "id": "02a3a0d4-6618-4bf4-a40a-2a8feab2cd20",
+        "name": "Idle",
+        "prompt": "Theo, a scruffy friendly street busker, a man with a short beard and a slouchy beanie, denim jacket over a striped shirt, an acoustic guitar held across his body, worn boots",
+        "size": {
+          "width": 64,
+          "height": 64
+        },
+        "template_id": "mannequin",
+        "directions": 8,
+        "view": "side",
+        "created_at": "2026-10-29T16:34:55.155343+00:00"
+      },
+      "folder": "Idle",
+      "frames": {
+        "rotations": {
+          "south": "Idle/rotations/south.png",
+          "south-east": "Idle/rotations/south-east.png",
+          "east": "Idle/rotations/east.png",
+          "north-east": "Idle/rotations/north-east.png",
+          "north": "Idle/rotations/north.png",
+          "north-west": "Idle/rotations/north-west.png",
+          "west": "Idle/rotations/west.png",
+          "south-west": "Idle/rotations/south-west.png"
+        },
+        "animations": {
+          "theo_idle": {
+            "east": [
+              "Idle/animations/theo_idle/east/frame_000.png",
+              "Idle/animations/theo_idle/east/frame_001.png",
+              "Idle/animations/theo_idle/east/frame_002.png",
+              "Idle/animations/theo_idle/east/frame_003.png"
+            ]
+          },
+          "theo_talk": {
+            "east": [
+              "Idle/animations/theo_talk/east/frame_000.png",
+              "Idle/animations/theo_talk/east/frame_001.png",
+              "Idle/animations/theo_talk/east/frame_002.png",
+              "Idle/animations/theo_talk/east/frame_003.png",
+              "Idle/animations/theo_talk/east/frame_004.png"
+            ]
+          }
+        }
+      }
+    }
+  ],
+  "export_version": "3.1",
+  "export_date": "2026-10-29T16:41:45.996756"
+}

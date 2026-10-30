@@ -64,6 +64,15 @@ export const TRUE_BEFORE = [
   'EIGHT_BALL_COPY_REVIEWED',
 ];
 
+/**
+ * Flags added after A4 (not part of the 17-flag ledger). Each starts `false` until emci ticks its review doc,
+ * and only ticked rows ship (so false never hides a surface that is already live); `value` is its current decision.
+ */
+export const AFTER_A4: Record<string, { file: string; value: boolean }> = {
+  // PHASE-11c (2026-10-27): docs/almanac-review.md, loaded by `npm run load:almanac`. emci approved it 2026-10-30.
+  ALMANAC_COPY_REVIEWED: { file: 'src/lib/almanac/index.ts', value: true },
+};
+
 /** The value of `export const NAME = true|false` in a source text, or null when it is not declared there. */
 export function flagValue(src: string, name: string): boolean | null {
   // Anchored to the start of a line, so a commented-out `// export const …` never counts.
@@ -168,6 +177,7 @@ for (const rel of allFlagFiles('src')) {
 const known = new Set([
   ...Object.entries(DECISIONS).filter(([, row]) => row.decision !== 'retired').map(([name]) => name),
   ...TRUE_BEFORE,
+  ...Object.keys(AFTER_A4),
 ]);
 /** Names a scan finds that no decision covers (aliases must be listed in ALIASES). */
 export function unlisted(found: string[], knownNames: Set<string>, aliasNames: string[], aliasFound: string[]): string[] {
@@ -176,10 +186,13 @@ export function unlisted(found: string[], knownNames: Set<string>, aliasNames: s
 const unknown = unlisted([...declared.keys()], known, ALIASES, aliases);
 assert.deepEqual(unknown, [], `new *_COPY_REVIEWED flag(s) with no decision in scripts/copy-flags-check.ts and Ledger A: ${unknown.join(', ')}`);
 for (const name of TRUE_BEFORE) assert.equal(declared.get(name), true, `${name} was true before A4 and must stay true`);
+for (const [name, row] of Object.entries(AFTER_A4)) {
+  assert.equal(flagValue(read(row.file), name), row.value, `${name} must be ${row.value} (its recorded decision)`);
+}
 assert.equal(
-  [...declared.values()].filter((v) => v === false).length,
+  [...declared.entries()].filter(([name, v]) => v === false && !(name in AFTER_A4)).length,
   4,
-  'exactly 4 flags are false: the 4 to read (the 4 retired ones are deleted)',
+  'exactly 4 flags are false: the 4 to read (the 4 retired ones are deleted; later flags carry their value in AFTER_A4)',
 );
 // Pairs on the real helper: an unlisted literal flag and an unlisted alias are both caught; a listed alias passes.
 assert.deepEqual(unlisted(['A'], new Set(['A']), ALIASES, ['UNLOCK_COPY_REVIEWED']), [], 'pass: known flag + the listed alias');

@@ -250,6 +250,12 @@ assert.doesNotMatch(
 assert.match(rollCode, /fetchServerMuseum\(\)/, 'met legends come from the saved museum, read like Legends does');
 assert.match(rollCode, /<LegendStoryCard/, 'a met legend opens its saved story card');
 assert.match(rollCode, /pathname: '\/legends', params: \{ hall \}/, 'each hall row opens that hall in Legends');
+// PHASE-07: a failed load never reads as "no legends met" (retry instead), and headings are announced.
+assert.match(rollCode, /\{REVEALS_ERROR_COPY\}/, 'a failed load shows an error with a retry, not the empty state');
+assert.match(rollCode, /loadFailed/, 'Your reveals tracks a failed load');
+assert.match(rollCode, /ready && !loadFailed/, 'the "Legends met" empty copy is hidden when the load failed');
+assert.match(rollCode, /<SkeletonCard/, 'Your reveals shows a skeleton while loading');
+assert.ok((rollCode.match(/accessibilityRole="header"/g) ?? []).length >= 4, 'title and section headings carry the header role');
 ok('Roll is "Your reveals": a real screen, no Rebuilt notice, display only (no spend, claim, save or model call)');
 
 console.log(`\n${passed} rebuilt checks passed`);

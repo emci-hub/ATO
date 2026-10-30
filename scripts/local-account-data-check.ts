@@ -90,6 +90,21 @@ function wouldWipe(key: string): boolean {
 // The keys that actually leaked must be wiped...
 for (const wiped of [
   'ato.today-insight.v1',
+  'ato.daily-line-ai-log.v1', // PHASE-11: writer removed; phones that already hold it are cleaned on sign-out
+  'ato.almanac.seen.v1', // PHASE-11a: Almanac seen-set (per account)
+  'ato.almanac.today.v1', // PHASE-11a: today's Almanac card per surface (per account)
+  'ato.almanac.prefs.v1', // PHASE-11f: seasonal switches (wiped on sign-out with the rest)
+  'ato.almanac.locale.v1', // PHASE-11b: stored hemisphere (wiped on sign-out, worked out again for the next account)
+  'ato.almanac.badges.v1', // PHASE-11e: cosmetic seasonal badges earned on this phone
+  'ato.insights.collection.v2', // PHASE-11e: Insights seen + per-event decks (v1 is read once, then left to the sign-out wipe)
+  'ato.insights.collection.v1',
+  'ato.quests.run.v1', // PHASE-14: the saved Quests run
+  'ato.quests.progress.v1', // PHASE-14: endings found + as-me evidence stamps
+  'ato.quests.tutorial.v1', // PHASE-23's tutorial flag (key fixed in PHASE-14)
+  'ato.quests.apply-queue.v1', // PHASE-17: Saves waiting for a connection (no user id; a new account never inherits them)
+  'ato.quests.applied.v1', // PHASE-17: 7-day Apply mirror
+  'ato.quests.devflags.v1', // PHASE-17: dev-only flag override
+  'ato.quests.flags.v1', // PHASE-17: last server flags, for offline
   'ato.questions.answeredOption.full-profile:abc.v1',
   'ato.questions.categoryPage.full-profile:abc.v1',
   'ato.profile.fullUnlock.seen.abc.v1',

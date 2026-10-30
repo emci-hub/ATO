@@ -3,12 +3,19 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { AlmanacDeckCard, AlmanacTryCard, eventNameFor, useAlmanacTry } from '@/components/almanac/event-cards';
 import { ConflictStyleCard } from '@/components/daily-insights/conflict-style-card';
 import { SuperpowerCard } from '@/components/daily-insights/superpower-card';
 import { TryTodayCard } from '@/components/daily-insights/try-today-card';
 import { InsightsStoryCard } from '@/components/insights/insights-story-card';
+import { GlowPulse } from '@/components/glow-pulse';
 import { TodayFocusCard } from '@/components/insights/today-focus-card';
+import { FlipCard } from '@/components/flip-card';
+import { InsightCollection } from '@/components/insight-collection';
 import { Appear, SkeletonCard } from '@/components/motion';
+import { QuestsEntryCard } from '@/components/quests/entry-card';
+import { SpectrumSection } from '@/components/spectrum-slider';
+import { ThemedPressable } from '@/components/themed-pressable';
 import { NAV_PIXEL_HEADER_INSET } from '@/components/nav-pixel';
 import { ThemedText } from '@/components/themed-text';
 import { TokenChip } from '@/components/token-chip';
@@ -18,6 +25,7 @@ import { useSession } from '@/hooks/use-session';
 import { useTheme } from '@/hooks/use-theme';
 import { useTryToday } from '@/hooks/use-try-today';
 import { useAccountDataEpoch } from '@/lib/account-data-epoch';
+import { useAlmanacDay } from '@/hooks/use-almanac-day';
 import { readyCategories } from '@/lib/categories';
 import { checkWindowFor } from '@/lib/check-window';
 import {
@@ -28,6 +36,8 @@ import {
   shouldShowTryToday,
 } from '@/lib/daily-insights';
 import { fullProfileLockedLine, fullProfileProgress, isFullProfileDone } from '@/lib/full-profile-gate';
+import { markInsightsSeen } from '@/lib/home-path-store';
+import { spectrumRows } from '@/lib/insights-spectrum';
 import { useMeContext } from '@/lib/me-context';
 import { FIRST_READ_STAGE, intakeStage } from '@/lib/questions/intake-stage';
 import { SAGE_COACH_LABEL, SAGE_NOT_A_PERSON } from '@/lib/sage-copy';
@@ -44,12 +54,19 @@ export const INSIGHTS_TITLE = SAGE_COACH_LABEL;
  * client, claims quota, asks for AI consent or takes typed text
  * (`check:insights-no-ai`).
  *
- * Order, top to bottom:
- *   1. 🎯 Try this today (daily-insights bank, "Did it ✓" streak)
- *   2. Today's focus (insight bank), without its own "try today" line
- *   3. The Story (story-v3 templates, v2 bank fallback)
+ * Order, top to bottom (PHASE-09 gamified it):
+ *   1. One flip card: front = Today's focus (insight bank, without its own
+ *      "try today" line), back = 🎯 Try this today (daily-insights bank,
+ *      "Did it ✓" streak). Without a try pick the focus card stands alone.
+ *   2. The Story (story-v3 templates, v2 bank fallback)
+ *   3. Where you lean (spectrum sliders, top 3 clear leans)
  *   4. ⚡ Superpower / 🪫 Kryptonite
  *   5. 🗣️ How you argue
+ *   6. Insights seen (collection, kept on the phone)
+ *   7. QUESTS_CARD_SLOT (PHASE-23)
+ *
+ * Opening this screen with a card on it also ticks Home's "read today's
+ * insight" step (`markInsightsSeen`), whichever way it was opened.
  *
  * "Today" is the profile timezone through the shared helpers (`localYmd`,
  * `checkWindowFor`), never the device's own zone.
@@ -62,6 +79,8 @@ export default function InsightsScreen() {
   const [tracks, setTracks] = useState<TraitTrack[]>([]);
   const [tracksReady, setTracksReady] = useState(false);
   const [tracksOwner, setTracksOwner] = useState<string | null>(null);
+  const [tracksError, setTracksError] = useState(false);
+  const [shownTitle, setShownTitle] = useState<string | null>(null);
   const dataEpoch = useAccountDataEpoch();
 
   // Refetch on focus (tab screens stay mounted); only the newest request writes.
@@ -75,8 +94,10 @@ export default function InsightsScreen() {
       if (requestId !== requestIdRef.current) return;
       setTracks(rows);
       setTracksOwner(userId);
+      setTracksError(false);
     } catch (err) {
       console.log('[insights] tracks error:', err);
+      if (requestId === requestIdRef.current) setTracksError(true);
     } finally {
       if (requestId === requestIdRef.current) setTracksReady(true);
     }
@@ -89,6 +110,8 @@ export default function InsightsScreen() {
     setTracks([]);
     setTracksOwner(null);
     setTracksReady(false);
+    setTracksError(false);
+    setShownTitle(null);
   }, [userId]);
 
   useFocusEffect(
@@ -114,6 +137,15 @@ export default function InsightsScreen() {
     touched: me?.trait_touched_at,
     enabled: !!userId && tryTodayVisible,
   });
+  // The Almanac's day (PHASE-11e): an event day swaps the flip card's back and adds a deck card.
+  const almanacDay = useAlmanacDay({
+    userId,
+    me,
+    ymd: window?.todayYmd,
+    tracks: ownTracks ? tracks : [],
+    dataDays: tryToday.streak ?? 0,
+  });
+  const almanacTry = useAlmanacTry(unlocked ? almanacDay : null);
   const superpower = useMemo(
     () => (tracksReady && ownTracks ? pickSuperpower(readyCategories(tracks)) : null),
     [tracks, tracksReady, ownTracks],
@@ -124,6 +156,34 @@ export default function InsightsScreen() {
   );
   // 🎯 is always offered here, so the focus card never repeats a "try today".
   const focusTry = focusShowsTryToday({ tryTodayCardShown: tryTodayVisible });
+  const spectrum = useMemo(
+    () => (cardsVisible && tracksReady && ownTracks ? spectrumRows(tracks) : []),
+    [cardsVisible, tracks, tracksReady, ownTracks],
+  );
+  const onInsightShown = useCallback((title: string) => setShownTitle(title), []);
+
+  // Opening Insights with a card on it counts as reading today's insight on Home's path.
+  const todayYmd = window?.todayYmd ?? null;
+  const showsInsight = unlocked || earlyRead;
+  useFocusEffect(
+    useCallback(() => {
+      if (userId && todayYmd && showsInsight) void markInsightsSeen(userId, todayYmd);
+    }, [userId, todayYmd, showsInsight]),
+  );
+
+  const focusCard =
+    userId && window ? (
+      <GlowPulse>
+        <TodayFocusCard
+          userId={userId}
+          tracks={tracks}
+          todayYmd={window.todayYmd}
+          todayDay={window.todayDay}
+          showTryToday={focusTry}
+          onInsightShown={onInsightShown}
+        />
+      </GlowPulse>
+    ) : null;
 
   return (
     <ThemedView style={styles.container}>
@@ -134,7 +194,7 @@ export default function InsightsScreen() {
           contentInsetAdjustmentBehavior="never">
           <View style={styles.header}>
             <View style={styles.titleRow}>
-              <ThemedText type="subtitle" style={styles.flexText}>
+              <ThemedText type="subtitle" style={styles.flexText} accessibilityRole="header">
                 {INSIGHTS_TITLE}
               </ThemedText>
               <TokenChip />
@@ -144,7 +204,24 @@ export default function InsightsScreen() {
             </ThemedText>
           </View>
 
-          {!me || !tracksReady || !ownTracks ? (
+          {me && tracksReady && !ownTracks && tracksError ? (
+            <ThemedView type="backgroundElement" style={styles.errorCard} testID="insights-error">
+              <ThemedText type="smallBold">Couldn’t load your insights.</ThemedText>
+              <ThemedText type="small" themeColor="textSecondary">
+                Check your connection and try again.
+              </ThemedText>
+              <ThemedPressable
+                accessibilityRole="button"
+                accessibilityLabel="Try again"
+                onPress={() => {
+                  setTracksReady(false);
+                  void reloadTracks();
+                }}
+                style={styles.retry}>
+                <ThemedText type="smallBold">Try again</ThemedText>
+              </ThemedPressable>
+            </ThemedView>
+          ) : !me || !tracksReady || !ownTracks ? (
             <>
               <SkeletonCard lines={3} />
               <SkeletonCard />
@@ -185,7 +262,26 @@ export default function InsightsScreen() {
             </>
           ) : (
             <>
-              {tryTodayVisible && tryToday.pick ? (
+              {/* One stable wrapper: the focus card keeps its place (and its load state) when the Try pick arrives late. */}
+              {focusCard ? (
+                <FlipCard
+                  front={focusCard}
+                  back={
+                    almanacTry ? (
+                      <AlmanacTryCard text={almanacTry.text} eventName={almanacDay ? eventNameFor(almanacDay, almanacTry.event) : 'Today'} />
+                    ) : tryTodayVisible && tryToday.pick ? (
+                      <TryTodayCard
+                        pick={tryToday.pick}
+                        streak={tryToday.streak}
+                        done={tryToday.done}
+                        onDone={tryToday.markDone}
+                      />
+                    ) : null
+                  }
+                  toBackLabel="Try this today"
+                  toFrontLabel="Today’s focus"
+                />
+              ) : tryTodayVisible && tryToday.pick ? (
                 <Appear>
                   <TryTodayCard
                     pick={tryToday.pick}
@@ -196,20 +292,27 @@ export default function InsightsScreen() {
                 </Appear>
               ) : null}
 
-              {userId && window ? (
-                <TodayFocusCard
-                  userId={userId}
-                  tracks={tracks}
-                  todayYmd={window.todayYmd}
-                  todayDay={window.todayDay}
-                  showTryToday={focusTry}
-                />
-              ) : null}
-
               <InsightsStoryCard me={me} tracks={tracks} tracksReady={tracksReady} unlocked={unlocked} />
 
-              {cardsVisible && superpower ? <SuperpowerCard pick={superpower} /> : null}
-              {cardsVisible && conflict ? <ConflictStyleCard line={conflict} /> : null}
+              {spectrum.length > 0 ? <SpectrumSection rows={spectrum} /> : null}
+
+              {cardsVisible && superpower ? (
+                <Appear index={2}>
+                  <SuperpowerCard pick={superpower} />
+                </Appear>
+              ) : null}
+              {cardsVisible && conflict ? (
+                <Appear index={4}>
+                  <ConflictStyleCard line={conflict} />
+                </Appear>
+              ) : null}
+
+              {cardsVisible && userId && almanacDay ? <AlmanacDeckCard userId={userId} day={almanacDay} /> : null}
+
+              {userId ? <InsightCollection userId={userId} shownTitle={shownTitle} /> : null}
+
+              {/* QUESTS_CARD_SLOT */}
+              <QuestsEntryCard />
             </>
           )}
         </ScrollView>
@@ -253,6 +356,18 @@ const styles = StyleSheet.create({
     borderRadius: Spacing.three,
     borderWidth: 1,
     padding: Spacing.three,
+  },
+  errorCard: {
+    borderRadius: Spacing.three,
+    padding: Spacing.three,
+    gap: Spacing.two,
+  },
+  retry: {
+    alignSelf: 'flex-start',
+    minHeight: 44,
+    minWidth: 44,
+    justifyContent: 'center',
+    paddingHorizontal: Spacing.three,
   },
   flexText: {
     flex: 1,

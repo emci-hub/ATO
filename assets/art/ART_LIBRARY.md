@@ -1,6 +1,6 @@
 # ATO art library
 
-Generated. 590 live entries.
+Generated. 677 live entries.
 Open `assets/art/_contact/library.html` (desktop / file://) or `library-portable.html` on a phone.
 Every tile is a preview (animated main clip, still, or individual sprites) — not the raw sheet.
 Reuse before create. New art goes in `assets/art/<category>/in-use|unused/<set>/<variant>/`.
@@ -10,12 +10,12 @@ Viewer lists one card per set (not each clip/file).
 
 - **heroes** (208: 66 in use / 142 unused) — Heroes
 - **enemies-bosses** (32: 24 in use / 8 unused) — Enemies / bosses
-- **ui** (26: 11 in use / 15 unused) — UI
-- **icons** (153: 72 in use / 81 unused) — Icons
+- **ui** (29: 11 in use / 18 unused) — UI
+- **icons** (231: 117 in use / 114 unused) — Icons
 - **rooms** (71: 49 in use / 22 unused) — Rooms
 - **props** (50: 11 in use / 39 unused) — Props
 - **tiles** (21: 0 in use / 21 unused) — Tiles
-- **fx** (14: 1 in use / 13 unused) — FX
+- **fx** (20: 7 in use / 13 unused) — FX
 - **backgrounds** (2: 2 in use / 0 unused) — Backgrounds
 - **branding** (13: 2 in use / 11 unused) — Branding
 - **misc** (0: 0 in use / 0 unused) — Misc
@@ -660,6 +660,14 @@ Viewer lists one card per set (not each clip/file).
 | `creep.wizard.streetwear.combat` | 503×101 | needs-restyle | — | assets/art/legacy-play-sheets.json, assets/play/sheets/streetwear/creeps/wizard/sheets.json, src/play/generated-play-sheets.ts |
 | `creep.wizard.streetwear.core` | 311×242 | needs-restyle | — | assets/art/legacy-play-sheets.json, assets/play/sheets/streetwear/creeps/wizard/sheets.json, src/play/generated-play-sheets.ts |
 
+## ui · almanac-frames · default · unused
+
+| id | size | status | score | usedBy |
+|---|---|---|---|---|
+| `ui.almanac-frames.complete` | 192×256 | resource | — | — |
+| `ui.almanac-frames.event` | 192×256 | resource | — | — |
+| `ui.almanac-frames.plain` | 192×256 | resource | — | — |
+
 ## ui · frames · streetwear · in-use
 
 | id | size | status | score | usedBy |
@@ -705,6 +713,109 @@ Viewer lists one card per set (not each clip/file).
 | `ui.streetwear.card-frame` | 288×384 | resource | — | — |
 | `ui.streetwear.health-bar` | 591×125 | resource | — | — |
 | `ui.streetwear.panel-frame` | 384×288 | resource | — | — |
+
+## icons · almanac-badges · default · unused
+
+| id | size | status | score | usedBy |
+|---|---|---|---|---|
+| `icon.almanac-badges.back-to-school` | 32×32 | resource | — | — |
+| `icon.almanac-badges.christmas` | 32×32 | resource | — | — |
+| `icon.almanac-badges.diwali` | 32×32 | resource | — | — |
+| `icon.almanac-badges.easter` | 32×32 | resource | — | — |
+| `icon.almanac-badges.eid-al-fitr` | 32×32 | resource | — | — |
+| `icon.almanac-badges.fathers-day` | 32×32 | resource | — | — |
+| `icon.almanac-badges.halloween` | 32×32 | resource | — | — |
+| `icon.almanac-badges.lunar-new-year` | 32×32 | resource | — | — |
+| `icon.almanac-badges.mothers-day` | 32×32 | resource | — | — |
+| `icon.almanac-badges.new-year` | 32×32 | resource | — | — |
+| `icon.almanac-badges.season-autumn` | 32×32 | resource | — | — |
+| `icon.almanac-badges.season-spring` | 32×32 | resource | — | — |
+| `icon.almanac-badges.season-summer` | 32×32 | resource | — | — |
+| `icon.almanac-badges.season-winter` | 32×32 | resource | — | — |
+| `icon.almanac-badges.summer` | 32×32 | resource | — | — |
+| `icon.almanac-badges.summer-solstice` | 32×32 | resource | — | — |
+| `icon.almanac-badges.thanksgiving-ca` | 32×32 | resource | — | — |
+| `icon.almanac-badges.thanksgiving-us` | 32×32 | resource | — | — |
+| `icon.almanac-badges.valentines` | 32×32 | resource | — | — |
+| `icon.almanac-badges.winter-solstice` | 32×32 | resource | — | — |
+| `icon.almanac-badges.year-end` | 32×32 | resource | — | — |
+
+## icons · almanac-decor · default · in-use
+
+| id | size | status | score | usedBy |
+|---|---|---|---|---|
+| `icon.almanac-decor.crescent` | 32×32 | resource | — | src/components/almanac/decor-layer.tsx |
+| `icon.almanac-decor.diya` | 32×32 | resource | — | src/components/almanac/decor-layer.tsx |
+| `icon.almanac-decor.egg` | 32×32 | resource | — | src/components/almanac/decor-layer.tsx |
+| `icon.almanac-decor.firework` | 32×32 | resource | — | src/components/almanac/decor-layer.tsx |
+| `icon.almanac-decor.lantern` | 32×32 | resource | — | src/components/almanac/decor-layer.tsx |
+| `icon.almanac-decor.petal` | 32×32 | resource | — | src/components/almanac/decor-layer.tsx |
+| `icon.almanac-decor.pumpkin` | 32×32 | resource | — | src/components/almanac/decor-layer.tsx |
+| `icon.almanac-decor.snowflake` | 32×32 | resource | — | src/components/almanac/decor-layer.tsx |
+| `icon.almanac-decor.star` | 32×32 | resource | — | src/components/almanac/decor-layer.tsx |
+| `icon.almanac-decor.wreath` | 32×32 | resource | — | src/components/almanac/decor-layer.tsx |
+
+## icons · almanac-emblems · default · unused
+
+| id | size | status | score | usedBy |
+|---|---|---|---|---|
+| `icon.almanac-emblems.christmas` | 32×32 | resource | — | — |
+| `icon.almanac-emblems.diwali` | 32×32 | resource | — | — |
+| `icon.almanac-emblems.easter` | 32×32 | resource | — | — |
+| `icon.almanac-emblems.eid-al-fitr` | 32×32 | resource | — | — |
+| `icon.almanac-emblems.halloween` | 32×32 | resource | — | — |
+| `icon.almanac-emblems.lunar-new-year` | 32×32 | resource | — | — |
+| `icon.almanac-emblems.mothers-day` | 32×32 | resource | — | — |
+| `icon.almanac-emblems.new-year` | 32×32 | resource | — | — |
+| `icon.almanac-emblems.summer` | 32×32 | resource | — | — |
+| `icon.almanac-emblems.thanksgiving` | 32×32 | resource | — | — |
+| `icon.almanac-emblems.valentines` | 32×32 | resource | — | — |
+| `icon.almanac-emblems.winter-solstice` | 32×32 | resource | — | — |
+
+## icons · almanac-sprigs · default · in-use
+
+| id | size | status | score | usedBy |
+|---|---|---|---|---|
+| `icon.almanac-sprigs.christmas` | 64×64 | resource | — | src/components/almanac/edge-sprigs.tsx |
+| `icon.almanac-sprigs.diwali` | 64×64 | resource | — | src/components/almanac/edge-sprigs.tsx |
+| `icon.almanac-sprigs.easter` | 64×64 | resource | — | src/components/almanac/edge-sprigs.tsx |
+| `icon.almanac-sprigs.eid-al-fitr` | 64×64 | resource | — | src/components/almanac/edge-sprigs.tsx |
+| `icon.almanac-sprigs.halloween` | 64×64 | resource | — | src/components/almanac/edge-sprigs.tsx |
+| `icon.almanac-sprigs.lunar-new-year` | 64×64 | resource | — | src/components/almanac/edge-sprigs.tsx |
+| `icon.almanac-sprigs.mothers-day` | 64×64 | resource | — | src/components/almanac/edge-sprigs.tsx |
+| `icon.almanac-sprigs.new-year` | 64×64 | resource | — | src/components/almanac/edge-sprigs.tsx |
+| `icon.almanac-sprigs.summer` | 64×64 | resource | — | src/components/almanac/edge-sprigs.tsx |
+| `icon.almanac-sprigs.thanksgiving` | 64×64 | resource | — | src/components/almanac/edge-sprigs.tsx |
+| `icon.almanac-sprigs.valentines` | 64×64 | resource | — | src/components/almanac/edge-sprigs.tsx |
+| `icon.almanac-sprigs.winter-solstice` | 64×64 | resource | — | src/components/almanac/edge-sprigs.tsx |
+
+## icons · almanac-stickers · default · in-use
+
+| id | size | status | score | usedBy |
+|---|---|---|---|---|
+| `icon.almanac-stickers.clock-change` | 32×32 | resource | — | src/components/almanac/decor-layer.tsx |
+| `icon.almanac-stickers.equinox` | 32×32 | resource | — | src/components/almanac/decor-layer.tsx |
+| `icon.almanac-stickers.first-snow` | 32×32 | resource | — | src/components/almanac/decor-layer.tsx |
+| `icon.almanac-stickers.friday-13th` | 32×32 | resource | — | src/components/almanac/decor-layer.tsx |
+| `icon.almanac-stickers.full-moon` | 32×32 | resource | — | src/components/almanac/decor-layer.tsx |
+| `icon.almanac-stickers.glow-30` | 32×32 | resource | — | src/components/almanac/decor-layer.tsx |
+| `icon.almanac-stickers.half-year` | 32×32 | resource | — | src/components/almanac/decor-layer.tsx |
+| `icon.almanac-stickers.month01` | 32×32 | resource | — | src/components/almanac/decor-layer.tsx |
+| `icon.almanac-stickers.month02` | 32×32 | resource | — | src/components/almanac/decor-layer.tsx |
+| `icon.almanac-stickers.month03` | 32×32 | resource | — | src/components/almanac/decor-layer.tsx |
+| `icon.almanac-stickers.month04` | 32×32 | resource | — | src/components/almanac/decor-layer.tsx |
+| `icon.almanac-stickers.month05` | 32×32 | resource | — | src/components/almanac/decor-layer.tsx |
+| `icon.almanac-stickers.month06` | 32×32 | resource | — | src/components/almanac/decor-layer.tsx |
+| `icon.almanac-stickers.month07` | 32×32 | resource | — | src/components/almanac/decor-layer.tsx |
+| `icon.almanac-stickers.month08` | 32×32 | resource | — | src/components/almanac/decor-layer.tsx |
+| `icon.almanac-stickers.month09` | 32×32 | resource | — | src/components/almanac/decor-layer.tsx |
+| `icon.almanac-stickers.month10` | 32×32 | resource | — | src/components/almanac/decor-layer.tsx |
+| `icon.almanac-stickers.month11` | 32×32 | resource | — | src/components/almanac/decor-layer.tsx |
+| `icon.almanac-stickers.month12` | 32×32 | resource | — | src/components/almanac/decor-layer.tsx |
+| `icon.almanac-stickers.one-year-ago` | 32×32 | resource | — | src/components/almanac/decor-layer.tsx |
+| `icon.almanac-stickers.payday-friday` | 32×32 | resource | — | src/components/almanac/decor-layer.tsx |
+| `icon.almanac-stickers.pick-100` | 32×32 | resource | — | src/components/almanac/decor-layer.tsx |
+| `icon.almanac-stickers.small-moment` | 32×32 | resource | — | src/components/almanac/decor-layer.tsx |
 
 ## icons · currency · streetwear · unused
 
@@ -1135,6 +1246,42 @@ Viewer lists one card per set (not each clip/file).
 | `tile.streetwear.road-path.tile-7` | 32×32 | resource | — | — |
 | `tile.streetwear.road-path.tile-8` | 32×32 | resource | — | — |
 | `tile.streetwear.road-path.tile-9` | 32×32 | resource | — | — |
+
+## fx · almanac-candle · default · in-use
+
+| id | size | status | score | usedBy |
+|---|---|---|---|---|
+| `fx.almanac-candle.candle-64` | 192×192 | resource | — | src/components/almanac/decor-layer.tsx |
+
+## fx · almanac-firework · default · in-use
+
+| id | size | status | score | usedBy |
+|---|---|---|---|---|
+| `fx.almanac-firework.firework-64` | 256×256 | resource | — | src/components/almanac/decor-layer.tsx |
+
+## fx · almanac-lantern-glow · default · in-use
+
+| id | size | status | score | usedBy |
+|---|---|---|---|---|
+| `fx.almanac-lantern-glow.lantern-glow-64` | 256×192 | resource | — | src/components/almanac/decor-layer.tsx |
+
+## fx · almanac-leaf · default · in-use
+
+| id | size | status | score | usedBy |
+|---|---|---|---|---|
+| `fx.almanac-leaf.leaf-64` | 256×256 | resource | — | src/components/almanac/decor-layer.tsx |
+
+## fx · almanac-petal · default · in-use
+
+| id | size | status | score | usedBy |
+|---|---|---|---|---|
+| `fx.almanac-petal.petal-64` | 256×256 | resource | — | src/components/almanac/decor-layer.tsx |
+
+## fx · almanac-snow · default · in-use
+
+| id | size | status | score | usedBy |
+|---|---|---|---|---|
+| `fx.almanac-snow.snow-64` | 256×256 | resource | — | src/components/almanac/decor-layer.tsx |
 
 ## fx · drip · streetwear · unused
 

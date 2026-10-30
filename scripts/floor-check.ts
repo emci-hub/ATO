@@ -150,7 +150,7 @@ assert.doesNotMatch(labels, /\[CONFIRM/, 'labels doc has no [CONFIRM] tag');
 assert.doesNotMatch(read('landing/index.html'), /\[CONFIRM|asstrollogs|AsTrollOGs/i, 'landing index is final');
 // pass/fail pairs
 assert.ok(legalFinalProblems(policy + ' [CONFIRM: x]', 'privacy').includes('has a [CONFIRM] tag'), 'fail: a tag');
-assert.ok(legalFinalProblems(policy.replace(/October 26, 2026/, '[DATE — fill in on publish]'), 'privacy').includes('has a date placeholder'), 'fail: no date');
+assert.ok(legalFinalProblems(policy.replace(/(January|February|March|April|May|June|July|August|September|October|November|December) \d{1,2}, 20\d\d/, '[DATE — fill in on publish]'), 'privacy').includes('has a date placeholder'), 'fail: no date');
 assert.ok(legalFinalProblems(policy + ' Draft, pending lawyer review', 'privacy').includes('says Draft'), 'fail: Draft');
 assert.ok(legalFinalProblems(policy + ' DRAFT', 'privacy').includes('says Draft'), 'fail: DRAFT in capitals');
 assert.ok(legalFinalProblems(policy + ' with DeepSeek as a fallback', 'privacy').includes('names DeepSeek'), 'fail: DeepSeek');

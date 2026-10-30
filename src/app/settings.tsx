@@ -14,6 +14,7 @@ import { HelplineRow } from '@/components/helpline-row';
 import { LegalLinks } from '@/components/legal-links';
 import { NotificationPrefsFold } from '@/components/notification-prefs-fold';
 import { RunningUpdateLine } from '@/components/running-update-line';
+import { SeasonalPrefsFold } from '@/components/seasonal-prefs-fold';
 import { SettingsFold } from '@/components/settings-fold';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -155,17 +156,19 @@ Update: ${Updates.updateId ?? 'original build'}`);
               style={({ pressed }) => [styles.backButton, pressed && styles.pressed]}>
               <ThemedText type="link">‹ Back</ThemedText>
             </Pressable>
-            <ThemedText type="subtitle">{SETTINGS_TITLE}</ThemedText>
+            <ThemedText type="subtitle" accessibilityRole="header">
+              {SETTINGS_TITLE}
+            </ThemedText>
           </View>
 
-          <ThemedText type="code" themeColor="textSecondary" style={styles.sectionHead}>
+          <ThemedText type="code" themeColor="textSecondary" style={styles.sectionHead} accessibilityRole="header">
             Appearance
           </ThemedText>
           <AppearancePicker />
 
           {me ? (
             <>
-              <ThemedText type="code" themeColor="textSecondary" style={styles.sectionHead}>
+              <ThemedText type="code" themeColor="textSecondary" style={styles.sectionHead} accessibilityRole="header">
                 Profile details
               </ThemedText>
               <CityPicker
@@ -180,12 +183,13 @@ Update: ${Updates.updateId ?? 'original build'}`);
             </>
           ) : null}
 
-          <ThemedText type="code" themeColor="textSecondary" style={styles.sectionHead}>
+          <ThemedText type="code" themeColor="textSecondary" style={styles.sectionHead} accessibilityRole="header">
             Notifications
           </ThemedText>
           <NotificationPrefsFold />
+          <SeasonalPrefsFold />
 
-          <ThemedText type="code" themeColor="textSecondary" style={styles.sectionHead}>
+          <ThemedText type="code" themeColor="textSecondary" style={styles.sectionHead} accessibilityRole="header">
             Privacy &amp; AI
           </ThemedText>
           <SettingsFold title="ATO's AI" defaultOpen>
@@ -202,7 +206,9 @@ Update: ${Updates.updateId ?? 'original build'}`);
                 />
               ) : (
                 <Pressable
-                  accessibilityRole="button"
+                  accessibilityRole="switch"
+                  accessibilityLabel="ATO's AI"
+                  accessibilityState={{ checked: consent === 'granted', busy: consentBusy }}
                   disabled={consentBusy || !me}
                   onPress={() => {
                     void saveAiConsent(consent !== 'granted');
@@ -220,13 +226,14 @@ Update: ${Updates.updateId ?? 'original build'}`);
             </View>
           </SettingsFold>
 
-          <ThemedText type="code" themeColor="textSecondary" style={styles.sectionHead}>
+          <ThemedText type="code" themeColor="textSecondary" style={styles.sectionHead} accessibilityRole="header">
             Help &amp; legal
           </ThemedText>
           {/* One static helpline row (emci 2026-10-14). Never generated. */}
           <HelplineRow />
           <Pressable
             accessibilityRole="link"
+            accessibilityLabel={SEND_FEEDBACK_LABEL}
             onPress={() => {
               void sendFeedback();
             }}
@@ -240,10 +247,13 @@ Update: ${Updates.updateId ?? 'original build'}`);
           ) : null}
           <LegalLinks />
 
-          <ThemedText type="code" themeColor="textSecondary" style={styles.sectionHead}>
+          <ThemedText type="code" themeColor="textSecondary" style={styles.sectionHead} accessibilityRole="header">
             Account
           </ThemedText>
           <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Sign out"
+            accessibilityState={{ disabled: signingOut, busy: signingOut }}
             onPress={handleSignOut}
             disabled={signingOut}
             style={({ pressed }) => [
@@ -269,19 +279,21 @@ Update: ${Updates.updateId ?? 'original build'}`);
             </ThemedText>
           </Pressable>
 
-          <ThemedText type="code" themeColor="textSecondary" style={styles.sectionHead}>
+          <ThemedText type="code" themeColor="textSecondary" style={styles.sectionHead} accessibilityRole="header">
             About
           </ThemedText>
           <RunningUpdateLine />
 
           {showDeveloper ? (
             <>
-              <ThemedText type="code" themeColor="textSecondary" style={styles.sectionHead}>
+              <ThemedText type="code" themeColor="textSecondary" style={styles.sectionHead} accessibilityRole="header">
                 Developer
               </ThemedText>
               {canSeeHub ? (
                 <ThemedView type="backgroundElement" style={styles.boxCard}>
                   <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel="Dev Tools Hub"
                     onPress={() => router.push('/dev-lab')}
                     style={({ pressed }) => [styles.boxRow, pressed && styles.pressed]}>
                     <View style={styles.boxRowText}>
@@ -297,6 +309,8 @@ Update: ${Updates.updateId ?? 'original build'}`);
               {__DEV__ ? (
                 <ThemedView type="backgroundElement" style={styles.boxCard}>
                   <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel="Pixel lab"
                     onPress={() => router.push('/pixel-lab')}
                     style={({ pressed }) => [styles.boxRow, pressed && styles.pressed]}>
                     <View style={styles.boxRowText}>
@@ -372,6 +386,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingVertical: Spacing.two,
+    minHeight: 44,
   },
   signOutButton: {
     borderRadius: Spacing.three,
