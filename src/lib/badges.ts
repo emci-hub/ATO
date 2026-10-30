@@ -105,6 +105,67 @@ export function resolveBadges(input: BadgeInput): BadgeState[] {
   ];
 }
 
+// ── Seasonal badges (PHASE-11e, L3) ─────────────────────────────────────────
+// Cosmetic and local: earned by answering a Pick while a season or an event's
+// build/peak window is on. They never unlock anything and never expire.
+
+export interface SeasonalBadge {
+  /** `event_<id>_<year>` or `season_<id>_<year>`. Forever. */
+  id: string;
+  name: string;
+  /** The local day it was earned. */
+  ymd: string;
+}
+
+export interface SeasonalBadgeWindow {
+  ymd: string;
+  seasonId: string;
+  seasonName: string;
+  eventId: string | null;
+  eventName: string | null;
+  eventPhase?: string;
+}
+
+/** The badges a Pick answered today can earn: the season, and the event while it builds or peaks. */
+export function earnableSeasonalBadges(w: SeasonalBadgeWindow): SeasonalBadge[] {
+  const year = w.ymd.slice(0, 4);
+  // New Year's late-December build belongs to next year's New Year (one badge).
+  const eventYear = w.eventId === 'new_year' && w.ymd.slice(5, 7) === '12' ? String(Number(year) + 1) : year;
+  const out: SeasonalBadge[] = [{ id: `season_${w.seasonId}_${year}`, name: w.seasonName, ymd: w.ymd }];
+  if (w.eventId && w.eventName && (w.eventPhase === 'build' || w.eventPhase === 'peak')) {
+    out.push({ id: `event_${w.eventId}_${eventYear}`, name: w.eventName, ymd: w.ymd });
+  }
+  return out;
+}
+
+export function addSeasonalBadges(
+  have: readonly SeasonalBadge[],
+  earned: readonly SeasonalBadge[],
+): { list: SeasonalBadge[]; added: SeasonalBadge[] } {
+  const list = [...have];
+  const added: SeasonalBadge[] = [];
+  for (const badge of earned) {
+    if (list.some((b) => b.id === badge.id)) continue;
+    list.push(badge);
+    added.push(badge);
+  }
+  return { list, added };
+}
+
+export function parseSeasonalBadges(raw: string | null, userId: string): SeasonalBadge[] {
+  if (!raw) return [];
+  try {
+    const v = JSON.parse(raw) as { userId?: unknown; badges?: unknown } | null;
+    if (!v || v.userId !== userId || !Array.isArray(v.badges)) return [];
+    return v.badges.filter(
+      (b): b is SeasonalBadge =>
+        !!b && typeof b.id === 'string' && typeof b.name === 'string' && typeof b.ymd === 'string',
+    );
+  } catch {
+    return [];
+  }
+}
+
 export function unlockedCount(states: BadgeState[]): number {
   return states.filter((badge) => badge.unlocked).length;
 }

@@ -49,27 +49,27 @@ Stage C Gamify screens
 Stage C2 Almanac
 - [ ] PHASE-11a Almanac engine core
 - [ ] PHASE-11b Calendar, locale, ramp, arcs
-- [ ] PHASE-11c Almanac content pipeline + MVP bank  ⚑ copy OK
-- [ ] PHASE-11d Pick 368 + community counter  ⚑ wave117
-- [ ] PHASE-11e Almanac surfaces: Home, Insights, You
-- [ ] PHASE-11f Seasonal settings + morning push copy
-- [ ] PHASE-11g Art: Almanac decor, stickers, badges (PixelLab)  ⚑ art OK
-- [ ] PHASE-11h Theming integration
+- [x] PHASE-11c Almanac content pipeline + MVP bank  ⚑ copy OK (built; emci approved and ticked 2026-10-28, flag true 2026-10-30)
+- [x] PHASE-11d Pick 368 + community counter  ⚑ wave117 (built; emci applies wave117)
+- [x] PHASE-11e Almanac surfaces: Home, Insights, You
+- [x] PHASE-11f Seasonal settings + morning push copy
+- [x] PHASE-11g Art: Almanac decor, stickers, badges (PixelLab)  ⚑ art OK
+- [x] PHASE-11h Theming integration
 Stage D Quests
-- [ ] PHASE-12 Quests content model + validator
-- [ ] PHASE-13 Scoring + sims
+- [x] PHASE-12 Quests content model + validator
+- [x] PHASE-13 Scoring + sims
 - [ ] PHASE-14 Run engine + saves
 - [ ] PHASE-15 Art 1: style lock + Lantern set (PixelLab)
 - [ ] PHASE-16 Quests UI v3
 - [ ] PHASE-17 Server, Apply, Undo, flags  ⚑ wave116
-- [ ] PHASE-18 Style guide + The Drowned Lantern  ⚑ copy OK
-- [ ] PHASE-19 The Masquerade  ⚑ copy OK
-- [ ] PHASE-20 Last Train Home  ⚑ copy OK
+- [ ] PHASE-18 Style guide + The Drowned Lantern  ⚑ copy OK (emci approved 2026-10-30, no changes)
+- [x] PHASE-19 The Masquerade  ⚑ copy OK (built; emci approved the Quests copy 2026-10-30, no changes)
+- [ ] PHASE-20 Last Train Home  ⚑ copy OK (emci approved 2026-10-30, no changes)
 - [ ] PHASE-21 Art 2: Masquerade + City + shared VFX (PixelLab)  ⚑ art OK
-- [ ] PHASE-22 Atlas build + art integration
-- [ ] PHASE-23 Quests entry points + tutorial + You
+- [x] PHASE-22 Atlas build + art integration
+- [x] PHASE-23 Quests entry points + tutorial + You
 Stage E Polish & release
-- [ ] PHASE-24 Per-mode polish (G5)
+- [ ] PHASE-24 Per-mode polish (G5) — code built 2026-10-29, checks green; open: 5-mode screenshots, wiring `tracks` into a sender share path
 - [ ] PHASE-25 Quests QA + playtest  ⚑ playtest
 - [ ] PHASE-26 Whole-app a11y + states
 - [ ] PHASE-27 Regression QA + release  ⚑ wording, flags, OTA
@@ -726,7 +726,7 @@ Formulas (pure functions, no I/O). Skip undone picks and for-fun runs. For each 
   - game .60 → .609.
 Steps:
 1. Fixtures: misclick, flip-flop, chaotic, for-fun, undone, contradiction, the limits (3 axes / 0.08 / 7 days / 30 days), decay, the worked example.
-2. Sim harness: 1,000 random runs per registered campaign. The apply-rate must be under 5%, and a consistent run must apply at least 1 axis. It is skipped for `isSample`.
+2. Sim harness: 1,000 random runs per registered campaign. ~~The apply-rate must be under 5%~~ **(emci 2026-10-28, option A: no valid campaign can reach < 5% of runs with these formulas; the lowest is ~9%)** each target axis is applied in ≤ 12% of random runs and the mean random |Δ| over all (run, target axis) pairs is ≤ 0.02; a consistent run must apply at least 1 axis. It is skipped for `isSample`. In practice a primary scene needs a neutral choice beside its two poles (2-choice primaries give 62.5% per axis).
 3. Write notes on how `_trait_write` merges the game track into the progress Log. **(R10)** `_trait_write(uuid,text,text,double precision,text)` takes no weight, so read its `p_mode='game'` branch (wave79 ~L202–L330) and record exactly where `g` and the |Δ|≤0.08 cap can be applied. If the server can't honour `g`, STOP and ask emci.
 Accept: `check:quest-score` is green.
 
@@ -874,7 +874,7 @@ SQL:
   - 7 days per axis;
   - the run id is used once.
 
-  It stores pre_values and calls `_trait_write(uid, axis, 'self_game', s, 'game')`.
+  It stores pre_values and ~~calls `_trait_write(uid, axis, 'self_game', s, 'game')`~~ **(R10, emci 2026-10-28, option A)** writes through a new private helper in wave116: `to = clamp(game + g·(s − game), game ± 0.08)` (no game row yet = start at 0.5, like `score.ts`), updating ONLY the game-track `value` (never its stability or answer_count, never the `me` column or `trait_sources`) plus one `self_game` history row. `_trait_write` stays untouched (its game branch has no weight, uses its own gain and blends `me`; notes in `docs/ato-build-progress.md`, PHASE-13).
 - `undo_quest_result(p_run_id)`: within 24 h. It restores pre_values if the game track hasn't been written since; otherwise it applies the inverse nudge.
 - `app_config` columns: `quests_enabled bool default false`, `quests_apply_enabled bool default false`, `quests_disabled_campaigns text[] default '{}'`.
 Client:
@@ -885,7 +885,7 @@ Client:
 - a dev override for the flags.
 Hardening (red team):
 - **(R11)** every RPC is `security definer` with `set search_path = public, pg_temp`, rejects a null `auth.uid()`, validates every jsonb field, does `revoke ... from public, anon` and grants only to `authenticated`. No direct DML on `quest_runs`.
-- **(R10)** `p_axes` carries `{axis, s, g}`. The server validates `s∈[0.2,0.8]` and `g≤0.25`, applies the |Δ|≤0.08 cap itself, and uses PHASE-13's notes on `_trait_write`.
+- **(R10)** `p_axes` carries `{axis, s, g}`. The server validates `s∈[0.2,0.8]` and `g≤0.25`, applies the |Δ|≤0.08 cap itself, and uses PHASE-13's notes on `_trait_write` (option A above: a game-value-only write, not `_trait_write`).
 - **(R09)** the server enforces the 30-day evidence rule (per campaign, from `quest_runs`) and the 7-day axis rule; client state is only a mirror.
 - **(R08)** Undo after a newer game-track write is bounded: the value never leaves `pre_value ± 0.08` or `[0.2, 0.8]`.
 - **(R07)** the client takes an in-flight lock per run id; the queue retries with the same run id, so two concurrent Applies make one write.

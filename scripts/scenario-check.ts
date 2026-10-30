@@ -112,6 +112,12 @@ for (const axis of EXTRA_AXES) allExtra[axis] = 0.8;
 assert.equal(pickScenarioAxis(allExtra, null), null);
 ok('round-robin among unfilled extra axes only');
 
+// wave118: a scenario pick leaves `me` empty, so a played game track counts as filled.
+assert.equal(pickScenarioAxis(extraGap(), null, ['autonomy']), 'competence');
+assert.equal(pickScenarioAxis(extraGap(), null, [...EXTRA_AXES]), null);
+assert.equal(pickScenarioAxis(extraGap(), null, ['openness']), 'autonomy', 'a non-extra played axis changes nothing');
+ok('played game axes count as filled for the scenario rotation');
+
 const firstNineFilled = extraGap();
 for (const axis of [
   'openness',

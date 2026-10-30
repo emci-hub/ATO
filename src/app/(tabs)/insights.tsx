@@ -3,14 +3,17 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { AlmanacDeckCard, AlmanacTryCard, eventNameFor, useAlmanacTry } from '@/components/almanac/event-cards';
 import { ConflictStyleCard } from '@/components/daily-insights/conflict-style-card';
 import { SuperpowerCard } from '@/components/daily-insights/superpower-card';
 import { TryTodayCard } from '@/components/daily-insights/try-today-card';
 import { InsightsStoryCard } from '@/components/insights/insights-story-card';
+import { GlowPulse } from '@/components/glow-pulse';
 import { TodayFocusCard } from '@/components/insights/today-focus-card';
 import { FlipCard } from '@/components/flip-card';
 import { InsightCollection } from '@/components/insight-collection';
 import { Appear, SkeletonCard } from '@/components/motion';
+import { QuestsEntryCard } from '@/components/quests/entry-card';
 import { SpectrumSection } from '@/components/spectrum-slider';
 import { ThemedPressable } from '@/components/themed-pressable';
 import { NAV_PIXEL_HEADER_INSET } from '@/components/nav-pixel';
@@ -22,6 +25,7 @@ import { useSession } from '@/hooks/use-session';
 import { useTheme } from '@/hooks/use-theme';
 import { useTryToday } from '@/hooks/use-try-today';
 import { useAccountDataEpoch } from '@/lib/account-data-epoch';
+import { useAlmanacDay } from '@/hooks/use-almanac-day';
 import { readyCategories } from '@/lib/categories';
 import { checkWindowFor } from '@/lib/check-window';
 import {
@@ -133,6 +137,15 @@ export default function InsightsScreen() {
     touched: me?.trait_touched_at,
     enabled: !!userId && tryTodayVisible,
   });
+  // The Almanac's day (PHASE-11e): an event day swaps the flip card's back and adds a deck card.
+  const almanacDay = useAlmanacDay({
+    userId,
+    me,
+    ymd: window?.todayYmd,
+    tracks: ownTracks ? tracks : [],
+    dataDays: tryToday.streak ?? 0,
+  });
+  const almanacTry = useAlmanacTry(unlocked ? almanacDay : null);
   const superpower = useMemo(
     () => (tracksReady && ownTracks ? pickSuperpower(readyCategories(tracks)) : null),
     [tracks, tracksReady, ownTracks],
@@ -160,14 +173,16 @@ export default function InsightsScreen() {
 
   const focusCard =
     userId && window ? (
-      <TodayFocusCard
-        userId={userId}
-        tracks={tracks}
-        todayYmd={window.todayYmd}
-        todayDay={window.todayDay}
-        showTryToday={focusTry}
-        onInsightShown={onInsightShown}
-      />
+      <GlowPulse>
+        <TodayFocusCard
+          userId={userId}
+          tracks={tracks}
+          todayYmd={window.todayYmd}
+          todayDay={window.todayDay}
+          showTryToday={focusTry}
+          onInsightShown={onInsightShown}
+        />
+      </GlowPulse>
     ) : null;
 
   return (
@@ -179,7 +194,7 @@ export default function InsightsScreen() {
           contentInsetAdjustmentBehavior="never">
           <View style={styles.header}>
             <View style={styles.titleRow}>
-              <ThemedText type="subtitle" style={styles.flexText}>
+              <ThemedText type="subtitle" style={styles.flexText} accessibilityRole="header">
                 {INSIGHTS_TITLE}
               </ThemedText>
               <TokenChip />
@@ -252,7 +267,9 @@ export default function InsightsScreen() {
                 <FlipCard
                   front={focusCard}
                   back={
-                    tryTodayVisible && tryToday.pick ? (
+                    almanacTry ? (
+                      <AlmanacTryCard text={almanacTry.text} eventName={almanacDay ? eventNameFor(almanacDay, almanacTry.event) : 'Today'} />
+                    ) : tryTodayVisible && tryToday.pick ? (
                       <TryTodayCard
                         pick={tryToday.pick}
                         streak={tryToday.streak}
@@ -290,9 +307,12 @@ export default function InsightsScreen() {
                 </Appear>
               ) : null}
 
+              {cardsVisible && userId && almanacDay ? <AlmanacDeckCard userId={userId} day={almanacDay} /> : null}
+
               {userId ? <InsightCollection userId={userId} shownTitle={shownTitle} /> : null}
 
               {/* QUESTS_CARD_SLOT */}
+              <QuestsEntryCard />
             </>
           )}
         </ScrollView>

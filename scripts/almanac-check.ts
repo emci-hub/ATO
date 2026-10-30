@@ -44,8 +44,16 @@ import type {
 } from '../src/lib/almanac/types';
 import type { ClearLean } from '../src/lib/daily-line/pick';
 import { pickIndexForYmd } from '../src/lib/daily-pick/bank';
+import { cardIsShareable } from '../src/lib/almanac-share';
+import { AXIS_POLE_NAME } from '../src/lib/axis-poles';
+import { addSeasonalBadges, earnableSeasonalBadges, parseSeasonalBadges } from '../src/lib/badges';
+import { communityEventFor, communityLine, eventYear, nextGoal, TEASER_MAX, TEASER_MIN, teaserWindow } from '../src/lib/almanac/community';
+import { createCalendar } from '../src/lib/almanac/resolve';
+import { monthlyShifts } from '../src/lib/almanac/shift';
+import { YEAR_RECAP_CARDS, yearDeck, yearRecapOpen } from '../src/lib/almanac/year';
 import { streakWithRest } from '../src/lib/home-path';
 import { addDaysYmd } from '../src/lib/local-date';
+import { isShareableLean } from '../src/lib/legends64/identity';
 import { TRAIT_AXES, type TraitAxis, type TraitLean } from '../src/lib/traits';
 import { matchingFrameworkTerms } from '../src/lib/voice/framework-fence';
 
@@ -299,18 +307,27 @@ for (let d = 0; d < 40; d++) {
   assert.deepEqual(r, { surface: 'home.pick', source: 'rotation', pickIndex: pickIndexForYmd(ymd) }, `base Pick = global rotation (${ymd})`);
 }
 {
-  const calendar = { events: [{ event: 'halloween', phase: 'peak' as const }] };
-  const a = today('home.pick', { ...PROFILES.strong!, calendar }, { bank });
-  const b = today('home.pick', { ...PROFILES.starter!, calendar }, { bank });
-  assert.ok(a && a.source === 'card' && a.card.event === 'halloween', 'a live event Pick replaces the rotation');
+  // PHASE-11e: a peak day follows daily-pick's override table (the server's rows).
+  const peak = '2026-10-31';
+  const withPeak = [
+    ...bank,
+    { id: 'alm_pick_halloween_peak_01', kind: 'pick' as const, event: 'halloween', text: 'Treat or trick?', reviewed: true },
+  ];
+  const a = today('home.pick', { ...PROFILES.strong!, ymd: peak }, { bank: withPeak });
+  const b = today('home.pick', { ...PROFILES.starter!, ymd: peak }, { bank: withPeak });
+  assert.ok(a && a.source === 'card' && a.card.event === 'halloween', 'a peak day uses the override Pick');
   assert.equal(resultId(a), resultId(b), 'event Pick is shared: every reader gets the same one');
+  const quiet = today('home.pick', { ...PROFILES.strong!, ymd: '2026-10-30' }, { bank: withPeak });
+  assert.equal(quiet?.source, 'rotation', 'the day before is the ordinary rotation');
+  const missing = today('home.pick', { ...PROFILES.strong!, ymd: peak }, { bank });
+  assert.equal(missing?.source, 'rotation', 'no reviewed card for the peak Pick: the rotation stands');
 }
 assert.deepEqual(today('home.pick', PROFILES.strong!), { surface: 'home.pick', source: 'rotation', pickIndex: pickIndexForYmd(START) });
 ok('home.pick: the existing global rotation by ymd; event Picks shared, not personal');
 
 // ---------------------------------------------------------------- empty shipped bank
-assert.equal(ALMANAC_BANK.length, 0, 'the shipped bank stays empty until PHASE-11c');
-assert.equal(today('home.line', PROFILES.strong!), null, 'nothing fits → null, never a crash');
+assert.ok(ALMANAC_BANK.every((c) => c.reviewed), 'the shipped bank holds only reviewed (ticked) cards');
+assert.equal(today('home.line', PROFILES.strong!, { bank: [] }), null, 'nothing fits → null, never a crash');
 ok('empty bank → null on every personal surface');
 
 // ---------------------------------------------------------------- cache + seen
@@ -421,9 +438,108 @@ function sourceChecks(): void {
   ok('purity: no RN / Expo / AsyncStorage / Supabase import, no fetch, no Math.random, no clock');
 }
 
+// ---------------------------------------------------------------- PHASE-11e surfaces
+function surfaceChecks(): void {
+  const cal = createCalendar({ tz: 'UTC', region: 'US', hemisphere: 'north' });
+
+  // Community goal: next round goal, global events on build/peak days only.
+  assert.equal(nextGoal(20), 100);
+  assert.equal(nextGoal(100), 250, 'a reached goal moves to the next');
+  assert.equal(nextGoal(99_999), 100_000);
+  assert.equal(nextGoal(100_000), 200_000, 'past the table it steps by 100,000');
+  const peak = cal.theme('2026-10-31');
+  assert.equal(communityEventFor(peak), 'halloween', 'Halloween peak counts Halloween Picks');
+  assert.equal(communityEventFor(cal.theme('2026-07-15')), null, 'an ordinary summer day has no community card');
+  assert.match(communityLine('halloween', 1160, 2500), /^Halloween Picks answered: 1,160 of 2,500\.$/);
+
+  // Teaser: only while an event is on the screen at 0.1 to 0.4.
+  let teased = 0;
+  for (const t of cal.series('2026-10-01', 40)) {
+    const x = t.display.intensity;
+    assert.equal(teaserWindow(t), t.display.event != null && x >= TEASER_MIN && x <= TEASER_MAX);
+    if (teaserWindow(t)) teased += 1;
+  }
+  assert.ok(teased > 0, 'the October walk has teaser days');
+
+  // What shifted: window start = last value before it; small moves are noise.
+  const now = new Date('2026-11-15T12:00:00Z');
+  const row = (axis: TraitAxis, value: number, iso: string) => ({ axis, value, createdAt: iso });
+  const shifts = monthlyShifts(
+    [
+      row('openness', 0.4, '2026-09-01T10:00:00Z'),
+      row('openness', 0.7, '2026-11-10T10:00:00Z'),
+      row('extraversion', 0.5, '2026-10-30T10:00:00Z'),
+      row('extraversion', 0.52, '2026-11-12T10:00:00Z'),
+      row('conscientiousness', 0.9, '2026-09-02T10:00:00Z'),
+      row('conscientiousness', 0.6, '2026-11-01T10:00:00Z'),
+      row('agreeableness', 0.3, '2026-08-01T10:00:00Z'),
+    ],
+    now,
+  );
+  assert.deepEqual(shifts.map((s) => s.axis), ['conscientiousness', 'openness'], 'noise and rows outside the window are dropped, biggest first');
+  assert.equal(shifts[1]!.toward, AXIS_POLE_NAME.openness.high);
+  assert.equal(shifts[0]!.toward, AXIS_POLE_NAME.conscientiousness.low);
+  assert.deepEqual(monthlyShifts([], now), []);
+
+  // Your year: eight distinct cards, same day = same deck, December only.
+  assert.equal(yearRecapOpen('2026-12-01'), true);
+  assert.equal(yearRecapOpen('2026-11-30'), false);
+  const yearBank: AlmanacCard[] = Array.from({ length: 12 }, (_, i) => ({
+    id: `alm_year_any_${String(i + 1).padStart(2, '0')}`,
+    kind: 'year' as const,
+    text: `Year card ${i + 1}.`,
+    reviewed: true,
+  }));
+  const yctx = { ...PROFILES.strong!, ymd: '2026-12-10' };
+  const deck = yearDeck(yctx, yearBank);
+  assert.equal(deck.length, YEAR_RECAP_CARDS);
+  assert.equal(new Set(deck.map((c) => c.card.id)).size, YEAR_RECAP_CARDS, 'no card twice in one deck');
+  assert.deepEqual(yearDeck(yctx, yearBank).map((c) => c.card.id), deck.map((c) => c.card.id), 'the same day gives the same deck');
+  assert.deepEqual(yearDeck(yctx, yearBank.slice(0, 3)).length, 3, 'a thin bank gives a short deck, not filler');
+  assert.deepEqual(yearDeck(yctx, []), [], 'no cards: no deck');
+
+  // Seasonal badges: the season always, the event only while it builds or peaks.
+  const win = { ymd: '2026-10-31', seasonId: 'shadows', seasonName: 'Season of Shadows', eventId: 'halloween', eventName: 'Halloween' };
+  assert.deepEqual(earnableSeasonalBadges({ ...win, eventPhase: 'peak' }).map((b) => b.id), ['season_shadows_2026', 'event_halloween_2026']);
+  assert.deepEqual(earnableSeasonalBadges({ ...win, eventPhase: 'fade' }).map((b) => b.id), ['season_shadows_2026']);
+  const first = addSeasonalBadges([], earnableSeasonalBadges({ ...win, eventPhase: 'peak' }));
+  assert.equal(first.added.length, 2);
+  assert.equal(addSeasonalBadges(first.list, earnableSeasonalBadges({ ...win, eventPhase: 'peak' })).added.length, 0, 'earned once');
+  assert.deepEqual(parseSeasonalBadges(JSON.stringify({ userId: 'u', badges: first.list }), 'u'), first.list);
+  assert.deepEqual(parseSeasonalBadges(JSON.stringify({ userId: 'u', badges: first.list }), 'x'), [], "another account's badges are never read");
+  assert.deepEqual(parseSeasonalBadges('{', 'u'), []);
+
+  // Share: a {axis} slot fills from the reader's strongest lean, so that lean must be shareable too.
+  const priv = TRAIT_AXES.flatMap((axis) => (['high', 'low'] as const).map((l) => ({ axis, l }))).find(({ axis, l }) => !isShareableLean(axis, l))!;
+  const pub = TRAIT_AXES.flatMap((axis) => (['high', 'low'] as const).map((l) => ({ axis, l }))).find(({ axis, l }) => isShareableLean(axis, l))!;
+  const leanOf = (x: { axis: TraitAxis; l: 'high' | 'low' }, strength: number): ClearLean => ({ axis: x.axis, lean: x.l, settled: true, strength });
+  const slotCard = { text: 'Your answers leaned {axis} ({axisPct}%).' };
+  assert.equal(cardIsShareable(slotCard, [leanOf(priv, 0.4), leanOf(pub, 0.2)]), false, 'a private strongest lean never leaves the phone');
+  assert.equal(cardIsShareable(slotCard, [leanOf(pub, 0.4), leanOf(priv, 0.2)]), true, 'a shareable strongest lean may');
+  assert.equal(cardIsShareable({ text: '{pairAxis} next.' }, [leanOf(pub, 0.4), leanOf(priv, 0.2)]), false, 'the pair slot counts too');
+  assert.equal(cardIsShareable({ text: 'No slots here.' }, [leanOf(priv, 0.4)]), true, 'a card with no axis slot is fine');
+  assert.equal(cardIsShareable({ text: 'x', axes: [`${priv.axis}:${priv.l}`] }, []), false, 'a card written for a private lean is not shared');
+  assert.equal(eventYear('new_year', '2026-12-30'), 2027, "late-December build is next year's New Year");
+  assert.equal(eventYear('new_year', '2027-01-01'), 2027);
+  assert.equal(eventYear('halloween', '2026-12-30'), 2026);
+
+  // Wired in the screens, not just built.
+  const home = readFileSync(resolve(__dirname, '../src/app/(tabs)/index.tsx'), 'utf8');
+  assert.match(home, /<TeaserLine day=\{almanacDay\}/);
+  assert.match(home, /<CommunityGoal theme=\{almanacDay\.theme\}/);
+  assert.match(home, /earnSeasonalBadges\(userId, almanacDay\.theme\)/);
+  const card = readFileSync(resolve(__dirname, '../src/components/today-pick-card.tsx'), 'utf8');
+  assert.match(card, /eventPickForYmd\(ymd\)/);
+  assert.match(card, /fetchEventPickId\(ymd\)/, 'a seasonal Pick shows only when the server names it');
+  assert.match(card, /pickShareLine\(landed\)/);
+  assert.match(card, /`You’re in the \$\{percent\}%\.`/, 'the result line reads "You’re in the N%."');
+  ok('PHASE-11e surfaces: community goal, teaser window, monthly shift, year deck, seasonal badges, wiring');
+}
+
 void loadTodayChecks()
   .then(() => {
     sourceChecks();
+    surfaceChecks();
     console.log(`check:almanac passed (bank v${ALMANAC_BANK_VERSION}, fixture ${bank.length} cards)`);
   })
   .catch((err) => {

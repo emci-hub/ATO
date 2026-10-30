@@ -1,8 +1,9 @@
-import { forwardRef, useRef, useState } from 'react';
+import { forwardRef, useRef, useState, type ComponentProps } from 'react';
 import { Modal, Pressable, StyleSheet, View } from 'react-native';
 import QRCode from 'react-native-qrcode-svg';
 
 import { ThemedText } from '@/components/themed-text';
+import { TraitConstellation } from '@/components/trait-constellation';
 import { TraitShape } from '@/components/trait-shape';
 import { accentFromShowUp } from '@/lib/color';
 import { SHARE_FAILED_COPY, SHARE_UNAVAILABLE_COPY, shareViewAsImage } from '@/lib/share';
@@ -31,6 +32,8 @@ export type ShareCardContent =
       traits: readonly string[];
       /** "Your shape" (polish pass): drawn without names or numbers. */
       shape?: readonly ShapePoint[];
+      /** The sender's own tracks (PHASE-24): a still constellation replaces the shape. Stars only, no names or numbers. */
+      tracks?: ComponentProps<typeof TraitConstellation>['tracks'];
     }
   | { kind: 'line'; text: string };
 
@@ -59,7 +62,17 @@ export const ShareCard = forwardRef<View, { me: SharePerson; content: ShareCardC
         <View style={styles.body}>
           {content.kind === 'identity' ? (
             <>
-              {content.shape ? (
+              {content.tracks && content.tracks.length > 0 ? (
+                <View style={styles.shape}>
+                  <TraitConstellation
+                    tracks={content.tracks}
+                    size={Math.round(width * 0.4)}
+                    variant="poster"
+                    accent={accent.dark}
+                    ring="rgba(245, 241, 233, 0.28)"
+                  />
+                </View>
+              ) : content.shape ? (
                 <View style={styles.shape}>
                   <TraitShape
                     points={content.shape}
@@ -78,7 +91,7 @@ export const ShareCard = forwardRef<View, { me: SharePerson; content: ShareCardC
               {/* With the shape on the card the three lines would push the QR off
                   a 9:16 image, so the shape stands in for them. */}
               <View style={styles.traits}>
-                {(content.shape ? [] : content.traits).map((trait) => (
+                {(content.shape || content.tracks?.length ? [] : content.traits).map((trait) => (
                   <ThemedText key={trait} style={styles.trait}>
                     {trait}
                   </ThemedText>

@@ -48,7 +48,9 @@ ok('Try today button: role, state, hint, 44×44, announces, "Did it ✓" / "Done
 
 assert.match(t, /import \{ useAppearance \} from '@\/lib\/theme\/context';/);
 assert.match(t, /if \(!reduceMotion\)/);
-assert.match(t, /Haptics\.impactAsync\(Haptics\.ImpactFeedbackStyle\.Light\)/);
+// The press buzz goes through the shared haptic map (haptic.commit = Light impact).
+assert.match(t, /haptic\.commit\(\)/);
+assert.ok(!/expo-haptics/.test(t), 'haptics only through motion-tokens');
 assert.ok(!/confetti/i.test(t), 'no confetti');
 ok('Reduce Motion from useAppearance: no scale/fade when on; haptics still fire');
 

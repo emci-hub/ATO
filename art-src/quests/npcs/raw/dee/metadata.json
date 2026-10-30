@@ -1,0 +1,54 @@
+{
+  "group_id": "0c9e7a93-3475-4ecd-8ec0-1b9a4d291d2f",
+  "states": [
+    {
+      "character": {
+        "id": "a29beb99-aeb5-4297-97bd-29f2cb7880e0",
+        "name": "Idle",
+        "prompt": "Dee, a calm night cab driver, short cropped hair, a flat cap, a mustard yellow jacket over a collared shirt, car keys on a finger, easy confident stance",
+        "size": {
+          "width": 64,
+          "height": 64
+        },
+        "template_id": "mannequin",
+        "directions": 8,
+        "view": "side",
+        "created_at": "2026-10-29T16:34:56.043020+00:00"
+      },
+      "folder": "Idle",
+      "frames": {
+        "rotations": {
+          "south": "Idle/rotations/south.png",
+          "south-east": "Idle/rotations/south-east.png",
+          "east": "Idle/rotations/east.png",
+          "north-east": "Idle/rotations/north-east.png",
+          "north": "Idle/rotations/north.png",
+          "north-west": "Idle/rotations/north-west.png",
+          "west": "Idle/rotations/west.png",
+          "south-west": "Idle/rotations/south-west.png"
+        },
+        "animations": {
+          "dee_idle": {
+            "east": [
+              "Idle/animations/dee_idle/east/frame_000.png",
+              "Idle/animations/dee_idle/east/frame_001.png",
+              "Idle/animations/dee_idle/east/frame_002.png",
+              "Idle/animations/dee_idle/east/frame_003.png"
+            ]
+          },
+          "dee_talk": {
+            "east": [
+              "Idle/animations/dee_talk/east/frame_000.png",
+              "Idle/animations/dee_talk/east/frame_001.png",
+              "Idle/animations/dee_talk/east/frame_002.png",
+              "Idle/animations/dee_talk/east/frame_003.png",
+              "Idle/animations/dee_talk/east/frame_004.png"
+            ]
+          }
+        }
+      }
+    }
+  ],
+  "export_version": "3.1",
+  "export_date": "2026-10-29T16:41:48.177034"
+}

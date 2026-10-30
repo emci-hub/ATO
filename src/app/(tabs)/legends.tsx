@@ -145,6 +145,8 @@ export default function LegendsScreen() {
   const { me, refresh: refreshMe } = useMeContext();
   const [tracks, setTracks] = useState<readonly TraitTrack[]>([]);
   const [ready, setReady] = useState(false);
+  /** The last load failed (offline): shown only while nothing has loaded yet. */
+  const [loadFailed, setLoadFailed] = useState(false);
   const [today, setToday] = useState<string | null>(null);
   const [local, setLocal] = useState<LegendLocalState | null>(null);
   const [hall, setHall] = useState<LegendHall | null>(null);
@@ -211,10 +213,12 @@ export default function LegendsScreen() {
       }
       setTracks(boot.tracks);
       setToday(day);
+      setLoadFailed(false);
       // A story being written owns the state until it is saved.
       if (!meetingRef.current) persist(next);
     } catch (err) {
       console.log('[legends] load error:', err);
+      if (request === requestRef.current) setLoadFailed(true);
     } finally {
       if (request === requestRef.current) setReady(true);
     }
@@ -483,7 +487,7 @@ export default function LegendsScreen() {
           contentContainerStyle={styles.scroll}
           contentInsetAdjustmentBehavior="never">
           <View style={styles.titleRow}>
-            <ThemedText type="subtitle" style={styles.flex}>
+            <ThemedText type="subtitle" style={styles.flex} accessibilityRole="header">
               Legends
             </ThemedText>
             <TokenChip />
@@ -501,7 +505,25 @@ export default function LegendsScreen() {
             </Pressable>
           ) : null}
 
-          {!ready ? null : !unlocked ? (
+          {!ready ? null : loadFailed && today == null ? (
+            <View style={[styles.panel, { backgroundColor: theme.backgroundElement, borderColor: theme.border }]}>
+              <ThemedText type="smallBold">Couldn&apos;t load the museum.</ThemedText>
+              <ThemedText type="small" themeColor="textSecondary">
+                Check your connection and try again.
+              </ThemedText>
+              <Pressable
+                onPress={() => {
+                  if (!userId || !me) return;
+                  setReady(false);
+                  void reload();
+                }}
+                accessibilityRole="button"
+                accessibilityLabel="Try again"
+                style={({ pressed }) => [styles.link, pressed && styles.pressed]}>
+                <ThemedText type="linkPrimary">Try again</ThemedText>
+              </Pressable>
+            </View>
+          ) : !unlocked ? (
             <View style={[styles.panel, { backgroundColor: theme.backgroundElement, borderColor: theme.border }]}>
               <ThemedText type="smallBold">
                 {tracks.length > 0 ? fullProfileLockedLine(fullProfileProgress(tracks)) : FULL_PROFILE_LOCKED_COPY}
@@ -537,7 +559,7 @@ export default function LegendsScreen() {
                 <>
                   <View style={styles.hallHead}>
                     <MaterialCommunityIcons name={HALL_ICON[hall]} size={22} color={HALL_COLOR[hall]} />
-                    <ThemedText type="heading" style={styles.flex}>
+                    <ThemedText type="heading" style={styles.flex} accessibilityRole="header">
                       {HALL_LABEL[hall]}
                     </ThemedText>
                   </View>
@@ -687,7 +709,7 @@ function HallTile({
         <MaterialCommunityIcons name={HALL_ICON[hall]} size={22} color={color} />
         <HallRing met={metHere} total={all.length} color={color} index={index} />
       </View>
-      <ThemedText type="small" style={styles.tileLabel} numberOfLines={2}>
+      <ThemedText type="small" numberOfLines={2}>
         {HALL_LABEL[hall]}
       </ThemedText>
     </Pressable>
@@ -713,7 +735,7 @@ const styles = StyleSheet.create({
   titleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: Spacing.two },
   heading: { marginTop: Spacing.two },
   panel: { borderWidth: 1, borderRadius: 14, padding: Spacing.three, gap: Spacing.two },
-  link: { paddingVertical: 4 },
+  link: { minHeight: 44, justifyContent: 'center' },
   revealsLink: { minHeight: 44, justifyContent: 'center', alignSelf: 'flex-start' },
   pressed: { opacity: 0.7 },
   flex: { flex: 1 },
@@ -727,11 +749,10 @@ const styles = StyleSheet.create({
     gap: 4,
     justifyContent: 'space-between',
   },
-  tileLabel: { lineHeight: 16 },
   hallHead: { flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: Spacing.two },
   frames: { flexDirection: 'row', gap: 8 },
   tileTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   metList: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  metChip: { borderWidth: 1, borderRadius: 10, paddingHorizontal: 10, paddingVertical: 8 },
+  metChip: { borderWidth: 1, borderRadius: 10, paddingHorizontal: 10, paddingVertical: 8, minHeight: 44, justifyContent: 'center' },
   placeholder: { gap: 4, marginTop: Spacing.two },
 });

@@ -3,8 +3,10 @@ import { StyleSheet, View } from 'react-native';
 import QRCode from 'react-native-qrcode-svg';
 
 import { ThemedText } from '@/components/themed-text';
+import { TraitConstellation } from '@/components/trait-constellation';
 import { accentFromShowUp } from '@/lib/color';
 import { publicLink } from '@/lib/share-codec';
+import type { TraitTrack } from '@/lib/trait-stability';
 
 /**
  * The Stories-size poster (9:16). Shared as an image with the caption
@@ -36,15 +38,23 @@ const PLATE = '#F6F2EA'; // scan plate — warm paper
 const QR_INK = '#191A1E'; // QR modules — near-black on the light plate
 const PLATE_HAIR = 'rgba(25, 26, 30, 0.12)'; // hairline on the plate
 const FIELD_HAIR = 'rgba(255, 255, 255, 0.10)'; // poster hairline on the field
+const FIELD_RING = 'rgba(245, 241, 233, 0.28)'; // constellation ring on the field; decorative, the stars carry the meaning
 const PLATE_SHADOW = 'rgba(0, 0, 0, 0.42)';
 const MICROCOPY = 'rgba(25, 26, 30, 0.55)'; // microcopy ink on the plate
 
-export const SharePoster = forwardRef<View, { me: PosterPerson; width?: number }>(function SharePoster(
-  { me, width = 320 },
-  ref,
-) {
+export const SharePoster = forwardRef<
+  View,
+  {
+    me: PosterPerson;
+    width?: number;
+    /** The sender's own tracks: draws their constellation, still, between name and QR. Never passed on the public page. */
+    tracks?: readonly TraitTrack[];
+  }
+>(function SharePoster({ me, width = 320, tracks }, ref) {
   const accent = accentFromShowUp(me.show_up);
-  const qrSize = Math.round(width * 0.5);
+  const hasSky = !!tracks && tracks.length > 0;
+  const qrSize = Math.round(hasSky ? width * 0.44 : width * 0.5);
+  const skySize = Math.round(width * 0.42);
   const scanTag = `ATO//${me.handle.replace(/^@/, '').toUpperCase()}`;
 
   return (
@@ -70,6 +80,10 @@ export const SharePoster = forwardRef<View, { me: PosterPerson; width?: number }
           <ThemedText style={styles.name}>{me.name}</ThemedText>
           <ThemedText style={[styles.handle, { color: MIST }]}>@{me.handle}</ThemedText>
         </View>
+
+        {hasSky ? (
+          <TraitConstellation tracks={tracks} size={skySize} variant="poster" accent={accent.dark} ring={FIELD_RING} />
+        ) : null}
 
         {/* Light scan plate: QR dark-on-light, hairline frame, corner ticks. */}
         <View style={styles.qrCard}>

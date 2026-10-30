@@ -35,6 +35,7 @@ import { ExtensionStorage } from '@bacons/apple-targets';
 import { Platform } from 'react-native';
 
 import { APP_GROUP, forgetWidgetTryToday, WIDGET_KIND } from '@/lib/insight/today-insight';
+import { resetIncludeQuestsCache } from '@/lib/quests/include-store';
 import { resetAnsweredOptionCache } from '@/lib/questions/answered-option-storage';
 import { resetCategoryPagePositionCache } from '@/lib/questions/category-page-position';
 import { resetFullProfileUnlockCache } from '@/lib/full-profile-unlock';
@@ -164,6 +165,7 @@ export function clearAccountMemoryCaches(): void {
   resetAnsweredOptionCache();
   resetCategoryPagePositionCache();
   resetFullProfileUnlockCache();
+  resetIncludeQuestsCache();
   // The previous account's own AI-written daily lines are registered in memory.
   forgetDailyLineAccount();
   // …and anything the mini guy was still waiting to say.

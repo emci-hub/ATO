@@ -1,6 +1,6 @@
 -- wave115: drop the AI provider layer and the model-writer plumbing.
 --
--- *** NOT APPLIED. RUN ONLY AFTER emci APPROVES. ***
+-- *** EFFECTIVELY APPLIED (verified read-only 2026-10-29: every object it drops is already gone). ***
 -- ATO calls no outside AI service (Gemini, DeepSeek, any). The phone-side
 -- provider switcher (/ai-lab) and the shared ai-vendors module are removed in
 -- code; ai-library and ai-library-fill already return 410. This drops what only

@@ -54,6 +54,15 @@ import {
 } from '../src/lib/almanac/events';
 import { today } from '../src/lib/almanac/index';
 import {
+  ALMANAC_PREFS_KEY,
+  eventPrefsOf,
+  loadAlmanacPrefs,
+  parseAlmanacPrefs,
+  saveAlmanacPrefs,
+  setAlmanacHemisphere,
+  subscribeAlmanacPrefs,
+} from '../src/lib/almanac/prefs';
+import {
   ALMANAC_LOCALE_KEY,
   hemisphereFromZone,
   loadLocale,
@@ -349,6 +358,40 @@ async function localeChecks(): Promise<void> {
   };
   assert.equal((await loadLocale(broken, 'Asia/Singapore')).hemisphere, 'tropics', 'storage failure still answers');
   ok('hemisphere is stored once (travel keeps it), Settings override sticks, bad storage still answers');
+
+  // PHASE-11f: seasonal prefs, one local key, safe defaults.
+  assert.equal(ALMANAC_PREFS_KEY, 'ato.almanac.prefs.v1');
+  assert.deepEqual(parseAlmanacPrefs(null), { v: 1, seasonal: true, cultural: {}, birthday: true });
+  assert.deepEqual(parseAlmanacPrefs('not json'), { v: 1, seasonal: true, cultural: {}, birthday: true });
+  assert.deepEqual(parseAlmanacPrefs(JSON.stringify({ v: 2, seasonal: false })), { v: 1, seasonal: true, cultural: {}, birthday: true });
+  const prefStore = memoryStore();
+  let heard = 0;
+  const unsubscribe = subscribeAlmanacPrefs(() => {
+    heard += 1;
+  });
+  await saveAlmanacPrefs(prefStore, { v: 1, seasonal: false, cultural: { diwali: true, easter: false }, birthday: false });
+  const back2 = await loadAlmanacPrefs(prefStore);
+  assert.deepEqual(back2, { v: 1, seasonal: false, cultural: { diwali: true, easter: false }, birthday: false });
+  assert.equal(heard, 1, 'a save tells the screens');
+  assert.deepEqual(eventPrefsOf(back2), { seasonal: false, cultural: { diwali: true, easter: false }, birthday: false });
+  assert.equal(await setAlmanacHemisphere(prefStore, 'south', 'Europe/Paris'), 'south');
+  assert.equal(heard, 2, 'a hemisphere change tells the screens too');
+  assert.equal((await loadLocale(prefStore, 'Europe/Paris')).hemisphere, 'south', 'hemisphere lives in the locale key');
+  assert.equal(prefStore.data.has(ALMANAC_PREFS_KEY), true);
+  unsubscribe();
+  await saveAlmanacPrefs(prefStore, back2);
+  assert.equal(heard, 2, 'unsubscribed listeners stay quiet');
+  const saveFails: KeyValueStore = {
+    async getItem() {
+      throw new Error('storage down');
+    },
+    async setItem() {
+      throw new Error('storage down');
+    },
+  };
+  assert.equal((await loadAlmanacPrefs(saveFails)).seasonal, true, 'storage failure reads as defaults');
+  await saveAlmanacPrefs(saveFails, back2);
+  ok('seasonal prefs: defaults, round trip, listeners, hemisphere stays in the locale key, storage failure is safe');
 }
 
 // ---------------------------------------------------------------- 5. time zones
@@ -588,8 +631,16 @@ function clashChecks(): void {
     assert.equal(t.hero.kind, 'season');
   }
   const bday = createCalendar({ tz: 'America/New_York', region: 'US', hemisphere: 'north', bornOn: '1990-12-25', prefs: { seasonal: false } });
-  assert.equal(bday.theme('2026-12-25').winner?.id, 'birthday', 'personal events ignore the seasonal switch');
-  ok('Eid has a 2-day peak; seasonal off removes events and micro-events but keeps season / month / week; birthday stays');
+  assert.notEqual(bday.theme('2026-12-25').winner?.id, 'birthday', 'master off turns personal events off too (emci 2026-10-28)');
+  assert.equal(bday.theme('2026-12-25').winner, null, 'master off: no event at all, even on a birthday');
+  const bdayOn = createCalendar({ tz: 'America/New_York', region: 'US', hemisphere: 'north', bornOn: '1990-12-25', prefs: { seasonal: true } });
+  assert.equal(bdayOn.theme('2026-12-25').winner?.id, 'birthday', 'master on + birthday default on');
+  const bdayOff = createCalendar({ tz: 'America/New_York', region: 'US', hemisphere: 'north', bornOn: '1990-12-25', prefs: { birthday: false } });
+  assert.notEqual(bdayOff.theme('2026-12-25').winner?.id, 'birthday', '"Use my birthday" off drops the birthday');
+  assert.equal(bdayOff.theme('2026-12-25').winner?.id, 'christmas', 'the day still belongs to Christmas');
+  const annivOff = createCalendar({ tz: 'America/New_York', region: 'US', hemisphere: 'north', joinedYmd: '2025-03-14', prefs: { birthday: false } });
+  assert.equal(annivOff.theme('2026-03-14').winner?.id, 'ato_anniversary', 'the birthday toggle leaves the ATO anniversary alone');
+  ok('Eid has a 2-day peak; seasonal off removes every event (personal too) but keeps season / month / week; birthday has its own switch');
 
   // Personal beats a regional peak: a birthday on Christmas.
   const bd = createCalendar({ tz: 'America/New_York', region: 'US', hemisphere: 'north', bornOn: '1990-12-25' });

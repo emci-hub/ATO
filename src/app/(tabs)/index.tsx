@@ -10,7 +10,11 @@ import { ShapeEmptyCard } from '@/components/shape-card';
 import { TraitShape } from '@/components/trait-shape';
 import { TodayPickCard } from '@/components/today-pick-card';
 import { WeekStrip } from '@/components/week-strip';
+import { CommunityGoal } from '@/components/almanac/community-goal';
+import { TeaserLine } from '@/components/almanac/teaser-line';
 import { HomeHero } from '@/components/home-hero';
+import { earnSeasonalBadges } from '@/lib/almanac-badges-store';
+import { useAlmanacDay } from '@/hooks/use-almanac-day';
 import { StreakChip } from '@/components/streak-chip';
 import { TodaysPath } from '@/components/todays-path';
 import { totalAnswered } from '@/lib/home-path';
@@ -203,6 +207,15 @@ export default function HomeScreen() {
   const todayPick = todayYmd ? pickForYmd(todayYmd) : null;
   // The mini guy who says the line (same recipe as the nav companion).
   const faceRecipe = useMemo(() => (me ? recipeForAccount(me.id, me.recipe) : undefined), [me]);
+  // The Almanac's day (PHASE-11e): feeds the one-line teaser and the community card.
+  const almanacDay = useAlmanacDay({
+    userId,
+    me,
+    ymd: todayYmd,
+    tracks,
+    dataDays: todayLine?.streak ?? 0,
+    facts: { glowStreak: todayLine?.streak },
+  });
   // How far into the current round (one read, refreshed with the tracks).
   const roundAnswered = useRoundProgress(fullProfileDone ? userId : undefined, tracks);
   // 3 / 7 / 21 days in a row: the mini guy says it, once each.
@@ -343,9 +356,12 @@ export default function HomeScreen() {
             face={faceRecipe}
             onAnswered={() => {
               void reloadHome();
+              // A Pick answered inside a season or an event's build/peak earns its cosmetic badge.
+              if (almanacDay) void earnSeasonalBadges(userId, almanacDay.theme);
             }}
           />
         </Appear>
+        {almanacDay ? <CommunityGoal theme={almanacDay.theme} /> : null}
       </>
     ) : null;
 
@@ -377,7 +393,9 @@ export default function HomeScreen() {
               small line under it. */}
           <View style={styles.header}>
             <View style={styles.headerTop}>
-              <ThemedText type="subtitle">{HOME_TITLE}</ThemedText>
+              <ThemedText type="subtitle" accessibilityRole="header">
+                {HOME_TITLE}
+              </ThemedText>
               {/* Settings live on their own screen (IA phase P1). */}
               <Pressable
                 accessibilityRole="button"
@@ -396,8 +414,10 @@ export default function HomeScreen() {
           {/* The hero (PHASE-08): the constellation, once THIS account's tracks have
               loaded, like You. No tracks = the constellation's own empty card. */}
           {me && bootstrapReady && !bootstrapFailed && tracksUserId === me.id ? (
-            <HomeHero userId={me.id} tracks={tracks} />
+            <HomeHero userId={me.id} tracks={tracks} day={almanacDay} />
           ) : null}
+
+          {almanacDay ? <TeaserLine day={almanacDay} /> : null}
 
           {me && todayYmd && todayLine ? <StreakChip userId={me.id} todayYmd={todayYmd} refreshKey={todayLine} /> : null}
 

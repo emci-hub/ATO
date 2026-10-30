@@ -575,10 +575,12 @@ assert.doesNotMatch(exploreScreen, /CategoriesFold|CategoryDeepDiveCard|FullProf
 assert.equal(exploreScreen.trim().split('\n').filter((l) => /^\s*(import|export)\b/.test(l)).length, 2, 'one import, one default export');
 assert.match(youScreen, /<CategoriesFold/);
 // PHASE-06 deep-link fixture: only an exact known key scrolls; everything else is a silent no-op.
-for (const key of ['shape', 'traits', 'categories', 'profile', 'tokens']) {
+for (const key of ['shape', 'traits', 'categories', 'profile', 'tokens', 'quests']) {
   assert.equal(parseSection(key), key, `?section=${key} is accepted`);
 }
-for (const bad of ['quests', '', 'Shape', 'nope', ' shape', undefined, null, ['shape'], ['a', 'b'], 7]) {
+// PHASE-23 (R22): with Quests off (or not read yet) You drops ?section=quests like an unknown key.
+assert.match(youScreen, /parsedSection === 'quests' && !questsOn \? null : parsedSection/, 'You ignores section=quests while Quests is off');
+for (const bad of ['','Shape', 'nope', ' shape', undefined, null, ['shape'], ['a', 'b'], 7]) {
   assert.equal(parseSection(bad), null, `?section=${JSON.stringify(bad)} is ignored, no error`);
 }
 assert.match(youScreen, /parseSection\(params\.section\)/, 'You parses the section param through parseSection');

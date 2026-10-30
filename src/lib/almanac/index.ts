@@ -6,8 +6,8 @@
  *   almanac.loadToday(surface, ctx, store)        today's cached card, else today() + save
  *
  * Surfaces: home.pick, home.line, insights.deck, insights.try, push, you.week,
- * you.month, you.year. Nothing calls this yet: PHASE-11e wires the surfaces and
- * PHASE-11c replaces the empty bank with the reviewed one.
+ * you.month, you.year. Nothing calls this yet: PHASE-11e wires the surfaces. The bank
+ * is `bank.generated.ts` (PHASE-11c): only the cards emci ticked ship.
  */
 import {
   cacheKey,
@@ -17,9 +17,12 @@ import {
   writeCached,
   type CachedResult,
 } from './cache';
+import { GENERATED_BANK_VERSION, GENERATED_CARDS } from './bank.generated';
 import { addSeen, loadSeen, saveSeen, seenFor } from './seen-store';
-import { basePickIndex, sharedSeed } from './seed';
-import { candidatesFor, drawFromTop, selectCard } from './select';
+import { eventPickForYmd } from '@/lib/daily-pick/bank';
+
+import { basePickIndex } from './seed';
+import { selectCard } from './select';
 import type {
   AlmanacCard,
   AlmanacContext,
@@ -35,10 +38,15 @@ export { ALMANAC_MAX_CHARS, ALMANAC_SLOTS, fillCard } from './slots';
 export { ALMANAC_SEEN_CAP, ALMANAC_SEEN_KEY } from './seen-store';
 export { ALMANAC_TODAY_KEY, cacheKey } from './cache';
 
-/** Bump whenever the bank's cards change (PHASE-11c's loader writes it). */
-export const ALMANAC_BANK_VERSION = 0;
-/** Empty until PHASE-11c lands the reviewed bank. */
-export const ALMANAC_BANK: readonly AlmanacCard[] = [];
+/**
+ * True since 2026-10-30: emci approved the ticked cards in docs/almanac-review.md (⚑ almanac copy).
+ * Only ticked rows reach the generated bank.
+ */
+export const ALMANAC_COPY_REVIEWED = true;
+/** Changes whenever a shipped card changes (`npm run load:almanac` writes it). 0 = nothing shipped. */
+export const ALMANAC_BANK_VERSION = GENERATED_BANK_VERSION;
+/** The ticked cards, from `bank.generated.ts`. */
+export const ALMANAC_BANK: readonly AlmanacCard[] = GENERATED_CARDS;
 
 export interface TodayOptions {
   bank?: readonly AlmanacCard[];
@@ -58,14 +66,12 @@ export interface TodayOptions {
 export function today(surface: AlmanacSurface, ctx: AlmanacContext, opts: TodayOptions = {}): AlmanacResult | null {
   const bank = opts.bank ?? ALMANAC_BANK;
   if (surface === 'home.pick') {
-    const eventPicks = candidatesFor('home.pick', ctx, bank).filter((c) => !!c.card.event);
-    const ranked = eventPicks
-      .map((candidate) => ({ candidate, score: 1 }))
-      .sort((a, b) => (a.candidate.card.id < b.candidate.card.id ? -1 : 1));
-    const chosen = drawFromTop(ranked, sharedSeed(ctx.ymd, surface));
-    if (chosen) {
-      return { surface, source: 'card', card: chosen.card, text: chosen.filled.text, usedAlt: chosen.filled.usedAlt };
-    }
+    // PHASE-11e: a peak day names its Pick in the override table (daily-pick/bank,
+    // the same rows as wave117), so the phone and the server agree on which one.
+    // The card only shows it once the server confirms (today-pick-card).
+    const event = eventPickForYmd(ctx.ymd);
+    const card = event ? bank.find((c) => c.id === event.cardId && c.kind === 'pick') : undefined;
+    if (event && card) return { surface, source: 'card', card, text: event.prompt, usedAlt: false };
     return { surface, source: 'rotation', pickIndex: basePickIndex(ctx.ymd) };
   }
   const chosen = selectCard(surface, ctx, bank, opts.seen ?? []);

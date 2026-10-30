@@ -1,5 +1,5 @@
 /** `?section=` targets that scroll You to a block. */
-export const SECTION_KEYS = ['shape', 'traits', 'categories', 'profile', 'tokens'] as const;
+export const SECTION_KEYS = ['shape', 'traits', 'categories', 'profile', 'tokens', 'quests'] as const;
 export type SectionKey = (typeof SECTION_KEYS)[number];
 
 /**

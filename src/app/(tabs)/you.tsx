@@ -3,6 +3,10 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { MonthShift } from '@/components/almanac/month-shift';
+import { SeasonalBadges } from '@/components/almanac/seasonal-badges';
+import { WeekRecap } from '@/components/almanac/week-recap';
+import { YearRecap } from '@/components/almanac/year-recap';
 import { AtoTokenCard } from '@/components/ato-token-card';
 import { CategoriesFold } from '@/components/categories-fold';
 import { CategoryDeepDiveCard } from '@/components/category-deep-dive-card';
@@ -13,7 +17,9 @@ import { Appear, SkeletonCard } from '@/components/motion';
 import { NAV_PIXEL_HEADER_INSET } from '@/components/nav-pixel';
 import { ProfileCharacter } from '@/components/profile-character';
 import { ProfileFillFold } from '@/components/profile-fill-fold';
+import { FromYourQuests } from '@/components/quests/from-your-quests';
 import { ShapeCard } from '@/components/shape-card';
+import { QuestBlendToggle } from '@/components/quest-blend-toggle';
 import { TraitBandsFold } from '@/components/trait-bands-fold';
 import { TraitConstellation } from '@/components/trait-constellation';
 import { ThemedText } from '@/components/themed-text';
@@ -21,11 +27,15 @@ import { ThemedView } from '@/components/themed-view';
 import { YourWeekCard } from '@/components/your-week-card';
 import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
 import { useSession } from '@/hooks/use-session';
+import { almanacYmd } from '@/lib/almanac';
+import { useAlmanacDay } from '@/hooks/use-almanac-day';
 import { useCircleContext } from '@/lib/circle-context';
+import { loadDailyLineState } from '@/lib/daily-line/state';
 import { atoTokenBalanceOf } from '@/lib/ato-tokens';
 import { isFullProfileDone } from '@/lib/full-profile-gate';
 import { fetchHomeBootstrap } from '@/lib/home-bootstrap';
 import { aiConsentFor } from '@/lib/me';
+import { useQuestFlags } from '@/lib/quests/flags';
 import { useMeContext } from '@/lib/me-context';
 import { isTabUnlocked } from '@/lib/nav/nav-order';
 import { SETTINGS_TITLE } from '@/lib/polish-copy';
@@ -114,7 +124,11 @@ export default function YouScreen() {
 
   // `?section=` (see lib/you-sections) scrolls to that block once the tracks have
   // landed (the blocks lay out after the skeleton is replaced). Unknown: ignored.
-  const wantedSection = parseSection(params.section);
+  // R22: `section=quests` with Quests off (or not read yet) is ignored, like an unknown key.
+  const { flags: questFlags } = useQuestFlags();
+  const questsOn = questFlags?.enabled === true;
+  const parsedSection = parseSection(params.section);
+  const wantedSection = parsedSection === 'quests' && !questsOn ? null : parsedSection;
   const scrollToSection = useCallback(() => {
     if (!wantedSection || !tracksReady) return;
     const y = sectionY.current[wantedSection];
@@ -128,6 +142,28 @@ export default function YouScreen() {
     scrollToSection();
   };
   const tracksOwned = !!userId && tracksUserId === userId;
+
+  // The Almanac's day (PHASE-11e): the Sunday recap, the monthly shift, the year recap.
+  const [lineDays, setLineDays] = useState(0);
+  useFocusEffect(
+    useCallback(() => {
+      if (!userId) return;
+      let live = true;
+      void loadDailyLineState(userId)
+        .then((state) => live && setLineDays(state.days.length))
+        .catch(() => undefined);
+      return () => {
+        live = false;
+      };
+    }, [userId]),
+  );
+  const almanacDay = useAlmanacDay({
+    userId,
+    me,
+    ymd: me ? almanacYmd(new Date(), timeZone) : undefined,
+    tracks: tracksOwned ? tracks : [],
+    dataDays: lineDays,
+  });
 
   // Refetch on FOCUS: tabs stay mounted, so answering questions elsewhere would
   // otherwise leave this card stale until the app restarted.
@@ -146,7 +182,9 @@ export default function YouScreen() {
           keyboardShouldPersistTaps="handled"
           contentContainerStyle={styles.scrollContent}>
           <View style={styles.header}>
-            <ThemedText type="subtitle">You</ThemedText>
+            <ThemedText type="subtitle" accessibilityRole="header">
+              You
+            </ThemedText>
           </View>
 
           {/* Constellation header (PHASE-05): the same tracks as a field of stars. Its own
@@ -198,8 +236,16 @@ export default function YouScreen() {
           {me ? (
             <View style={styles.traitsBlock} onLayout={markSection('traits')}>
               <TraitBandsFold me={me} tracks={tracks} />
+              <QuestBlendToggle userId={me.id} tracks={tracks} questsOn={questsOn} />
               <ProfileFillFold tracks={tracks} />
               <ChangeCard userId={me.id} />
+            </View>
+          ) : null}
+
+          {/* "From your quests" (PHASE-23): below Your traits; hidden while Quests is off. */}
+          {me && questsOn ? (
+            <View onLayout={markSection('quests')}>
+              <FromYourQuests onUndone={() => void reloadTracks()} />
             </View>
           ) : null}
 
@@ -237,6 +283,16 @@ export default function YouScreen() {
             <View onLayout={markSection('tokens')}>
               <AtoTokenCard me={me} />
             </View>
+          ) : null}
+
+          {/* Almanac recaps: Sundays, monthly, and from December 1 the year. Each hides when it has nothing. */}
+          {me && tracksOwned ? (
+            <>
+              <WeekRecap day={almanacDay} me={me} />
+              <MonthShift day={almanacDay} me={me} />
+              <YearRecap day={almanacDay} me={me} />
+              <SeasonalBadges userId={me.id} />
+            </>
           ) : null}
 
           {/* The last seven days in three counts. Local + one read, no AI. */}

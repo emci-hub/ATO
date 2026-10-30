@@ -13,7 +13,7 @@ import { shapeFilledCount, shapeGeometry, traitShapePoints, type ShapeGeometry }
 import { trackFor, type TraitTrack } from '@/lib/trait-stability';
 import type { TraitAxis } from '@/lib/traits';
 
-export type ConstellationVariant = 'hero' | 'header' | 'mini' | 'badge';
+export type ConstellationVariant = 'hero' | 'header' | 'mini' | 'badge' | 'poster';
 
 /** Above this stability a star turns gold. */
 export const GOLD_STABILITY = 0.8;
@@ -52,6 +52,8 @@ export const VARIANT_MOTION: Record<ConstellationVariant, { live: boolean; halos
   header: { live: true, halos: true, line: true, scale: 0.85 },
   mini: { live: false, halos: false, line: true, scale: 0.7 },
   badge: { live: false, halos: false, line: false, scale: 0.6 },
+  /** The share poster: full-size stars and line, drawn still so a capture is never mid-motion. */
+  poster: { live: false, halos: false, line: true, scale: 1 },
 };
 
 /** A fixed pseudo-random phase per axis position. */

@@ -60,6 +60,14 @@ export const HUB_TOOLS: readonly HubToolDef[] = [
     keywords: ['traits', 'categories', 'gates', 'debug'],
   },
   {
+    id: 'year-recap',
+    section: 'account',
+    name: 'Your year in you',
+    summary: 'Preview the eight year-end swipe cards on a December date.',
+    details: 'Read-only. Picks the cards on this phone from the Almanac bank for a made-up December day, so the date gate does not hide them. Writes nothing.',
+    keywords: ['almanac', 'recap', 'december', 'year'],
+  },
+  {
     id: 'intake-status',
     section: 'account',
     name: 'Where I am in the intake',

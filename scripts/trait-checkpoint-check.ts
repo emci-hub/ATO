@@ -192,4 +192,23 @@ function walk(dir: string): string[] {
   ok('step 2 (wave80 lock) is prepared and marked NOT APPLIED');
 }
 
+// --- 6. D6: a scenario pick never writes the me column (wave118) ---------------------------
+{
+  const sql = read('supabase/migrations/wave118_game_pick_no_me.sql');
+  assert.match(sql, /^-- APPLIED 2026-10-29/m, 'wave118 header says it is applied (emci, 2026-10-29)');
+  const at = sql.indexOf('create or replace function public._trait_write(');
+  assert.ok(at >= 0, '_trait_write restated');
+  const fn = sql.slice(at, sql.indexOf('$$;', sql.indexOf('as $$', at)));
+  assert.match(fn, /if not v_rejected and p_mode <> 'game' then\s+execute format\(\s+'update public\.me set/,
+    'the me update (value, trait_sources, trait_touched_at) and the me-diff history row skip game mode');
+  assert.match(fn, /if p_mode = 'game' then\s+insert into public\.trait_history \(user_id, axis, value, source\) values \(p_uid, p_axis, v_track_value, 'self_game'\);/,
+    'a game pick still writes its self_game history row');
+  assert.equal((fn.match(/update public\.me\b/g) ?? []).length, 2, 'only the confirm path and the guarded update touch me');
+  assert.match(fn, /v_track text := case when p_mode = 'game' then 'game' else 'report' end;/, 'game picks still move the game track');
+  assert.match(fn, /0\.12::float8 \* p_sample \+ 0\.88::float8 \* coalesce\(v_cur, 0\.5::float8\)/, 'same EWMA constants as wave79');
+  assert.match(sql, /revoke all on function public\._trait_write\(uuid, text, text, double precision, text\) from public, anon, authenticated;/);
+  assert.doesNotMatch(sql, /create or replace function public\.record_game_pick/, 'record_game_pick (wave101) is not restated');
+  ok('wave118: game mode skips me / trait_sources / trait_touched_at, keeps the game track and the self_game history row');
+}
+
 console.log(`\n${passed} trait-checkpoint checks passed`);

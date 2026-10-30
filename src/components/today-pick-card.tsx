@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 
@@ -9,8 +9,9 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
-import { DAILY_PICK_COPY_REVIEWED, pickForYmd } from '@/lib/daily-pick/bank';
+import { DAILY_PICK_COPY_REVIEWED, eventPickForYmd, pickForYmd, type GlobalPickEvent } from '@/lib/daily-pick/bank';
 import {
+  fetchEventPickId,
   fetchPickSplit,
   loadTodayAnswer,
   saveTodayAnswer,
@@ -27,6 +28,15 @@ export const TODAY_PICK_KICKER = 'today’s pick';
 export const TODAY_PICK_SHARE_LABEL = 'Ask a friend';
 export const TODAY_PICK_SPLIT_WAITING = 'The split shows once 20 people have picked today.';
 export const TODAY_PICK_UNSAVED = 'Saved on this phone. It syncs once there’s a connection.';
+/** Kicker suffix on a seasonal peak day (PHASE-11e). */
+export const TODAY_PICK_EVENT_LABEL: Record<GlobalPickEvent, string> = {
+  new_year: 'New Year',
+  valentines: 'Valentine’s Day',
+  halloween: 'Halloween',
+  christmas: 'Christmas',
+};
+/** After answering, once the split shows: where the reader landed. */
+export const pickShareLine = (percent: number) => `You’re in the ${percent}%.`;
 
 /**
  * Home: Today's Pick (emci, 2026-10-05) — one either/or question a day, the
@@ -51,7 +61,25 @@ export function TodayPickCard({
 }) {
   const theme = useTheme();
   const { reduceMotion } = useAppearance();
-  const pick = pickForYmd(ymd);
+  const rotation = pickForYmd(ymd);
+  // A seasonal peak Pick shows only when the server names the same one for today
+  // (wave117). Offline, or before wave117 is applied, the day's normal Pick shows
+  // and nothing errors. `eventOk` is null until the server has answered.
+  const candidate = useMemo(() => eventPickForYmd(ymd), [ymd]);
+  const [eventOk, setEventOk] = useState<boolean | null>(candidate ? null : false);
+  useEffect(() => {
+    setEventOk(candidate ? null : false);
+    if (!candidate) return;
+    let live = true;
+    void fetchEventPickId(ymd).then((id) => {
+      if (live) setEventOk(id === candidate.id);
+    });
+    return () => {
+      live = false;
+    };
+  }, [ymd, candidate]);
+  const eventPick = eventOk ? candidate : null;
+  const pick = eventPick ?? rotation;
   const [chosen, setChosen] = useState<number | null>(null);
   const [loaded, setLoaded] = useState(false);
   const [split, setSplit] = useState<PickSplit | null>(null);
@@ -66,6 +94,7 @@ export function TodayPickCard({
     setChosen(null);
     setSplit(null);
     setLoaded(false);
+    if (eventOk === null) return; // wait for the server before choosing which Pick this is
     loadTodayAnswer(userId, ymd, pick)
       .then((answer) => {
         if (cancelled) return;
@@ -78,7 +107,7 @@ export function TodayPickCard({
     return () => {
       cancelled = true;
     };
-  }, [userId, ymd, pick]);
+  }, [userId, ymd, pick, eventOk]);
 
   async function choose(index: number) {
     if (chosen != null || !loaded) return;
@@ -92,7 +121,9 @@ export function TodayPickCard({
     }
   }
 
-  const reaction = chosen != null ? reactionLine(pick, chosen, ymd) : null;
+  // A seasonal Pick moves no trait, so the mini guy has no trait line for it.
+  const reaction = chosen != null && !eventPick ? reactionLine(rotation, chosen, ymd) : null;
+  const landed = split && chosen != null ? Math.round(split.shares[chosen as 0 | 1] * 100) : null;
   const radius = theme.cutCorners ? 0 : Math.min(theme.radius, 18);
 
   return (
@@ -111,7 +142,7 @@ export function TodayPickCard({
           </View>
         ) : null}
         <ThemedText type="code" themeColor="textSecondary" style={styles.kicker}>
-          {TODAY_PICK_KICKER}
+          {eventPick ? `${TODAY_PICK_KICKER} · ${TODAY_PICK_EVENT_LABEL[eventPick.event]}` : TODAY_PICK_KICKER}
         </ThemedText>
       </View>
       {!DAILY_PICK_COPY_REVIEWED && PRE_LAUNCH_DEV ? (
@@ -179,6 +210,7 @@ export function TodayPickCard({
       {chosen != null ? (
         <Animated.View entering={reduceMotion ? undefined : FadeInDown.duration(300)} style={styles.after}>
           {reaction ? <ThemedText style={styles.reaction}>{reaction.text}</ThemedText> : null}
+          {landed != null ? <ThemedText type="smallBold">{pickShareLine(landed)}</ThemedText> : null}
           {unsaved ? (
             <ThemedText type="small" themeColor="textSecondary">
               {TODAY_PICK_UNSAVED}

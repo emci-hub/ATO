@@ -1,4 +1,3 @@
-import * as Haptics from 'expo-haptics';
 import { useRef } from 'react';
 import { AccessibilityInfo, Pressable, StyleSheet, View } from 'react-native';
 import Animated, {
@@ -65,7 +64,7 @@ export function TryTodayCard({
     // Two taps in one frame: only the first buzzes and announces.
     if (done || pressing.current) return;
     pressing.current = true;
-    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
+    haptic.commit();
     // Reduce Motion: an instant state change only, no scale or fade.
     if (!reduceMotion) {
       scale.value = withSequence(withTiming(1.06, { duration: 120 }), withTiming(1, { duration: 160 }));

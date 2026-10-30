@@ -24,12 +24,15 @@ export function DepthDive({
   me,
   axis,
   lastDepthAt,
+  hasGameTrack = false,
   onClose,
   onUpdated,
 }: {
   me: Me;
   axis: TraitAxis;
   lastDepthAt?: string | null;
+  /** A game-track row exists for this axis (a scenario pick no longer sets `self_game` on `me`, wave118). */
+  hasGameTrack?: boolean;
   onClose: () => void;
   onUpdated: () => void | Promise<void>;
 }) {
@@ -37,7 +40,7 @@ export function DepthDive({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const kind = depthKindFor(axis);
-  const preferAlt = me.trait_sources[axis] === 'self_game';
+  const preferAlt = hasGameTrack || me.trait_sources[axis] === 'self_game';
   const ready = depthReady(lastDepthAt ?? null);
 
   async function afterWrite() {

@@ -1,0 +1,54 @@
+{
+  "group_id": "5a28ba69-df0a-4b34-b319-448cdb359a6d",
+  "states": [
+    {
+      "character": {
+        "id": "39e4a035-b092-4d4a-abd6-42b57ca0e542",
+        "name": "Idle",
+        "prompt": "Mara, a tired night-shift nurse in teal hospital scrubs with a lanyard badge, a worn grey zip jacket, dark hair in a low ponytail, one hand holding a phone charging cable, sneakers",
+        "size": {
+          "width": 64,
+          "height": 64
+        },
+        "template_id": "mannequin",
+        "directions": 8,
+        "view": "side",
+        "created_at": "2026-10-29T16:34:54.358188+00:00"
+      },
+      "folder": "Idle",
+      "frames": {
+        "rotations": {
+          "south": "Idle/rotations/south.png",
+          "south-east": "Idle/rotations/south-east.png",
+          "east": "Idle/rotations/east.png",
+          "north-east": "Idle/rotations/north-east.png",
+          "north": "Idle/rotations/north.png",
+          "north-west": "Idle/rotations/north-west.png",
+          "west": "Idle/rotations/west.png",
+          "south-west": "Idle/rotations/south-west.png"
+        },
+        "animations": {
+          "mara_idle": {
+            "east": [
+              "Idle/animations/mara_idle/east/frame_000.png",
+              "Idle/animations/mara_idle/east/frame_001.png",
+              "Idle/animations/mara_idle/east/frame_002.png",
+              "Idle/animations/mara_idle/east/frame_003.png"
+            ]
+          },
+          "mara_talk": {
+            "east": [
+              "Idle/animations/mara_talk/east/frame_000.png",
+              "Idle/animations/mara_talk/east/frame_001.png",
+              "Idle/animations/mara_talk/east/frame_002.png",
+              "Idle/animations/mara_talk/east/frame_003.png",
+              "Idle/animations/mara_talk/east/frame_004.png"
+            ]
+          }
+        }
+      }
+    }
+  ],
+  "export_version": "3.1",
+  "export_date": "2026-10-29T16:41:44.192961"
+}

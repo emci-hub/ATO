@@ -398,7 +398,7 @@ export function IdentityCard({
         visible={sharing}
         onClose={() => setSharing(false)}
         me={me}
-        content={{ kind: 'identity', title, traits, shape: traitShapePoints(me, tracks) }}
+        content={{ kind: 'identity', title, traits, shape: traitShapePoints(me, tracks), tracks }}
       />
     </ThemedView>
   );

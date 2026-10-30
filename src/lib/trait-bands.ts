@@ -100,6 +100,11 @@ export interface FilledTraitBand {
   value: number;
   low: string;
   high: string;
+  /**
+   * Profile screens only, and only when "Include Quests" is on and a Quest row actually moved
+   * the axis: where the second dot sits. `filledTraitBands` never sets it.
+   */
+  questValue?: number;
 }
 
 /**

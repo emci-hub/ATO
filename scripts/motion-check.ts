@@ -170,7 +170,8 @@ assert.ok(starPhase(0) >= 0 && starPhase(0) < 1);
 assert.notEqual(starPhase(1), starPhase(2));
 ok('twinkle phases are fixed per axis and spread out');
 
-assert.deepEqual(Object.keys(VARIANT_MOTION).sort(), ['badge', 'header', 'hero', 'mini']);
+assert.deepEqual(Object.keys(VARIANT_MOTION).sort(), ['badge', 'header', 'hero', 'mini', 'poster']);
+assert.equal(VARIANT_MOTION.poster.live || VARIANT_MOTION.poster.halos, false, 'the poster sky is drawn still');
 assert.equal(VARIANT_MOTION.hero.live && VARIANT_MOTION.header.live, true);
 assert.equal(VARIANT_MOTION.mini.live || VARIANT_MOTION.badge.live, false, 'mini and badge sit still');
 const full = constellationModel(TRAIT_AXES.map((a) => track(a, 0.5, 0.5)), 240);
@@ -224,7 +225,7 @@ assert.match(
   'Home renders one hero constellation inside Appear breathe',
 );
 assert.equal((homeHero.match(/<TraitConstellation\b/g) ?? []).length, 1, 'one constellation on Home (35 nodes of the 60 cap)');
-assert.match(read('src/app/(tabs)/index.tsx'), /<HomeHero userId=\{me\.id\} tracks=\{tracks\} \/>/, 'Home mounts the hero');
+assert.match(read('src/app/(tabs)/index.tsx'), /<HomeHero userId=\{me\.id\} tracks=\{tracks\} day=\{almanacDay\} \/>/, 'Home mounts the hero (with today\'s Almanac day, PHASE-11h)');
 ok('Home shows the hero constellation once, inside Appear breathe');
 
 // ── Theme lab previews every primitive ───────────────────────────────────────
