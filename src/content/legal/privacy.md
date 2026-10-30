@@ -1,6 +1,6 @@
 # Privacy Policy — ATO
 
-**Last updated:** October 26, 2026
+**Last updated:** October 30, 2026
 
 ATO ("the app," "we," "us") is operated by Michael Malig, in Alberta, Canada. This policy explains what we collect, why, who can see it, how long we keep it, and how you control it.
 

@@ -20,7 +20,7 @@ undoable for 24 hours after saving (Undo restores the stored `pre_values`, bound
 | `privacy.md`: new "Your Quests" bullet under Usage, "Quests" added to the delete-account list | **mandatory** | the policy must describe data the app really stores (`quest_runs`, wave116); a stated-vs-real mismatch is the risk |
 | `app-privacy-labels.md`: `quest_runs` named in the Other User Content row | **recommended safeguard** | Apple data types are unchanged (Other User Content, already declared and Linked), so nothing changes in App Store Connect or the plist; this keeps our own table accurate |
 | `app-privacy-labels.md`: `ai_provider_log` removed from Product Interaction | **mandatory** (accuracy) | wave115 dropped the table; the label row named a log that no longer exists |
-| `privacy.md` "Last updated" date | **optional precaution** | emci sets it when he approves the wording (currently October 26, 2026) |
+| `privacy.md` "Last updated" date | **optional precaution** | set to October 30, 2026 (emci approved the wording 2026-10-30) |
 | Almanac (Pick, community counter, seasonal, recaps) | none | the same Pick answers as before; the counter is an aggregate; `ato.almanac.*` is device-only and wiped by `clearLocalAccountData` |
 
 `PrivacyInfo.xcprivacy` and `app.json` privacy manifests need no change (no new data type, no new required-reason API, no native change).

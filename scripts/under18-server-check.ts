@@ -57,6 +57,10 @@ const NOT_LIVE = new Set([
   // by scripts/quest-apply-check.ts; it restates reset_my_account / reset_dev_test_user /
   // count_user_rows (wave103/104/108 + one quest_runs line), pinned by check:reset-account.
   'wave116_quest_runs.sql',
+  // PHASE-27 (2026-10-30): restates answer_daily_pick (wave117's body, only the cutover date changed;
+  // still starts with require_adult()) and daily_pick_position (no client gate needed), pinned by
+  // scripts/daily-pick-check.ts.
+  'wave119_pick_cutover.sql',
 ]);
 
 /** Apply order of the migrations that existed when wave101 was written (git history order). */

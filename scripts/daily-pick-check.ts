@@ -126,7 +126,7 @@ for (let s = 0; s < 64; s += 1) assert.equal(positionForSlot(s, 4), s, 'with K =
 assert.equal(legacyPickIndexForYmd('2025-12-31'), legacyPickIndexForYmd(addDaysYmd('2025-12-31', 64)), 'days before the epoch wrap too (64)');
 assert.equal(pickIndexAt('2025-12-31', 368), pickIndexAt(addDaysYmd('2025-12-31', 368), 368), 'days before the epoch wrap too (368)');
 // The switch: the 64 rotation up to the day before, the 368 rotation from it, no trait twice across it.
-assert.ok(ALMANAC_PICK_CUTOVER >= '2026-12-01', 'the cutover is after the planned OTA (emci confirms the date at PHASE-27)');
+assert.ok(ALMANAC_PICK_CUTOVER >= '2026-11-01', 'the cutover is on or after the planned OTA (emci set 2026-11-01 at PHASE-27: no other users, no overlap needed)');
 const beforeCut = addDaysYmd(ALMANAC_PICK_CUTOVER, -1);
 assert.equal(pickIndexForYmd(beforeCut), legacyPickIndexForYmd(beforeCut), 'the day before the cutover: the 64 rotation');
 assert.equal(pickIndexForYmd(ALMANAC_PICK_CUTOVER), pickIndexAt(ALMANAC_PICK_CUTOVER, 368), 'the cutover day: the 368 rotation');
@@ -222,6 +222,8 @@ assert.match(split, /drop function public\.daily_pick_split\(text\);/);
 
 // wave117 (PHASE-11d, NOT applied): the 368 pool, the cutover, the overlap, the overrides, the counter.
 const w117 = read('supabase/migrations/wave117_almanac.sql').replace(/\r\n/g, '\n');
+// wave119 restates daily_pick_position + answer_daily_pick with the final cutover date; wave117 keeps the rest.
+const w119 = read('supabase/migrations/wave119_pick_cutover.sql').replace(/\r\n/g, '\n');
 const w117Rows = execFileSync('npx', ['tsx', 'scripts/gen-wave82-picks.ts', '--wave117'], {
   cwd: root,
   encoding: 'utf8',
@@ -232,7 +234,7 @@ assert.ok(w117.includes(w117Rows.replace(/\r\n/g, '\n')), 'wave117 rows match th
 // dividend's sign, / truncates), must give the app's index on every day around the cutover.
 const legacyFn = /create function public\.daily_pick_legacy_position\(p_ymd date\)[\s\S]*?as \$\$\s*select \(\(\(\(p_ymd - date '2026-01-01'\) % 64\) \+ 64\) % 64 % 16\) \* 4\s*\+ \(\(\(\(p_ymd - date '2026-01-01'\) % 64\) \+ 64\) % 64 \/ 16\);\s*\$\$;/;
 assert.match(w117, legacyFn, 'the 64 rotation is wave82\'s, word for word');
-const posFn = w117.match(
+const posFn = w119.match(
   /create or replace function public\.daily_pick_position\(p_ymd date\)[\s\S]*?when p_ymd < date '(\d{4}-\d{2}-\d{2})' then public\.daily_pick_legacy_position\(p_ymd\)\s*when s\.n \/ 16 < 4 then \(s\.n % 16\) \* 4 \+ s\.n \/ 16\s*else 64 \+ \(s\.n % 16\) \* (\d+) \+ \(s\.n \/ 16 - 4\)\s*end\s*from \(select \(\(\(p_ymd - date '2026-01-01'\) % (\d+)\) \+ \d+\) % \d+ as n\) s;/,
 );
 assert.ok(posFn, 'daily_pick_position has the cutover branch');
@@ -260,7 +262,7 @@ for (let d = -800; d < 800; d += 1) {
   assert.equal(sqlLegacy(ymd), legacyPickIndexForYmd(ymd), `${ymd}: SQL and app agree on the 64 rotation`);
 }
 // Overlap: for 14 days from the cutover an old bundle's 64-rotation pick is still accepted; the override too.
-const answer117 = w117.slice(w117.indexOf('create or replace function public.answer_daily_pick'));
+const answer117 = w119.slice(w119.indexOf('create or replace function public.answer_daily_pick'));
 assert.ok(
   answer117.includes(
     `if not found or not (

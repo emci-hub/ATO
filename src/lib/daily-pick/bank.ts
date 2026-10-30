@@ -466,11 +466,11 @@ export const LEGACY_PICK_COUNT = 64;
 /**
  * From this local date the rotation runs over all 368 picks (PHASE-11d, red team H3).
  * Before it, the 64-pick rotation, so a phone that has not taken the OTA yet shows the
- * same pick as everyone else. PLACEHOLDER: at least 14 days after the planned OTA;
- * emci confirms the real date at PHASE-27. The SQL (wave117 `daily_pick_position`)
+ * same pick as everyone else. emci set 2026-11-01 at PHASE-27 (no other users, so no
+ * slow-updater delay). The SQL (wave119 `daily_pick_position`, which restates wave117's)
  * carries the same date, pinned by check:daily-pick.
  */
-export const ALMANAC_PICK_CUTOVER = '2027-02-01';
+export const ALMANAC_PICK_CUTOVER = '2026-11-01';
 
 /** From the cutover, the server also accepts the 64-rotation pick for this many days (old bundles). */
 export const PICK_OVERLAP_DAYS = 14;

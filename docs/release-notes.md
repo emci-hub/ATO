@@ -17,5 +17,5 @@ One OTA, no native change. Runtime stays 1.2.0 (no new native deps; OTA only).
 - Database: waves 115 to 118 are live. Quests and Apply stay OFF until you set `quests_enabled` / `quests_apply_enabled`.
 - Scenario picks no longer write the original trait columns (wave118); they still move the game track.
 - Still behind a copy flag: `ALMANAC_COPY_REVIEWED = false` (your ticks in `docs/almanac-review.md` and `npm run load:almanac` are still to come), plus the older `false` flags (`CATEGORY_STATEMENTS`, `PROFILE_CARD`, `LEGEND_FIGURES`, `CIRCLE_COMPARE`).
-- `ALMANAC_PICK_CUTOVER` is a placeholder (2027-02-01): confirm it is at least 14 days after the OTA date.
+- `ALMANAC_PICK_CUTOVER` is 2026-11-01 (emci, 2026-10-30: no other users, so no slow-updater delay). Server side is wave119 (applied 2026-10-30). Publish the OTA on or before that day, or the old phone build and the server disagree until it lands (the 14-day overlap still accepts the old Pick).
 - No push, no OTA were done by Claude. Publish with `npm run ota:publish -- <eas args>`.
